@@ -28,6 +28,6 @@ jobs:
     - name: Package project
       run: dotnet pack --no-build -c Release --include-source
     - name: Publish package
-      run: dotnet nuget push bin/Release/*.symbols.nupkg --skip-duplicate
+      run: dotnet nuget push JKMP.Core/bin/Release/*.symbols.nupkg --skip-duplicate
       env:
         NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
