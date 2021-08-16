@@ -1,6 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net45</TargetFramework>
+        <PackageId>JKMP.Core</PackageId>
+        <Version>0.1.0</Version>
+        <Authors>Skipcast</Authors>
+        <Company>Jump King Multiplayer</Company>
+        <PackageDescription>The core module of the Jump King Multiplayer mod.</PackageDescription>
+        <RepositoryUrl>https://github.com/Jump-King-Multiplayer/JKMP.Core</RepositoryUrl>
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="Lib.Harmony" Version="2.1.1" />

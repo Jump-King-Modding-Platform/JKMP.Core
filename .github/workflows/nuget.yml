@@ -1,0 +1,33 @@
+name: Publish NuGet package
+
+on:
+  push:
+    branches: [main, development]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+        source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.js
+      env:
+        NUGET_AUTH_TOKEN: "%NUGET_AUTH_TOKEN%"
+    - name: Restore dependencies
+      run: dotnet restore
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build project
+      run: dotnet build --no-restore -c Release
+    - name: Run tests
+      run: dotnet test --no-build --verbosity normal
+    - name: Package project
+      run: dotnet pack --no-build -c Release --include-source
+    - name: Publish package
+      run: dotnet nuget push bin/Release/*.symbols.nupkg --skip-duplicate
+      env:
+        NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
