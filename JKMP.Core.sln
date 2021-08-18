@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JKMP.Core", "JKMP.Core\JKMP.Core.csproj", "{253BFCB9-A3AE-44E9-998A-BF1994894F21}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JKMP.Core.Loader.NetFramework", "JKMP.Core.Loader.NetFramework\JKMP.Core.Loader.NetFramework.csproj", "{B5585B23-AC8A-4BD7-BEB5-9A1257404237}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -20,9 +18,5 @@ Global
 		{253BFCB9-A3AE-44E9-998A-BF1994894F21}.Debug|x86.Build.0 = Debug|Any CPU
 		{253BFCB9-A3AE-44E9-998A-BF1994894F21}.Release|x86.ActiveCfg = Release|Any CPU
 		{253BFCB9-A3AE-44E9-998A-BF1994894F21}.Release|x86.Build.0 = Release|Any CPU
-		{B5585B23-AC8A-4BD7-BEB5-9A1257404237}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{B5585B23-AC8A-4BD7-BEB5-9A1257404237}.Debug|x86.Build.0 = Debug|Any CPU
-		{B5585B23-AC8A-4BD7-BEB5-9A1257404237}.Release|x86.ActiveCfg = Release|Any CPU
-		{B5585B23-AC8A-4BD7-BEB5-9A1257404237}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
