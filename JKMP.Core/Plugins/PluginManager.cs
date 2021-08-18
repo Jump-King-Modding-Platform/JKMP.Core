@@ -28,6 +28,8 @@ namespace JKMP.Core.Plugins
 
             foreach (string pluginDirectory in Directory.GetDirectories(pluginsDirectory))
             {
+                PluginContainer? pluginContainer = null;
+                
                 try
                 {
                     string pluginMetaDataPath = Path.Combine(pluginDirectory, "plugin.json");
@@ -65,7 +67,7 @@ namespace JKMP.Core.Plugins
 
                         Console.WriteLine($"Loading plugin '{pluginInfo.Name}' v{pluginInfo.Version} using {loader.GetType().Name}");
 
-                        PluginContainer pluginContainer = loader.LoadPlugin(entryFileName, pluginInfo);
+                        pluginContainer = loader.LoadPlugin(entryFileName, pluginInfo);
                         loadedPlugins[pluginDirectory] = pluginContainer;
 
                         Console.WriteLine("Plugin loaded");
@@ -82,7 +84,12 @@ namespace JKMP.Core.Plugins
                 {
                     Console.WriteLine($"An unhandled exception was raised while loading the plugin:\n{ex}");
                 }
+
+                pluginContainer?.Plugin.OnLoaded();
             }
+
+            foreach (var pluginContainer in loadedPlugins.Values)
+                pluginContainer.Plugin.Initialize();
         }
 
         private string? FindPluginEntryFile(string pluginDirectory)
