@@ -7,8 +7,30 @@
         <Company>Jump King Multiplayer</Company>
         <PackageDescription>The core module of the Jump King Multiplayer mod.</PackageDescription>
         <RepositoryUrl>https://github.com/Jump-King-Multiplayer/JKMP.Core</RepositoryUrl>
+        <Nullable>enable</Nullable>
+        <LangVersion>9</LangVersion>
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="Lib.Harmony" Version="2.1.1" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     </ItemGroup>
+    <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
+    
+    <!-- Copy files to game directory if this is not a CI build and GameDirectory is defined -->
+    <Target Name="CopyFilesToGameDirectory" AfterTargets="PostBuildEvent" Condition="$(CI) == '' And $(GameDirectory) != ''">
+        <ItemGroup>
+            <CoreFiles Include="$(TargetDir)JKMP.Core.dll" />
+        </ItemGroup>
+        
+        <ItemGroup>
+            <DependencyFiles Include="$(TargetDir)0Harmony.dll" />
+            <DependencyFiles Include="$(TargetDir)Newtonsoft.Json.dll" />
+        </ItemGroup>
+        
+        <Message Importance="high" Text="Copying @(CoreFiles->'%(filename)%(extension)') to $(GameDirectory)" />
+        <Copy SourceFiles="@(CoreFiles)" DestinationFolder="$(GameDirectory)" SkipUnchangedFiles="true" />
+
+        <Message Importance="high" Text="Copying @(CoreFiles->'%(filename)%(extension)') to $(GameDirectory)/JKMP/Dependencies" />
+        <Copy SourceFiles="@(DependencyFiles)" DestinationFolder="$(GameDirectory)/JKMP/Dependencies" SkipUnchangedFiles="true" />
+    </Target>
 </Project>

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net452</TargetFramework>
+        <LangVersion>9</LangVersion>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\JKMP.Core\JKMP.Core.csproj" />
+    </ItemGroup>
+    <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
+
+    <!-- Copy files to game directory if this is not a CI build and GameDirectory is defined -->
+    <Target Name="CopyFilesToGameDirectory" AfterTargets="PostBuildEvent" Condition="$(CI) == '' And $(GameDirectory) != ''">
+        <ItemGroup>
+            <CoreFiles Include="$(TargetDir)JKMP.Core.Loader.NetFramework.dll" />
+        </ItemGroup>
+
+        <Message Importance="high" Text="Copying @(CoreFiles->'%(filename)%(extension)') to $(GameDirectory)\JKMP\Loaders" />
+        <Copy SourceFiles="@(CoreFiles)" DestinationFolder="$(GameDirectory)\JKMP\Loaders" SkipUnchangedFiles="true" />
+    </Target>
+</Project>

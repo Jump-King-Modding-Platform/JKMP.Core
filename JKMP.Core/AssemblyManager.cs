@@ -1,0 +1,62 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+
+namespace JKMP.Core
+{
+    internal static class AssemblyManager
+    {
+        private static readonly ICollection<string> searchDirectories = new[]
+        {
+            "JKMP/Dependencies"
+        };
+
+        public static void SetupAssemblyResolving(AppDomain appDomain)
+        {
+            appDomain.AssemblyResolve += (sender, args) =>
+            {
+                Assembly requestingAssembly = args.RequestingAssembly ?? Assembly.GetCallingAssembly();
+                
+                var assemblyName = new AssemblyName(args.Name);
+                string requestingAssemblyPath = Path.GetDirectoryName(requestingAssembly.Location)!;
+                Console.WriteLine($"Attempting to resolve assembly {assemblyName.Name} from {requestingAssemblyPath}");
+
+                IEnumerable<string> allSearchDirectories = args.RequestingAssembly == null ? new string[0] : new[] { requestingAssemblyPath };
+                allSearchDirectories = allSearchDirectories.Concat(searchDirectories);
+                
+                foreach (string directoryPath in allSearchDirectories)
+                {
+                    Assembly? assembly = SearchDirectory(assemblyName, directoryPath);
+
+                    if (assembly != null)
+                        return assembly;
+                }
+
+                Console.WriteLine($"Failed to resolve assembly: {assemblyName.Name}");
+                return null;
+            };
+        }
+
+        private static Assembly? SearchDirectory(AssemblyName assemblyName, string directoryPath)
+        {
+            foreach (string filePath in Directory.GetFiles(directoryPath, "*.dll", SearchOption.TopDirectoryOnly))
+            {
+                string fileName = Path.GetFileNameWithoutExtension(filePath);
+
+                if (fileName.Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return Assembly.LoadFrom(filePath);
+                }
+            }
+
+            foreach (string subPath in Directory.GetDirectories(directoryPath))
+            {
+                return SearchDirectory(assemblyName, subPath);
+            }
+
+            return null;
+        }
+    }
+}
