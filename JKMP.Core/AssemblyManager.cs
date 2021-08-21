@@ -20,10 +20,10 @@ namespace JKMP.Core
                 Assembly requestingAssembly = args.RequestingAssembly ?? Assembly.GetCallingAssembly();
                 
                 var assemblyName = new AssemblyName(args.Name);
-                string requestingAssemblyPath = Path.GetDirectoryName(requestingAssembly.Location)!;
+                string? requestingAssemblyPath = string.IsNullOrEmpty(requestingAssembly.Location) ? null : Path.GetDirectoryName(requestingAssembly.Location)!;
                 Console.WriteLine($"Attempting to resolve assembly {assemblyName.Name} from {requestingAssemblyPath}");
 
-                IEnumerable<string> allSearchDirectories = args.RequestingAssembly == null ? new string[0] : new[] { requestingAssemblyPath };
+                IEnumerable<string> allSearchDirectories = requestingAssemblyPath == null ? new string[0] : new[] { requestingAssemblyPath };
                 allSearchDirectories = allSearchDirectories.Concat(searchDirectories);
                 
                 foreach (string directoryPath in allSearchDirectories)
