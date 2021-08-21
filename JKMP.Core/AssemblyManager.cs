@@ -10,7 +10,7 @@ namespace JKMP.Core
     {
         private static readonly ICollection<string> searchDirectories = new[]
         {
-            "JKMP/Dependencies"
+            Path.Combine("JKMP", "Dependencies")
         };
 
         public static void SetupAssemblyResolving(AppDomain appDomain)
