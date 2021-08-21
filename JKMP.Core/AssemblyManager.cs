@@ -17,7 +17,7 @@ namespace JKMP.Core
         {
             appDomain.AssemblyResolve += (sender, args) =>
             {
-                Assembly requestingAssembly = args.RequestingAssembly ?? Assembly.GetCallingAssembly();
+                Assembly requestingAssembly = args.RequestingAssembly ?? Assembly.GetExecutingAssembly();
                 
                 var assemblyName = new AssemblyName(args.Name);
                 string? requestingAssemblyPath = string.IsNullOrEmpty(requestingAssembly.Location) ? null : Path.GetDirectoryName(requestingAssembly.Location)!;
