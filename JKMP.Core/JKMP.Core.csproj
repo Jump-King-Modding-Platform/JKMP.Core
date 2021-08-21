@@ -2,7 +2,7 @@
     <PropertyGroup>
         <TargetFramework>net45</TargetFramework>
         <PackageId>JKMP.Core</PackageId>
-        <Version>0.3.0</Version>
+        <Version>0.3.1</Version>
         <Authors>Skipcast</Authors>
         <Company>Jump King Multiplayer</Company>
         <PackageDescription>The core module of the Jump King Multiplayer mod.</PackageDescription>
