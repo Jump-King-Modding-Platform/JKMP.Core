@@ -47,6 +47,7 @@ namespace JKMP.Core
 
                 if (fileName.Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase))
                 {
+                    Console.WriteLine($"Found assembly: {filePath}");
                     return Assembly.LoadFrom(filePath);
                 }
             }
