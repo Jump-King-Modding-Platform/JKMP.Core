@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFramework>net45</TargetFramework>
+        <TargetFramework>net462</TargetFramework>
         <PackageId>JKMP.Core</PackageId>
         <Version>0.3.4</Version>
         <Authors>Skipcast</Authors>

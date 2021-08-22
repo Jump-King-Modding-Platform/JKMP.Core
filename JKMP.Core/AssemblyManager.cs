@@ -34,7 +34,7 @@ namespace JKMP.Core
                 string? requestingAssemblyPath = string.IsNullOrEmpty(requestingAssembly.Location) ? null : Path.GetDirectoryName(requestingAssembly.Location)!;
                 Console.WriteLine($"Attempting to resolve assembly {assemblyName.Name} from {requestingAssemblyPath}");
 
-                IEnumerable<string> allSearchDirectories = requestingAssemblyPath == null ? new string[0] : new[] { requestingAssemblyPath };
+                IEnumerable<string> allSearchDirectories = requestingAssemblyPath == null ? Array.Empty<string>() : new[] { requestingAssemblyPath };
                 allSearchDirectories = allSearchDirectories.Concat(SearchDirectories);
                 
                 foreach (string directoryPath in allSearchDirectories)
