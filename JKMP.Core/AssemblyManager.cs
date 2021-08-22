@@ -14,6 +14,12 @@ namespace JKMP.Core
             Path.Combine("JKMP", "Loaders")
         };
 
+        private static readonly ICollection<string> IgnoredAssemblies = new[]
+        {
+            "JumpKing.XmlSerializers",
+            "LanguageJK.XmlSerializers"
+        };
+
         public static void SetupAssemblyResolving(AppDomain appDomain)
         {
             appDomain.AssemblyResolve += (sender, args) =>
@@ -21,6 +27,10 @@ namespace JKMP.Core
                 Assembly requestingAssembly = args.RequestingAssembly ?? Assembly.GetExecutingAssembly();
                 
                 var assemblyName = new AssemblyName(args.Name);
+
+                if (IgnoredAssemblies.Contains(args.Name))
+                    return null;
+                
                 string? requestingAssemblyPath = string.IsNullOrEmpty(requestingAssembly.Location) ? null : Path.GetDirectoryName(requestingAssembly.Location)!;
                 Console.WriteLine($"Attempting to resolve assembly {assemblyName.Name} from {requestingAssemblyPath}");
 
