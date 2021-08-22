@@ -8,7 +8,7 @@ namespace JKMP.Core
 {
     internal static class AssemblyManager
     {
-        private static readonly ICollection<string> searchDirectories = new[]
+        private static readonly ICollection<string> SearchDirectories = new[]
         {
             Path.Combine("JKMP", "Dependencies"),
             Path.Combine("JKMP", "Loaders")
@@ -25,7 +25,7 @@ namespace JKMP.Core
                 Console.WriteLine($"Attempting to resolve assembly {assemblyName.Name} from {requestingAssemblyPath}");
 
                 IEnumerable<string> allSearchDirectories = requestingAssemblyPath == null ? new string[0] : new[] { requestingAssemblyPath };
-                allSearchDirectories = allSearchDirectories.Concat(searchDirectories);
+                allSearchDirectories = allSearchDirectories.Concat(SearchDirectories);
                 
                 foreach (string directoryPath in allSearchDirectories)
                 {
