@@ -28,7 +28,7 @@ namespace JKMP.Core
                 
                 var assemblyName = new AssemblyName(args.Name);
 
-                if (IgnoredAssemblies.Contains(args.Name))
+                if (IgnoredAssemblies.Contains(assemblyName.Name))
                     return null;
                 
                 string? requestingAssemblyPath = string.IsNullOrEmpty(requestingAssembly.Location) ? null : Path.GetDirectoryName(requestingAssembly.Location)!;
