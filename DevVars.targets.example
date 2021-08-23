@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <PropertyGroup>
-        <GameDirectory>C:\Path\To\Game</GameDirectory>
-    </PropertyGroup>
+    <ItemGroup>
+        <GameDirectory Include="C:\Path\To\Game" />
+        <GameDirectory Include="\\othercomputer\game" />
+    </ItemGroup>
 </Project>

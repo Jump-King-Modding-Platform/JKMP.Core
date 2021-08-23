@@ -16,8 +16,8 @@
     </ItemGroup>
     <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
     
-    <!-- Copy files to game directory if this is not a CI build and GameDirectory is defined -->
-    <Target Name="CopyFilesToGameDirectory" AfterTargets="PostBuildEvent" Condition="$(CI) == '' And $(GameDirectory) != ''">
+    <!-- Copy files to game directories if this is not a CI build and GameDirectory is defined -->
+    <Target Name="CopyFilesToGameDirectory" AfterTargets="PostBuildEvent" Condition="$(CI) == ''" Outputs="%(GameDirectory.Identity)">
         <ItemGroup>
             <CoreFiles Include="$(TargetDir)JKMP.Core.dll" />
         </ItemGroup>
@@ -27,10 +27,14 @@
             <DependencyFiles Include="$(TargetDir)Newtonsoft.Json.dll" />
         </ItemGroup>
         
-        <Message Importance="high" Text="Copying @(CoreFiles->'%(filename)%(extension)') to $(GameDirectory)" />
-        <Copy SourceFiles="@(CoreFiles)" DestinationFolder="$(GameDirectory)" SkipUnchangedFiles="true" />
+        <PropertyGroup>
+            <Destination>%(GameDirectory.Identity)</Destination>
+        </PropertyGroup>
+        
+        <Message Importance="high" Text="Copying @(CoreFiles->'%(filename)%(extension)') to $(Destination)" />
+        <Copy SourceFiles="@(CoreFiles)" DestinationFolder="$(Destination)" SkipUnchangedFiles="true" />
 
-        <Message Importance="high" Text="Copying @(CoreFiles->'%(filename)%(extension)') to $(GameDirectory)/JKMP/Dependencies" />
-        <Copy SourceFiles="@(DependencyFiles)" DestinationFolder="$(GameDirectory)/JKMP/Dependencies" SkipUnchangedFiles="true" />
+        <Message Importance="high" Text="Copying @(DependencyFiles->'%(filename)%(extension)') to $(Destination)/JKMP/Dependencies" />
+        <Copy SourceFiles="@(DependencyFiles)" DestinationFolder="$(Destination)/JKMP/Dependencies')" SkipUnchangedFiles="true" />
     </Target>
 </Project>
