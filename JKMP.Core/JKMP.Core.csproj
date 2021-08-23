@@ -16,7 +16,7 @@
     </ItemGroup>
     <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
     
-    <!-- Copy files to game directories if this is not a CI build and GameDirectory is defined -->
+    <!-- Copy files to game directories if this is not a CI build -->
     <Target Name="CopyFilesToGameDirectory" AfterTargets="PostBuildEvent" Condition="$(CI) == ''" Outputs="%(GameDirectory.Identity)">
         <ItemGroup>
             <CoreFiles Include="$(TargetDir)JKMP.Core.dll" />
