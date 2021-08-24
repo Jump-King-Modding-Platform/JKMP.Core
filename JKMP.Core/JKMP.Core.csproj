@@ -23,14 +23,22 @@
     <Target Name="CopyFilesToGameDirectory" AfterTargets="PostBuildEvent" Condition="$(CI) == ''" Outputs="%(GameDirectory.Identity)">
         <ItemGroup>
             <CoreFiles Include="$(TargetDir)JKMP.Core.dll" />
+            
+            <!--
+            Serilog dependencies need to be in the root game folder due to logging being initialized before assembly resolving.
+            This means that the Serilog dll's won't be found unless they're in the root folder.
+            -->
+            <!-- TODO: Merge these into JKMP.Core.dll? -->
+            <CoreFiles Include="$(TargetDir)Serilog.dll" />
+            <CoreFiles Include="$(TargetDir)Serilog.Sinks.Console.dll" />
+            <CoreFiles Include="$(TargetDir)Serilog.Sinks.File.dll" />
+            <CoreFiles Include="$(TargetDir)Serilog.Enrichers.Demystifier.dll" />
+            <CoreFiles Include="$(TargetDir)Ben.Demystifier.dll" />
         </ItemGroup>
         
         <ItemGroup>
             <DependencyFiles Include="$(TargetDir)0Harmony.dll" />
             <DependencyFiles Include="$(TargetDir)Newtonsoft.Json.dll" />
-            <DependencyFiles Include="$(TargetDir)Serilog.dll" />
-            <DependencyFiles Include="$(TargetDir)Serilog.Sinks.Console.dll" />
-            <DependencyFiles Include="$(TargetDir)Serilog.Sinks.File.dll" />
         </ItemGroup>
         
         <PropertyGroup>
