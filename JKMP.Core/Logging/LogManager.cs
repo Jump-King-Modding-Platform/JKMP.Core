@@ -24,6 +24,7 @@ namespace JKMP.Core.Logging
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.Console(theme: AnsiConsoleTheme.Code, applyThemeToRedirectedOutput: true)
                 .WriteTo.File(Path.Combine("JKMP", "Logs", "jkmp.log"), restrictedToMinimumLevel: LogEventLevel.Information, rollingInterval: RollingInterval.Day)
+                .Enrich.WithDemystifiedStackTraces()
                 .CreateLogger();
         }
     }
