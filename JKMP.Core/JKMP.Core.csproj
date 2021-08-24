@@ -26,7 +26,7 @@
             <CoreFiles Include="$(TargetDir)JKMP.Core.dll" />
             
             <!--
-            Serilog dependencies need to be in the root game folder due to logging being initialized before assembly resolving.
+            Serilog and newtonsoft.json dependencies need to be in the root game folder due to logging being initialized before assembly resolving (json is used for customizing logging)
             This means that the Serilog dll's won't be found unless they're in the root folder.
             -->
             <!-- TODO: Merge these into JKMP.Core.dll? -->
@@ -35,11 +35,11 @@
             <CoreFiles Include="$(TargetDir)Serilog.Sinks.File.dll" />
             <CoreFiles Include="$(TargetDir)Serilog.Enrichers.Demystifier.dll" />
             <CoreFiles Include="$(TargetDir)Ben.Demystifier.dll" />
+            <CoreFiles Include="$(TargetDir)Newtonsoft.Json.dll" />
         </ItemGroup>
         
         <ItemGroup>
             <DependencyFiles Include="$(TargetDir)0Harmony.dll" />
-            <DependencyFiles Include="$(TargetDir)Newtonsoft.Json.dll" />
         </ItemGroup>
         
         <PropertyGroup>

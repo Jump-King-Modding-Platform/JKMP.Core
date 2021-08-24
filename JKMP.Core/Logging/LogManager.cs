@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Serilog;
+using Serilog.Configuration;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
 
@@ -28,6 +29,7 @@ namespace JKMP.Core.Logging
             Directory.CreateDirectory(Path.Combine("JKMP", "Logs"));
 
             Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Settings(new LoggerConfigLoader())
                 .WriteTo.Console(theme: AnsiConsoleTheme.Code, applyThemeToRedirectedOutput: true)
                 .WriteTo.File(Path.Combine("JKMP", "Logs", "jkmp.log"), restrictedToMinimumLevel: LogEventLevel.Information, rollingInterval: RollingInterval.Day)
                 .Enrich.WithDemystifiedStackTraces()
