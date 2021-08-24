@@ -36,7 +36,7 @@ namespace JKMP.Core
                     return null;
                 
                 string? requestingAssemblyPath = string.IsNullOrEmpty(requestingAssembly.Location) ? null : Path.GetDirectoryName(requestingAssembly.Location)!;
-                Logger.Verbose("Attempting to resolve assembly {assemblyName} from {requestingAssemblyPath}", assemblyName.Name, requestingAssemblyPath);
+                Logger.Debug("Attempting to resolve assembly {assemblyName} from {requestingAssemblyPath}", assemblyName.Name, requestingAssemblyPath);
 
                 IEnumerable<string> allSearchDirectories = requestingAssemblyPath == null ? Array.Empty<string>() : new[] { requestingAssemblyPath };
                 allSearchDirectories = allSearchDirectories.Concat(SearchDirectories);
@@ -62,7 +62,7 @@ namespace JKMP.Core
 
                 if (fileName.Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    Logger.Verbose("Found assembly: {filePath}", filePath);
+                    Logger.Debug("Found assembly: {filePath}", filePath);
                     return Assembly.LoadFrom(filePath);
                 }
             }
