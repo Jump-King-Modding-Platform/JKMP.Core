@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using JKMP.Core.Logging;
 
 namespace JKMP.Core
 {
@@ -16,7 +17,8 @@ namespace JKMP.Core
             {
                 ConsoleManager.InitializeConsole();
             }
-
+            
+            LogManager.InitializeLogging();
             AssemblyManager.SetupAssemblyResolving(AppDomain.CurrentDomain);
             Core = new();
         }
