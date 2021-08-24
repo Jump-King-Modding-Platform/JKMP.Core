@@ -19,6 +19,11 @@ namespace JKMP.Core.Logging
             return Log.Logger.ForContext<T>();
         }
 
+        /// <summary>
+        /// Creates a logger for the specified type. This overload is normally used for static classes where it can't be used as a generic type.
+        /// </summary>
+        /// <param name="type">The type that will use this logger. Used for knowing where a log message came from.</param>
+        /// <returns></returns>
         public static ILogger CreateLogger(Type type)
         {
             return Log.Logger.ForContext(type);
