@@ -41,6 +41,6 @@
         <Copy SourceFiles="@(CoreFiles)" DestinationFolder="$(Destination)" SkipUnchangedFiles="true" />
 
         <Message Importance="high" Text="Copying @(DependencyFiles->'%(filename)%(extension)') to $(Destination)/JKMP/Dependencies" />
-        <Copy SourceFiles="@(DependencyFiles)" DestinationFolder="$(Destination)/JKMP/Dependencies')" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="@(DependencyFiles)" DestinationFolder="$(Destination)/JKMP/Dependencies" SkipUnchangedFiles="true" />
     </Target>
 </Project>
