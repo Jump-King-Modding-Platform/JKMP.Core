@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using JKMP.Core.Logging;
+using Serilog;
 
 namespace JKMP.Core
 {
@@ -20,6 +22,8 @@ namespace JKMP.Core
             "LanguageJK.XmlSerializers"
         };
 
+        private static readonly ILogger Logger = LogManager.CreateLogger(typeof(AssemblyManager));
+
         public static void SetupAssemblyResolving(AppDomain appDomain)
         {
             appDomain.AssemblyResolve += (sender, args) =>
@@ -32,7 +36,7 @@ namespace JKMP.Core
                     return null;
                 
                 string? requestingAssemblyPath = string.IsNullOrEmpty(requestingAssembly.Location) ? null : Path.GetDirectoryName(requestingAssembly.Location)!;
-                Console.WriteLine($"Attempting to resolve assembly {assemblyName.Name} from {requestingAssemblyPath}");
+                Logger.Debug("Attempting to resolve assembly {assemblyName} from {requestingAssemblyPath}", assemblyName.Name, requestingAssemblyPath);
 
                 IEnumerable<string> allSearchDirectories = requestingAssemblyPath == null ? Array.Empty<string>() : new[] { requestingAssemblyPath };
                 allSearchDirectories = allSearchDirectories.Concat(SearchDirectories);
@@ -45,7 +49,7 @@ namespace JKMP.Core
                         return assembly;
                 }
 
-                Console.WriteLine($"Failed to resolve assembly: {assemblyName.Name}");
+                Logger.Error("Failed to resolve assembly: {assemblyName}", assemblyName.Name);
                 return null;
             };
         }
@@ -58,7 +62,7 @@ namespace JKMP.Core
 
                 if (fileName.Equals(assemblyName.Name, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    Console.WriteLine($"Found assembly: {filePath}");
+                    Logger.Debug("Found assembly: {filePath}", filePath);
                     return Assembly.LoadFrom(filePath);
                 }
             }

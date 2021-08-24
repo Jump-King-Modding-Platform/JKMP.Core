@@ -2,7 +2,7 @@
     <PropertyGroup>
         <TargetFramework>net462</TargetFramework>
         <PackageId>JKMP.Core</PackageId>
-        <Version>0.4.1</Version>
+        <Version>0.4.2</Version>
         <Authors>Skipcast</Authors>
         <Company>Jump King Multiplayer</Company>
         <PackageDescription>The core module of the Jump King Multiplayer mod.</PackageDescription>
@@ -13,6 +13,10 @@
     <ItemGroup>
       <PackageReference Include="Lib.Harmony" Version="2.1.1" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+      <PackageReference Include="Serilog" Version="2.10.0" />
+      <PackageReference Include="Serilog.Enrichers.Demystifier" Version="1.0.1" />
+      <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0" />
+      <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     </ItemGroup>
     <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
     
@@ -20,6 +24,17 @@
     <Target Name="CopyFilesToGameDirectory" AfterTargets="PostBuildEvent" Condition="$(CI) == ''" Outputs="%(GameDirectory.Identity)">
         <ItemGroup>
             <CoreFiles Include="$(TargetDir)JKMP.Core.dll" />
+            
+            <!--
+            Serilog dependencies need to be in the root game folder due to logging being initialized before assembly resolving.
+            This means that the Serilog dll's won't be found unless they're in the root folder.
+            -->
+            <!-- TODO: Merge these into JKMP.Core.dll? -->
+            <CoreFiles Include="$(TargetDir)Serilog.dll" />
+            <CoreFiles Include="$(TargetDir)Serilog.Sinks.Console.dll" />
+            <CoreFiles Include="$(TargetDir)Serilog.Sinks.File.dll" />
+            <CoreFiles Include="$(TargetDir)Serilog.Enrichers.Demystifier.dll" />
+            <CoreFiles Include="$(TargetDir)Ben.Demystifier.dll" />
         </ItemGroup>
         
         <ItemGroup>
@@ -35,6 +50,6 @@
         <Copy SourceFiles="@(CoreFiles)" DestinationFolder="$(Destination)" SkipUnchangedFiles="true" />
 
         <Message Importance="high" Text="Copying @(DependencyFiles->'%(filename)%(extension)') to $(Destination)/JKMP/Dependencies" />
-        <Copy SourceFiles="@(DependencyFiles)" DestinationFolder="$(Destination)/JKMP/Dependencies')" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="@(DependencyFiles)" DestinationFolder="$(Destination)/JKMP/Dependencies" SkipUnchangedFiles="true" />
     </Target>
 </Project>

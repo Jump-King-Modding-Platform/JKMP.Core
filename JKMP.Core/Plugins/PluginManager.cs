@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using JKMP.Core.Logging;
 using Newtonsoft.Json;
+using Serilog;
 
 namespace JKMP.Core.Plugins
 {
@@ -15,6 +17,8 @@ namespace JKMP.Core.Plugins
         private readonly List<IPluginLoader> loaders = new();
 
         private static readonly Regex RgxLoaderFileName = new Regex(@"^JKMP\.(?:.*)Loader\.(?<name>.+)\.dll$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        private static readonly ILogger Logger = LogManager.CreateLogger<PluginManager>();
         
         internal PluginManager()
         {
@@ -65,24 +69,33 @@ namespace JKMP.Core.Plugins
                         if (loader == null)
                             throw new PluginLoadException($"Could not find a loader than can load '{pluginExtension}' plugins.");
 
-                        Console.WriteLine($"Loading plugin '{pluginInfo.Name}' v{pluginInfo.Version} using {loader.GetType().Name}");
+                        Logger.Information(
+                            "Loading plugin '{name}' v{version} using {loaderName}",
+                            pluginInfo.Name,
+                            pluginInfo.Version,
+                            loader.GetType().Name
+                        );
 
                         pluginContainer = loader.LoadPlugin(entryFileName, pluginInfo);
                         loadedPlugins[pluginDirectory] = pluginContainer;
 
-                        Console.WriteLine("Plugin loaded");
+                        Logger.Verbose("Plugin loaded");
                     }
                 }
                 catch (PluginLoadException ex)
                 {
-                    Console.WriteLine($"Could not load plugin {Path.GetFileNameWithoutExtension(pluginDirectory)}: {ex.Message}");
+                    Logger.Error(
+                        "Could not load plugin {directoryName}: {exceptionMessage}",
+                        Path.GetFileNameWithoutExtension(pluginDirectory),
+                        ex.Message
+                    );
 
                     if (ex.InnerException != null)
-                        Console.WriteLine(ex.InnerException);
+                        Logger.Error(ex.InnerException, string.Empty);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"An unhandled exception was raised while loading the plugin:\n{ex}");
+                    Logger.Error(ex, "An unhandled exception was raised while loading the plugin");
                 }
 
                 pluginContainer?.Plugin.OnLoaded();
@@ -125,7 +138,7 @@ namespace JKMP.Core.Plugins
 
             foreach (var filePath in Directory.GetFiles(loadersDirectory, "JKMP.*Loader.*.dll", SearchOption.AllDirectories))
             {
-                Console.WriteLine($"Found loader dll: {filePath}");
+                Logger.Verbose("Found loader dll: {filePath}", filePath);
 
                 try
                 {
@@ -147,24 +160,24 @@ namespace JKMP.Core.Plugins
                         if (type.IsAbstract)
                             continue;
 
-                        Console.WriteLine($"Found loader type: {type.Name}");
+                        Logger.Verbose("Found loader type: {typeName}", type.Name);
 
                         if (expectedTypeName != type.Name)
                             throw new PluginLoaderException($"The loader type's name needs to match '{expectedTypeName}'.");
 
                         IPluginLoader instance = (IPluginLoader)Activator.CreateInstance(type);
                         loaders.Add(instance);
-                        Console.WriteLine($"Plugin loader loaded: {type.Name}");
+                        Logger.Information("Plugin loader loaded: {typeName}", type.Name);
                         break;
                     }
                 }
                 catch (PluginLoaderException ex)
                 {
-                    Console.WriteLine($"Failed to load: {ex.Message}");
+                    Logger.Error(ex, "Failed to load plugin loader");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"An unhandled exception was thrown:\n{ex}");
+                    Logger.Error(ex, "An unhandled exception was thrown");
                 }
             }
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using JKMP.Core.Logging;
 
 namespace JKMP.Core
 {
@@ -16,7 +17,13 @@ namespace JKMP.Core
             {
                 ConsoleManager.InitializeConsole();
             }
-
+            
+            // Consider carefully what is called before SetupAssemblyResolving.
+            // If any outside assembly is referenced it will be loaded by the runtime.
+            // If it's not found in the root game folder the game will crash due to the dll being located in JKMP/Dependencies.
+            // If absolutely necessary, place those dlls in the game root instead.
+            
+            LogManager.InitializeLogging();
             AssemblyManager.SetupAssemblyResolving(AppDomain.CurrentDomain);
             Core = new();
         }
