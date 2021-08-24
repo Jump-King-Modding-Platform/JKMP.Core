@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using Serilog;
 using Serilog.Events;
@@ -15,6 +16,11 @@ namespace JKMP.Core.Logging
         public static ILogger CreateLogger<T>()
         {
             return Log.Logger.ForContext<T>();
+        }
+
+        public static ILogger CreateLogger(Type type)
+        {
+            return Log.Logger.ForContext(type);
         }
         
         internal static void InitializeLogging()
