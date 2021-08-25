@@ -30,6 +30,11 @@ namespace JKMP.Core.Logging
         {
             return Log.Logger.ForContext(type);
         }
+
+        /// <summary>
+        /// Gets a logger that is used for temporary logging. Useful for debugging.
+        /// </summary>
+        public static ILogger TempLogger { get; private set; } = null!;
         
         internal static void InitializeLogging()
         {
@@ -42,6 +47,15 @@ namespace JKMP.Core.Logging
                 .WriteTo.File(new ExpressionTemplate(loggerSettings.LogConfig.OutputTemplate), Path.Combine("JKMP", "Logs", "jkmp_.log"), rollingInterval: RollingInterval.Day)
                 .Enrich.WithDemystifiedStackTraces()
                 .CreateLogger();
+
+            TempLogger = Log.Logger.ForContext<TempLog>();
         }
+    }
+
+    /// <summary>
+    /// Used for identifying temporary logging.
+    /// </summary>
+    internal class TempLog
+    {
     }
 }
