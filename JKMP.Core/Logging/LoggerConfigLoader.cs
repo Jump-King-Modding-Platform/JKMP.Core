@@ -8,19 +8,22 @@ using Serilog.Events;
 
 namespace JKMP.Core.Logging
 {
-    public class LoggerConfigLoader : ILoggerSettings
+    internal class LoggerConfigLoader : ILoggerSettings
     {
-        private class Config
+        internal class Config
         {
-            [JsonProperty()]
             public LogEventLevel MinimumLogLevel { get; set; } = LogEventLevel.Information;
+
+            public string OutputTemplate { get; set; } =
+                "[{@t:HH:mm:ss} {@l:u3} {#if SourceContext is not null}{Substring(SourceContext, LastIndexOf(SourceContext, '.') + 1)}{#end}] {@m}\n{#if @x is not null}{@x}\n{#end}";
         }
         
-        public void Configure(LoggerConfiguration loggerConfiguration)
+        public Config LogConfig { get; }
+
+        public LoggerConfigLoader()
         {
             string logConfigFileName = Path.Combine("JKMP", "LogConfig.json");
 
-            Config? config = null;
             JsonSerializerSettings serializerSettings = new()
             {
                 Converters =
@@ -28,12 +31,12 @@ namespace JKMP.Core.Logging
                     new StringEnumConverter()
                 }
             };
-            
+
             if (File.Exists(logConfigFileName))
             {
                 try
                 {
-                    config = JsonConvert.DeserializeObject<Config>(File.ReadAllText(logConfigFileName), serializerSettings)!;
+                    LogConfig = JsonConvert.DeserializeObject<Config>(File.ReadAllText(logConfigFileName), serializerSettings)!;
                 }
                 catch (Exception ex)
                 {
@@ -41,17 +44,17 @@ namespace JKMP.Core.Logging
                 }
             }
 
-            if (config == null)
-            {
-                // Write new config to disk
-                config = new();
-                
-                string json = JsonConvert.SerializeObject(config, Formatting.Indented, serializerSettings);
-                File.WriteAllText(logConfigFileName, json);
-            }
+            LogConfig ??= new();
+            
+            // Write config to disk in case it's new or there's new properties since last saved version
+            string json = JsonConvert.SerializeObject(LogConfig, Formatting.Indented, serializerSettings);
+            File.WriteAllText(logConfigFileName, json);
+        }
 
+        public void Configure(LoggerConfiguration loggerConfiguration)
+        {
             loggerConfiguration
-                .MinimumLevel.Is(config.MinimumLogLevel);
+                .MinimumLevel.Is(LogConfig.MinimumLogLevel);
         }
     }
 }

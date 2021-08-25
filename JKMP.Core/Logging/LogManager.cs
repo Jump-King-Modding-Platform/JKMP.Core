@@ -4,6 +4,8 @@ using Serilog;
 using Serilog.Configuration;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
+using Serilog.Templates;
+using Serilog.Templates.Themes;
 
 namespace JKMP.Core.Logging
 {
@@ -33,10 +35,11 @@ namespace JKMP.Core.Logging
         {
             Directory.CreateDirectory(Path.Combine("JKMP", "Logs"));
 
+            LoggerConfigLoader loggerSettings = new();
             Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Settings(new LoggerConfigLoader())
-                .WriteTo.Console(theme: AnsiConsoleTheme.Code, applyThemeToRedirectedOutput: true)
-                .WriteTo.File(Path.Combine("JKMP", "Logs", "jkmp.log"), restrictedToMinimumLevel: LogEventLevel.Information, rollingInterval: RollingInterval.Day)
+                .ReadFrom.Settings(loggerSettings)
+                .WriteTo.Console(new ExpressionTemplate(loggerSettings.LogConfig.OutputTemplate, theme: TemplateTheme.Code, applyThemeWhenOutputIsRedirected: true))
+                .WriteTo.File(new ExpressionTemplate(loggerSettings.LogConfig.OutputTemplate), Path.Combine("JKMP", "Logs", "jkmp_.log"), rollingInterval: RollingInterval.Day)
                 .Enrich.WithDemystifiedStackTraces()
                 .CreateLogger();
         }
