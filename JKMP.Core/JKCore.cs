@@ -15,7 +15,6 @@ namespace JKMP.Core
         internal JKCore()
         {
             Logger.Information("Initializing JKMP!");
-            
             Plugins = new();
             Plugins.LoadPlugins();
         }
