@@ -150,7 +150,7 @@ namespace JKMP.Core.Plugins
                     expectedTypeName += "PluginLoader";
                     
                     var loaderType = typeof(IPluginLoader);
-                    Assembly assembly = Assembly.LoadFrom(filePath);
+                    Assembly assembly = Assembly.LoadFile(Path.GetFullPath(filePath));
 
                     foreach (var type in assembly.ExportedTypes)
                     {
