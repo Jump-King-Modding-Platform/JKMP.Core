@@ -58,7 +58,12 @@ namespace JKMP.Core.Plugins
 
                     if (pluginInfo.OnlyContent)
                     {
-                        pluginContainer = new PluginContainer(new ContentPlugin(), pluginInfo, null, pluginDirectory);
+                        pluginContainer = new PluginContainer(new ContentPlugin(), pluginInfo, null)
+                        {
+                            RootDirectory = pluginDirectory,
+                            ContentRoot = Path.Combine(pluginDirectory, "Content")
+                        };
+
                         loadedPlugins[pluginDirectory] = pluginContainer;
                         continue;
                     }
@@ -85,6 +90,9 @@ namespace JKMP.Core.Plugins
                         );
 
                         pluginContainer = loader.LoadPlugin(entryFileName, pluginInfo);
+                        pluginContainer.RootDirectory = pluginDirectory;
+                        pluginContainer.ContentRoot = Path.Combine(pluginDirectory, "Content");
+                        
                         loadedPlugins[pluginDirectory] = pluginContainer;
 
                         Logger.Verbose("Plugin loaded");
