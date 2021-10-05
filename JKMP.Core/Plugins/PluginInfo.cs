@@ -28,5 +28,10 @@ namespace JKMP.Core.Plugins
         /// </summary>
         [JsonProperty(Required = Required.Always)]
         public string? Version { get; set; }
+        
+        /// <summary>
+        /// Gets whether or not this plugin only contains content and no additional code.
+        /// </summary>
+        public bool OnlyContent { get; set; }
     }
 }

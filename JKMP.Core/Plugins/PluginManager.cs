@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,7 +11,7 @@ using Serilog;
 
 namespace JKMP.Core.Plugins
 {
-    public sealed class PluginManager
+    public sealed class PluginManager : IEnumerable<PluginContainer>
     {
         private readonly Dictionary<string, PluginContainer> loadedPlugins = new();
 
@@ -53,6 +54,13 @@ namespace JKMP.Core.Plugins
                     catch (JsonException ex)
                     {
                         throw new PluginLoadException("plugin.json is not formatted correctly", ex);
+                    }
+
+                    if (pluginInfo.OnlyContent)
+                    {
+                        pluginContainer = new PluginContainer(new ContentPlugin(), pluginInfo, null, pluginDirectory);
+                        loadedPlugins[pluginDirectory] = pluginContainer;
+                        continue;
                     }
 
                     string? entryFileName = FindPluginEntryFile(pluginDirectory);
@@ -180,6 +188,16 @@ namespace JKMP.Core.Plugins
                     Logger.Error(ex, "An unhandled exception was thrown");
                 }
             }
+        }
+
+        public IEnumerator<PluginContainer> GetEnumerator()
+        {
+            return loadedPlugins.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }
