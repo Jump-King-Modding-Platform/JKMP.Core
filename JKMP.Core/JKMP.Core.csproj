@@ -2,13 +2,14 @@
     <PropertyGroup>
         <TargetFramework>net462</TargetFramework>
         <PackageId>JKMP.Core</PackageId>
-        <Version>0.4.5</Version>
+        <Version>0.4.6</Version>
         <Authors>Skipcast</Authors>
         <Company>Jump King Multiplayer</Company>
         <PackageDescription>The core module of the Jump King Multiplayer mod.</PackageDescription>
         <RepositoryUrl>https://github.com/Jump-King-Multiplayer/JKMP.Core</RepositoryUrl>
         <Nullable>enable</Nullable>
         <LangVersion>9</LangVersion>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="Lib.Harmony" Version="2.1.1" />
