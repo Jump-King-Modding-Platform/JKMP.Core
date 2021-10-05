@@ -12,7 +12,8 @@ namespace JKMP.Core.Content
 
         public static string GetContentPath(string assetName)
         {
-            foreach (PluginContainer container in JKCore.Instance.Plugins)
+            // Search plugins starting from the last loaded plugin
+            foreach (PluginContainer container in JKCore.Instance.Plugins.Reverse())
             {
                 string contentRoot = container.ContentRoot;
 
@@ -26,13 +27,13 @@ namespace JKMP.Core.Content
                 if (File.Exists(pluginAssetPath))
                 {
                     LogRedirect();
-                    return pluginAssetPath;
+                    return "../" + pluginAssetPath;
                 }
 
                 if (File.Exists(Path.ChangeExtension(pluginAssetPath, ".xnb")))
                 {
                     LogRedirect();
-                    return pluginAssetPath;
+                    return "../" + pluginAssetPath;
                 }
             }
             
