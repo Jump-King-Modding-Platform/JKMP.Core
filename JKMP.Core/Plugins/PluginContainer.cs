@@ -1,5 +1,3 @@
-using System.IO;
-
 namespace JKMP.Core.Plugins
 {
     public class PluginContainer
