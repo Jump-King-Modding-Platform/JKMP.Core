@@ -20,6 +20,14 @@ namespace JKMP.Core.Plugins
         private static readonly Regex RgxLoaderFileName = new Regex(@"^JKMP\.(?:.*)Loader\.(?<name>.+)\.dll$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         private static readonly ILogger Logger = LogManager.CreateLogger<PluginManager>();
+
+        private static readonly JsonSerializerSettings SerializerSettings = new()
+        {
+            Converters =
+            {
+                new SemVersionConverter(),
+            }
+        };
         
         internal PluginManager()
         {
@@ -49,7 +57,7 @@ namespace JKMP.Core.Plugins
                     try
                     {
                         string jsonContents = File.ReadAllText(pluginMetaDataPath);
-                        pluginInfo = JsonConvert.DeserializeObject<PluginInfo>(jsonContents) ?? throw new JsonException("Deserialized plugin.json is null");
+                        pluginInfo = JsonConvert.DeserializeObject<PluginInfo>(jsonContents, SerializerSettings) ?? throw new JsonException("Deserialized plugin.json is null");
                     }
                     catch (JsonException ex)
                     {
@@ -64,6 +72,8 @@ namespace JKMP.Core.Plugins
                             ContentRoot = Path.Combine(pluginDirectory, "Content")
                         };
 
+                        pluginContainer.Plugin.Container = pluginContainer;
+
                         loadedPlugins[pluginDirectory] = pluginContainer;
                         continue;
                     }
@@ -74,29 +84,28 @@ namespace JKMP.Core.Plugins
                     {
                         throw new PluginLoadException($"Could not find main entry file.");
                     }
-                    else
-                    {
-                        string pluginExtension = Path.GetExtension(entryFileName);
-                        IPluginLoader? loader = FindLoaderByExtension(pluginExtension);
 
-                        if (loader == null)
-                            throw new PluginLoadException($"Could not find a loader than can load '{pluginExtension}' plugins.");
+                    string pluginExtension = Path.GetExtension(entryFileName);
+                    IPluginLoader? loader = FindLoaderByExtension(pluginExtension);
 
-                        Logger.Information(
-                            "Loading plugin '{name}' v{version} using {loaderName}",
-                            pluginInfo.Name,
-                            pluginInfo.Version,
-                            loader.GetType().Name
-                        );
+                    if (loader == null)
+                        throw new PluginLoadException($"Could not find a loader that can load '{pluginExtension}' plugins.");
 
-                        pluginContainer = loader.LoadPlugin(entryFileName, pluginInfo);
-                        pluginContainer.RootDirectory = pluginDirectory;
-                        pluginContainer.ContentRoot = Path.Combine(pluginDirectory, "Content");
+                    Logger.Information(
+                        "Loading plugin '{name}' v{version} using {loaderName}",
+                        pluginInfo.Name,
+                        pluginInfo.Version,
+                        loader.GetType().Name
+                    );
+
+                    pluginContainer = loader.LoadPlugin(entryFileName, pluginInfo);
+                    pluginContainer.RootDirectory = pluginDirectory;
+                    pluginContainer.ContentRoot = Path.Combine(pluginDirectory, "Content");
+                    pluginContainer.Plugin.Container = pluginContainer;
                         
-                        loadedPlugins[pluginDirectory] = pluginContainer;
+                    loadedPlugins[pluginDirectory] = pluginContainer;
 
-                        Logger.Verbose("Plugin loaded");
-                    }
+                    Logger.Verbose("Plugin loaded");
                 }
                 catch (PluginLoadException ex)
                 {

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Semver;
 
 namespace JKMP.Core.Plugins
 {
@@ -27,11 +28,13 @@ namespace JKMP.Core.Plugins
         /// Gets the version of this plugin.
         /// </summary>
         [JsonProperty(Required = Required.Always)]
-        public string? Version { get; set; }
+        public SemVersion? Version { get; set; }
         
         /// <summary>
         /// Gets whether or not this plugin only contains content and no additional code.
         /// </summary>
         public bool OnlyContent { get; set; }
+
+        public Dictionary<string, string>? Dependencies { get; set; } = new();
     }
 }
