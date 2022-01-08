@@ -78,11 +78,16 @@ namespace JKMP.Core.Configuration
             if (!sourceName.EndsWith(".json"))
                 sourceName += ".json";
             
-            var configFilePath = Path.Combine(owner.Container.ConfigRoot, sourceName);
+            string configFilePath = Path.Combine(owner.Container.ConfigRoot, sourceName);
+            string configDirPath = Path.GetDirectoryName(configFilePath)!;
 
             try
             {
                 var json = JsonConvert.SerializeObject(config, JsonSerializerSettings);
+                
+                if (!Directory.Exists(configDirPath))
+                    Directory.CreateDirectory(configDirPath);
+                
                 File.WriteAllText(configFilePath, json);
             }
             catch (Exception ex)
