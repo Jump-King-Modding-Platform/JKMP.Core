@@ -7,6 +7,7 @@ namespace JKMP.Core.Plugins
         public IPluginLoader? Loader { get; }
         public string RootDirectory { get; internal set; } = null!;
         public string ContentRoot { get; internal set; } = null!;
+        public string ConfigRoot { get; internal set; } = null!;
 
         public PluginContainer(Plugin plugin, PluginInfo info, IPluginLoader? loader)
         {

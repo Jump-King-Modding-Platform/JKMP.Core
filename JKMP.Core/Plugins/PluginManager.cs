@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using JKMP.Core.Configuration;
 using JKMP.Core.Logging;
 using Newtonsoft.Json;
 using Serilog;
@@ -101,8 +102,10 @@ namespace JKMP.Core.Plugins
                     pluginContainer = loader.LoadPlugin(entryFileName, pluginInfo);
                     pluginContainer.RootDirectory = pluginDirectory;
                     pluginContainer.ContentRoot = Path.Combine(pluginDirectory, "Content");
+                    pluginContainer.ConfigRoot = Path.Combine("JKMP", "Config", pluginInfo.Name!);
                     pluginContainer.Plugin.Container = pluginContainer;
-                        
+                    pluginContainer.Plugin.Configs = new PluginConfigs(pluginContainer.Plugin);
+
                     loadedPlugins[pluginDirectory] = pluginContainer;
 
                     Logger.Verbose("Plugin loaded");
