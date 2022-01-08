@@ -30,9 +30,10 @@ namespace JKMP.Core.Configuration
         /// </summary>
         /// <param name="sourceName">The name of the file to load. It will be appended with .json if it doesn't already end with it.</param>
         /// <param name="saveToDisk">If true the config will be saved to disk if it didn't exist.</param>
+        /// <param name="syncChanges">If true the config will be saved to disk after being loaded to sync any new members that may have been added or removed in a new version.</param>
         /// <exception cref="JsonException">Thrown if any deserialization or serialization issues occur while loading or saving the file.</exception>
         /// <exception cref="IOException">Thrown when an error occurs while loading or saving the file to disk.</exception>
-        public T LoadConfig<T>(string sourceName, bool saveToDisk = true) where T : class, new()
+        public T LoadConfig<T>(string sourceName, bool saveToDisk = true, bool syncChanges = true) where T : class, new()
         {
             if (!sourceName.EndsWith(".json"))
                 sourceName += ".json";
@@ -52,6 +53,9 @@ namespace JKMP.Core.Configuration
                     Logger.Error(ex, "Config file {sourceName} for plugin {pluginName} is not valid", owner.Info.Name);
                     throw;
                 }
+                
+                if (syncChanges)
+                    SaveConfig(config, sourceName);
             }
             else
             {
