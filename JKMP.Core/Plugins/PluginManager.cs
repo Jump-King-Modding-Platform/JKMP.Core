@@ -113,7 +113,7 @@ namespace JKMP.Core.Plugins
                     pluginContainer = loader.LoadPlugin(entryFileName, pluginInfo);
                     pluginContainer.RootDirectory = pluginDirectory;
                     pluginContainer.ContentRoot = Path.Combine(pluginDirectory, "Content");
-                    pluginContainer.ConfigRoot = Path.Combine("JKMP", "Config", pluginInfo.Name!);
+                    pluginContainer.ConfigRoot = Path.Combine("JKMP", "Configs", pluginInfo.Name!);
                     pluginContainer.Plugin.Container = pluginContainer;
                     pluginContainer.Plugin.Configs = new PluginConfigs(pluginContainer.Plugin);
                     pluginContainer.Plugin.Configs.JsonSerializerSettings = CreateDefaultJsonSerializerSettings();
