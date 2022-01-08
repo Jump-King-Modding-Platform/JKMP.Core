@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -8,6 +9,7 @@ using System.Text.RegularExpressions;
 using JKMP.Core.Configuration;
 using JKMP.Core.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Serilog;
 
 namespace JKMP.Core.Plugins
@@ -33,6 +35,15 @@ namespace JKMP.Core.Plugins
         internal PluginManager()
         {
             LoadPluginLoaders();
+        }
+
+        internal static JsonSerializerSettings CreateDefaultJsonSerializerSettings()
+        {
+            return new JsonSerializerSettings
+            {
+                Formatting = Formatting.Indented,
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
         }
 
         internal void LoadPlugins()
@@ -105,6 +116,7 @@ namespace JKMP.Core.Plugins
                     pluginContainer.ConfigRoot = Path.Combine("JKMP", "Config", pluginInfo.Name!);
                     pluginContainer.Plugin.Container = pluginContainer;
                     pluginContainer.Plugin.Configs = new PluginConfigs(pluginContainer.Plugin);
+                    pluginContainer.Plugin.Configs.JsonSerializerSettings = CreateDefaultJsonSerializerSettings();
 
                     loadedPlugins[pluginDirectory] = pluginContainer;
 

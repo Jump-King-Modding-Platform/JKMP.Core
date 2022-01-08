@@ -28,7 +28,7 @@ namespace JKMP.Core.Plugins
         /// <param name="settings">The new settings to use. Can be null to reset to default settings.</param>
         protected void SetJsonSerializationSettings(JsonSerializerSettings? settings)
         {
-            Configs.JsonSerializerSettings = settings;
+            Configs.JsonSerializerSettings = settings ?? PluginManager.CreateDefaultJsonSerializerSettings();
         }
     }
 }
