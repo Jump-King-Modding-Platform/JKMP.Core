@@ -2,7 +2,8 @@ name: Publish NuGet package
 
 on:
   push:
-    branches: [main, development]
+    tags:
+      - v*
 
 jobs:
   publish:
@@ -27,6 +28,6 @@ jobs:
     - name: Run tests
       run: dotnet test --no-build --verbosity normal
     - name: Package project
-      run: dotnet pack --no-build -c Release --include-source
+      run: dotnet pack --no-build -c Release
     - name: Publish package
       run: dotnet nuget push JKMP.Core/bin/Release/*.symbols.nupkg --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
