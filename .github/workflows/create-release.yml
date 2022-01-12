@@ -25,6 +25,12 @@ jobs:
           NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Build project
         run: dotnet build --no-restore -c Release
+      - name: Run tests
+        run: dotnet test --no-build --verbosity normal
+      - name: Package project
+        run: dotnet pack --no-build -c Release
+      - name: Publish package
+        run: dotnet nuget push JKMP.Core/bin/Release/*.symbols.nupkg --source https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
       - name: Package artifact
         uses: vimtor/action-zip@v1
         with:
