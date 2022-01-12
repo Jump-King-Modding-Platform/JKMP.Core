@@ -1,4 +1,4 @@
-name: Create GitHub release
+name: Publish NuGet package and create GitHub release
 
 on:
   push:
