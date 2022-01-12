@@ -1,0 +1,48 @@
+name: Create GitHub release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout files
+        uses: actions/checkout@v2
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+          source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Restore packages
+        run: dotnet restore
+        env:
+          NUGET_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build project
+        run: dotnet build --no-restore -c Release
+      - name: Package artifact
+        uses: vimtor/action-zip@v1
+        with:
+          files: >
+            JKMP.Core/bin/Release/net462/JKMP.Core.dll
+            JKMP.Core/bin/Release/net462/Serilog.dll
+            JKMP.Core/bin/Release/net462/Serilog.Expressions.dll
+            JKMP.Core/bin/Release/net462/Serilog.Sinks.Console.dll
+            JKMP.Core/bin/Release/net462/Serilog.Sinks.File.dll
+            JKMP.Core/bin/Release/net462/Serilog.Enrichers.Demystifier.dll
+            JKMP.Core/bin/Release/net462/Ben.Demystifier.dll
+            JKMP.Core/bin/Release/net462/0Harmony.dll
+          dest: out/JKMP.Core.zip
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          name: Modular release
+          artifacts: "out/JKMP.Core.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+          generateReleaseNotes: true
