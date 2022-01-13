@@ -44,6 +44,7 @@ jobs:
             JKMP.Core/bin/Release/net462/Ben.Demystifier.dll
             JKMP.Core/bin/Release/net462/0Harmony.dll
             JKMP.Core/bin/Release/net462/Semver.dll
+            JKMP.Core/bin/Release/net462/Newtonsoft.Json.dll
           dest: out/JKMP.Core.zip
       - name: Create release
         uses: ncipollo/release-action@v1
