@@ -14,8 +14,17 @@ using Serilog;
 
 namespace JKMP.Core.Plugins
 {
-    public sealed class PluginManager : IEnumerable<PluginContainer>
+    /// <summary>
+    /// Handles the discovery and initialization of plugin loaders.
+    /// It can be enumerated to get all the loaded plugins, or indexed to get a specific one, identified by its unique plugin name (e.g. MyPlugin). The indexer is case-insensitive.
+    /// </summary>
+    public sealed class PluginManager : IReadOnlyCollection<PluginContainer>, IReadOnlyDictionary<string, PluginContainer>
     {
+        /// <summary>
+        /// Gets the number of loaded plugins.
+        /// </summary>
+        public int Count => loadedPlugins.Count;
+        
         private readonly Dictionary<string, PluginContainer> loadedPlugins = new();
 
         private readonly List<IPluginLoader> loaders = new();
@@ -86,7 +95,7 @@ namespace JKMP.Core.Plugins
 
                         pluginContainer.Plugin.Container = pluginContainer;
 
-                        loadedPlugins[pluginDirectory] = pluginContainer;
+                        loadedPlugins[pluginDirectory.ToLowerInvariant()] = pluginContainer;
                         continue;
                     }
 
@@ -118,7 +127,7 @@ namespace JKMP.Core.Plugins
                     pluginContainer.Plugin.Configs = new PluginConfigs(pluginContainer.Plugin);
                     pluginContainer.Plugin.Configs.JsonSerializerSettings = CreateDefaultJsonSerializerSettings();
 
-                    loadedPlugins[pluginDirectory] = pluginContainer;
+                    loadedPlugins[pluginDirectory.ToLowerInvariant()] = pluginContainer;
 
                     Logger.Verbose("Plugin loaded");
                 }
@@ -222,14 +231,45 @@ namespace JKMP.Core.Plugins
             }
         }
 
-        public IEnumerator<PluginContainer> GetEnumerator()
-        {
-            return loadedPlugins.Values.GetEnumerator();
-        }
+        IEnumerator<KeyValuePair<string, PluginContainer>> IEnumerable<KeyValuePair<string, PluginContainer>>.GetEnumerator() => loadedPlugins.GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        /// <summary>
+        /// Gets an enumerator that iterates through the containers of the loaded plugins.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<PluginContainer> GetEnumerator() => loadedPlugins.Values.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        /// <summary>
+        /// Determines whether the plugin with the specified name is loaded.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public bool ContainsKey(string key) => loadedPlugins.ContainsKey(key.ToLowerInvariant());
+
+        /// <summary>
+        /// Determines whether the plugin with the specified name is loaded and returns the plugin container if it is.
+        /// </summary>
+        /// <param name="key">The unique name of the plugin. It is case-insensitive.</param>
+        /// <param name="value">If the method returns true, this value is set to the value of the found plugin container.</param>
+        /// <returns>True if the plugin is loaded.</returns>
+        public bool TryGetValue(string key, out PluginContainer value) => loadedPlugins.TryGetValue(key.ToLowerInvariant(), out value);
+
+        /// <summary>
+        /// Gets the plugin container of the plugin with the specified unique name. The name is case-insensitive.
+        /// </summary>
+        /// <param name="key"></param>
+        public PluginContainer this[string key] => loadedPlugins[key.ToLowerInvariant()];
+
+        /// <summary>
+        /// Gets a collection of all the loaded plugin names.
+        /// </summary>
+        public IEnumerable<string> Keys => loadedPlugins.Keys;
+        
+        /// <summary>
+        /// Gets a collection of all the loaded plugin containers.
+        /// </summary>
+        public IEnumerable<PluginContainer> Values => loadedPlugins.Values;
     }
 }

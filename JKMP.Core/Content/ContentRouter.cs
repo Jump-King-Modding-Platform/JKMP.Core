@@ -13,7 +13,7 @@ namespace JKMP.Core.Content
         public static string GetContentPath(string assetName)
         {
             // Search plugins starting from the last loaded plugin
-            foreach (PluginContainer container in JKCore.Instance.Plugins.Reverse())
+            foreach (PluginContainer container in JKCore.Instance.Plugins.Values.Reverse())
             {
                 string contentRoot = container.ContentRoot;
 
