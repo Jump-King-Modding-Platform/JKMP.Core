@@ -4,6 +4,9 @@ using Semver;
 
 namespace JKMP.Core.Plugins
 {
+    /// <summary>
+    /// Contains metadata about a plugin, usually loaded from a plugin's manifest file 'plugin.json'.
+    /// </summary>
     public sealed class PluginInfo
     {
         /// <summary>
@@ -35,6 +38,9 @@ namespace JKMP.Core.Plugins
         /// </summary>
         public bool OnlyContent { get; set; }
 
+        /// <summary>
+        /// Gets the dependencies of this plugin. The key is the plugin name and the value is the version.
+        /// </summary>
         public Dictionary<string, string>? Dependencies { get; set; } = new();
     }
 }

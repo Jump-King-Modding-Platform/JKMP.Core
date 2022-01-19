@@ -4,11 +4,15 @@ using JKMP.Core.Logging;
 
 namespace JKMP.Core
 {
+    /// <summary>
+    /// The entry point for the JKMP mod loader.
+    /// </summary>
     public static class JKMP
     {
-#pragma warning disable 8618
-        public static JKCore Core { get; private set; }
-#pragma warning restore 8618
+        /// <summary>
+        /// Gets the core manager of JKMP which holds all plugins.
+        /// </summary>
+        public static JKCore Core { get; private set; } = null!;
 
         public static void Initialize()
         {

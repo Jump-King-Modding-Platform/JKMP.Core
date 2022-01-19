@@ -8,7 +8,17 @@ namespace JKMP.Core.Plugins
     /// </summary>
     public class PluginLoadException : Exception
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PluginLoadException"/> and sets the message.
+        /// </summary>
+        /// <param name="message"></param>
         public PluginLoadException(string message) : base(message) { }
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PluginLoadException"/> and sets the message and inner exception.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="innerException"></param>
         public PluginLoadException(string message, Exception innerException) : base(message, innerException) { }
     }
     
@@ -17,8 +27,22 @@ namespace JKMP.Core.Plugins
     /// </summary>
     public class PluginNotFoundException : FileNotFoundException
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PluginNotFoundException"/>.
+        /// </summary>
         public PluginNotFoundException() { }
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PluginNotFoundException"/> and sets the message.
+        /// </summary>
+        /// <param name="message"></param>
         public PluginNotFoundException(string message) : base(message) { }
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PluginNotFoundException"/> and sets the message and file name.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="fileName"></param>
         public PluginNotFoundException(string message, string fileName) : base(message, fileName) { }
     }
 

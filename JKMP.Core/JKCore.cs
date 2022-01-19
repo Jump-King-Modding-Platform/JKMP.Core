@@ -7,8 +7,14 @@ using Serilog;
 
 namespace JKMP.Core
 {
+    /// <summary>
+    /// The core of JKMP. This class is mainly responsible for loading all plugins.
+    /// </summary>
     public sealed class JKCore
     {
+        /// <summary>
+        /// Gets the plugin manager that handles all plugins.
+        /// </summary>
         public PluginManager Plugins { get; }
         
         internal static JKCore Instance { get; private set; }

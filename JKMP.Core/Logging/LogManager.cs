@@ -9,6 +9,9 @@ using Serilog.Templates.Themes;
 
 namespace JKMP.Core.Logging
 {
+    /// <summary>
+    /// Handles application logging, you should use this when you want to log something instead of using Console.WriteLine for example.
+    /// </summary>
     public static class LogManager
     {
         /// <summary>
