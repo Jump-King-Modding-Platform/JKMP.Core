@@ -1,8 +1,10 @@
 using System;
+using System.Reflection;
 using HarmonyLib;
 using JKMP.Core.Content;
 using JKMP.Core.Logging;
 using JKMP.Core.Plugins;
+using Semver;
 using Serilog;
 
 namespace JKMP.Core
@@ -17,6 +19,11 @@ namespace JKMP.Core
         /// </summary>
         public PluginManager Plugins { get; }
         
+        /// <summary>
+        /// Gets the version of Core.
+        /// </summary>
+        public SemVersion Version { get; }
+        
         internal static JKCore Instance { get; private set; } = null!;
         
         private readonly Harmony harmony;
@@ -29,8 +36,10 @@ namespace JKMP.Core
                 throw new InvalidOperationException("There can only be one JKCore instance");
             
             Instance = this;
-            
-            Logger.Information("Initializing JKMP!");
+
+            Version = new SemVersion(Assembly.GetExecutingAssembly().GetName().Version);
+
+            Logger.Information("Initializing JKMP v{version}!", Version);
             
             harmony = new Harmony("com.jkmp.core");
             harmony.PatchAll(typeof(JKCore).Assembly);
