@@ -17,7 +17,7 @@ namespace JKMP.Core
         /// </summary>
         public PluginManager Plugins { get; }
         
-        internal static JKCore Instance { get; private set; }
+        internal static JKCore Instance { get; private set; } = null!;
         
         private readonly Harmony harmony;
 

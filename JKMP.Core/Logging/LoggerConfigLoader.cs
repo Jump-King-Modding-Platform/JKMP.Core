@@ -38,7 +38,7 @@ namespace JKMP.Core.Logging
                 {
                     LogConfig = JsonConvert.DeserializeObject<Config>(File.ReadAllText(logConfigFileName), serializerSettings)!;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     // ignore
                 }
