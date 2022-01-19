@@ -35,7 +35,7 @@ namespace JKMP.Core.Plugins
         /// </summary>
         public string ConfigRoot { get; internal set; } = null!;
 
-        public PluginContainer(Plugin plugin, PluginInfo info, IPluginLoader? loader)
+        internal PluginContainer(Plugin plugin, PluginInfo info, IPluginLoader? loader)
         {
             Plugin = plugin;
             Info = info;

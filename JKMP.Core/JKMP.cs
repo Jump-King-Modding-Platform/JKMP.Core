@@ -14,7 +14,7 @@ namespace JKMP.Core
         /// </summary>
         public static JKCore Core { get; private set; } = null!;
 
-        public static void Initialize()
+        internal static void Initialize()
         {
             // todo: use a commandline library
             if (Environment.GetCommandLineArgs().Any(arg => arg.ToLowerInvariant() == "--console" || arg.ToLowerInvariant() == "-c"))

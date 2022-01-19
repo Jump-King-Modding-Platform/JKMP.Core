@@ -4,7 +4,7 @@ using Semver;
 
 namespace JKMP.Core.Plugins
 {
-    public class SemVersionConverter : JsonConverter<SemVersion>
+    internal class SemVersionConverter : JsonConverter<SemVersion>
     {
         public override void WriteJson(JsonWriter writer, SemVersion? value, JsonSerializer serializer)
         {
