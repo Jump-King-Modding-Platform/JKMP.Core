@@ -14,7 +14,10 @@ namespace JKMP.Core
         /// </summary>
         public static JKCore Core { get; private set; } = null!;
 
-        internal static void Initialize()
+        /// <summary>
+        /// Initializes the JKMP framework. Do not call this, it is only public because the game needs to call it.
+        /// </summary>
+        public static void Initialize()
         {
             // todo: use a commandline library
             if (Environment.GetCommandLineArgs().Any(arg => arg.ToLowerInvariant() == "--console" || arg.ToLowerInvariant() == "-c"))

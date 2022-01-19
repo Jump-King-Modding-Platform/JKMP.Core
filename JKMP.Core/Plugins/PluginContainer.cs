@@ -35,7 +35,13 @@ namespace JKMP.Core.Plugins
         /// </summary>
         public string ConfigRoot { get; internal set; } = null!;
 
-        internal PluginContainer(Plugin plugin, PluginInfo info, IPluginLoader? loader)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PluginContainer"/> class. Usually only used by plugin loaders.
+        /// </summary>
+        /// <param name="plugin">The loaded plugin.</param>
+        /// <param name="info">The metadata of the plugin, usually loaded from a plugin's manifest file 'plugin.json'.</param>
+        /// <param name="loader">The loaded that loaded the plugin.</param>
+        public PluginContainer(Plugin plugin, PluginInfo info, IPluginLoader? loader)
         {
             Plugin = plugin;
             Info = info;
