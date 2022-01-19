@@ -4,6 +4,8 @@ namespace JKMP.Core.Plugins
 {
     /// <summary>
     /// This class is used to find and load plugins at application startup.
+    /// The name of the class must be suffixed by "PluginLoader", and start with the name of the loader (e.g. "MyLoader").
+    /// Note that the assembly name must match JKMP.*Loader.MyLoader and end with the name of the plugin (e.g. "JKMP.Loader.MyLoader.dll").
     /// </summary>
     public interface IPluginLoader
     {
