@@ -13,8 +13,8 @@
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="JKMP.Facepunch.Steamworks.Win32" Version="2.5.0" />
+      <PackageReference Include="JKMP.GameDependencies" Version="1.0.0" />
       <PackageReference Include="Lib.Harmony" Version="2.1.1" />
-      <PackageReference Include="MonoGame.Framework.Portable" Version="3.7.1.189" PrivateAssets="all" />
       <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
       <PackageReference Include="Semver" Version="2.0.6" />
       <PackageReference Include="Serilog" Version="2.10.0" />
