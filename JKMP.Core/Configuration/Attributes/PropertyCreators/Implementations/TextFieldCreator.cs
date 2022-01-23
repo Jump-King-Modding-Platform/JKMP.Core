@@ -24,9 +24,9 @@ namespace JKMP.Core.Configuration.Attributes.PropertyCreators.Implementations
                 TrimWhitespace = attribute.TrimWhitespace,
             };
 
-            result.OnValueChanged += val =>
+            result.ValueChanged += val =>
             {
-                OnValueChanged?.Invoke(val);
+                ValueChanged?.Invoke(val);
             };
 
             return result;

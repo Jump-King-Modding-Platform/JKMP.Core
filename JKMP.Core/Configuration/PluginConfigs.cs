@@ -107,13 +107,14 @@ namespace JKMP.Core.Configuration
         /// Adds an menu in the settings under mods that will let the user modify the loaded config in game.
         /// Values are saved automatically when they are changed.
         /// </summary>
+        /// <param name="name">The name of the sub-menu.</param>
         /// <param name="sourceName">The source filename of the config.</param>
         /// <typeparam name="T">The type that contains the values of the config. Note that it needs to have the <see cref="SettingsMenuAttribute"/>.</typeparam>
         /// <returns></returns>
-        public IConfigMenu<T> CreateConfigMenu<T>(string sourceName) where T : class, new()
+        public IConfigMenu<T> CreateConfigMenu<T>(string name, string sourceName) where T : class, new()
         {
             var menu = new ReflectedConfigMenu<T>(owner, sourceName);
-            SettingsMenuManager.AddMenu(owner, menu);
+            SettingsMenuManager.AddMenu(owner, name, menu);
 
             return menu;
         }

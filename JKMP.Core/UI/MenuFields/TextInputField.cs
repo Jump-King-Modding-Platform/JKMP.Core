@@ -25,7 +25,7 @@ namespace JKMP.Core.UI.MenuFields
         public TextVisibility Visibility { get; set; }
         public bool Readonly { get; set; }
 
-        public Action<string>? OnValueChanged { get; set; }
+        public Action<string>? ValueChanged { get; set; }
 
         private SpriteFont font;
 
@@ -158,7 +158,7 @@ namespace JKMP.Core.UI.MenuFields
             if (Value != newValue)
             {
                 Value = newValue;
-                OnValueChanged?.Invoke(Value);
+                ValueChanged?.Invoke(Value);
             }
 
             SetFocus(false);

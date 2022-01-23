@@ -21,7 +21,6 @@ namespace JKMP.Core.Configuration.UI
         public IBTnode? MenuItem => menuItem;
 
         private MenuSelector? menuItem;
-        private string? name;
 
         private readonly Plugin owner;
         private readonly string sourceName;
@@ -34,22 +33,9 @@ namespace JKMP.Core.Configuration.UI
             this.sourceName = sourceName;
             
             Values = owner.Configs.LoadConfig<T>(sourceName);
-            ReadAttributes();
         }
 
-        private void ReadAttributes()
-        {
-            var settingsMenuAttr = Values.GetType().GetCustomAttribute(typeof(SettingsMenuAttribute)) as SettingsMenuAttribute;
-            
-            if (settingsMenuAttr == null)
-            {
-                throw new ConfigAttributeException("Config class must have SettingsMenuAttribute");
-            }
-
-            name = settingsMenuAttr.Name;
-        }
-
-        public MenuSelector CreateMenu(GuiFormat format, MenuSelector parent, List<IDrawable> drawables)
+        public MenuSelector CreateMenu(GuiFormat format, string name, MenuSelector parent, List<IDrawable> drawables)
         {
             var menu = new MenuSelector(format);
             CreateFields(menu, drawables);
@@ -80,8 +66,10 @@ namespace JKMP.Core.Configuration.UI
 
                 SettingsOptionAttribute optionAttribute = settingsOptionAttributes.Single();
 
-                if (!PropertyCreators.Values.TryGetValue(optionAttribute.GetType(), out var propertyCreatorType))
-                    throw new ConfigAttributeException($"No property reader found for type {optionAttribute.GetType()}");
+                var propertyCreatorType = optionAttribute.GetType().GetCustomAttribute<SettingsOptionCreatorAttribute>()?.Type;
+
+                if (propertyCreatorType == null)
+                    throw new ConfigAttributeException($"No SettingsOptionCreatorAttribute found on type {optionAttribute.GetType().FullName}");
 
                 if (propertyCreatorType.GetConstructor(Type.EmptyTypes) == null)
                     throw new ConfigAttributeException($"Property reader {propertyCreatorType} must have a default constructor");
@@ -95,9 +83,16 @@ namespace JKMP.Core.Configuration.UI
                 if (!propertyCreator.SupportedTypes.Contains(property.PropertyType))
                     throw new ConfigAttributeException($"Property type {property.PropertyType} is not supported by {propertyCreatorType}");
 
-                propertyCreator.OnValueChanged += newValue =>
+                propertyCreator.ValueChanged += newValue =>
                 {
-                    property.SetValue(Values, newValue);
+                    if (newValue.GetType() == property.PropertyType)
+                    {
+                        property.SetValue(Values, newValue);
+                    }
+                    else
+                    {
+                        property.SetValue(Values, Convert.ChangeType(newValue, property.PropertyType));
+                    }
 
                     try
                     {

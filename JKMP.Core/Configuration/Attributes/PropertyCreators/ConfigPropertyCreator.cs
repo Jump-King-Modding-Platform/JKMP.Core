@@ -9,7 +9,7 @@ namespace JKMP.Core.Configuration.Attributes.PropertyCreators
 {
     public abstract class ConfigPropertyCreator
     {
-        public Action<object>? OnValueChanged { get; set; }
+        public Action<object>? ValueChanged { get; set; }
         
         public abstract ICollection<Type> SupportedTypes { get; }
 

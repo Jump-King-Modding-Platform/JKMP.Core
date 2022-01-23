@@ -1,16 +1,17 @@
 using System;
+using JKMP.Core.Configuration.Attributes.PropertyCreators.Implementations;
 using JKMP.Core.UI.MenuFields;
 
 namespace JKMP.Core.Configuration.Attributes
 {
     [AttributeUsage(AttributeTargets.Class)]
-    public sealed class SettingsMenuAttribute : Attribute
+    public sealed class SettingsOptionCreatorAttribute : Attribute
     {
-        public string Name { get; }
+        public Type Type { get; }
 
-        public SettingsMenuAttribute(string name)
+        public SettingsOptionCreatorAttribute(Type type)
         {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
+            Type = type ?? throw new ArgumentNullException(nameof(type));
         }
     }
 
@@ -20,6 +21,8 @@ namespace JKMP.Core.Configuration.Attributes
         public string? Name { get; set; }
     }
 
+    
+    [SettingsOptionCreator(typeof(TextFieldCreator))]
     public class TextFieldAttribute : SettingsOptionAttribute
     {
         public TextVisibility Visibility { get; set; } = TextVisibility.Visible;
@@ -27,6 +30,7 @@ namespace JKMP.Core.Configuration.Attributes
         public bool TrimWhitespace { get; set; } = true;
     }
     
+    [SettingsOptionCreator(typeof(SliderFieldCreator))]
     public class SliderFieldAttribute : SettingsOptionAttribute
     {
         public float MinValue { get; set; } = 0;
@@ -34,6 +38,7 @@ namespace JKMP.Core.Configuration.Attributes
         public float StepSize { get; set; } = 0.1f;
     }
 
+    [SettingsOptionCreator(typeof(CheckboxFieldCreator))]
     public class CheckboxFieldAttribute : SettingsOptionAttribute
     {
     }
