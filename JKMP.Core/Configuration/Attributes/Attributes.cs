@@ -23,7 +23,8 @@ namespace JKMP.Core.Configuration.Attributes
 
     
     [SettingsOptionCreator(typeof(TextFieldCreator))]
-    public class TextFieldAttribute : SettingsOptionAttribute
+    [AttributeUsage(AttributeTargets.Property)]
+    public sealed class TextFieldAttribute : SettingsOptionAttribute
     {
         public TextVisibility Visibility { get; set; } = TextVisibility.Visible;
         public int MaxLength { get; set; }
@@ -31,7 +32,8 @@ namespace JKMP.Core.Configuration.Attributes
     }
     
     [SettingsOptionCreator(typeof(SliderFieldCreator))]
-    public class SliderFieldAttribute : SettingsOptionAttribute
+    [AttributeUsage(AttributeTargets.Property)]
+    public sealed class SliderFieldAttribute : SettingsOptionAttribute
     {
         public float MinValue { get; set; } = 0;
         public float MaxValue { get; set; } = 1;
@@ -39,7 +41,8 @@ namespace JKMP.Core.Configuration.Attributes
     }
 
     [SettingsOptionCreator(typeof(CheckboxFieldCreator))]
-    public class CheckboxFieldAttribute : SettingsOptionAttribute
+    [AttributeUsage(AttributeTargets.Property)]
+    public sealed class CheckboxFieldAttribute : SettingsOptionAttribute
     {
     }
 }
