@@ -53,7 +53,7 @@ namespace JKMP.Core.UI.MenuFields
 
         private readonly Sprite sliderLeft, sliderRight, sliderLine, sliderCursor;
         private float value;
-        private string name;
+        private string name = null!; // Name is set in the constructor through the Name property.
 
         private const int TextPadding = 2;
         private const int SliderLineWidth = 50;

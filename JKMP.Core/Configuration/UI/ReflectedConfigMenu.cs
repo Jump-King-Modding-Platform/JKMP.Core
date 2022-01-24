@@ -18,10 +18,6 @@ namespace JKMP.Core.Configuration.UI
     {
         public T Values { get; }
 
-        public IBTnode? MenuItem => menuItem;
-
-        private MenuSelector? menuItem;
-
         private readonly Plugin owner;
         private readonly string sourceName;
 

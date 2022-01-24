@@ -36,7 +36,7 @@ namespace JKMP.Core.UI.MenuFields
 
         private Vector2 textSize;
         private readonly SpriteFont font;
-        private string name;
+        private string name = null!; // Name is set in the constructor through the Name property.
 
         private const int TextPadding = 2;
 
