@@ -98,6 +98,7 @@ namespace JKMP.Core.UI.MenuFields
             Vector2 drawPos = new Vector2(x, y);
             TextHelper.DrawString(font, Name, drawPos, Color.White, Vector2.Zero);
             drawPos.X += textSize.X + TextPadding;
+            drawPos.Y += (int)(textSize.Y / 2f - sliderLeft.source.Height / 2f);
 
             // Draw the slider
             sliderLine.Draw(new Rectangle((int)(drawPos.X + sliderLeft.source.Width), (int)drawPos.Y, SliderLineWidth, sliderLine.source.Height));
@@ -110,7 +111,7 @@ namespace JKMP.Core.UI.MenuFields
 
         public Point GetSize()
         {
-            return new Point((int)(sliderLeft.source.Width + sliderRight.source.Width + SliderLineWidth + textSize.X + TextPadding), sliderLeft.source.Height);
+            return new Point((int)(sliderLeft.source.Width + sliderRight.source.Width + SliderLineWidth + textSize.X + TextPadding), (int)Math.Max(sliderLeft.source.Height, textSize.Y));
         }
     }
 }
