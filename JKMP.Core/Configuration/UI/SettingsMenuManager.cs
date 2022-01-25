@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using JKMP.Core.Logging;
 using JKMP.Core.Plugins;
+using JKMP.Core.UI;
+using JumpKing;
 using JumpKing.PauseMenu;
 using JumpKing.PauseMenu.BT;
-using JumpKing.Util;
+using Microsoft.Xna.Framework;
 using Serilog;
+using IDrawable = JumpKing.Util.IDrawable;
 
 namespace JKMP.Core.Configuration.UI
 {
@@ -16,19 +19,19 @@ namespace JKMP.Core.Configuration.UI
         private static readonly Dictionary<Plugin, MenuSelector> ModMenus = new();
 
         private static bool menusCreated;
-        private static MenuSelector? modsMenu;
+        private static PluginsMenu? modsMenu;
 
         private static readonly ILogger Logger = LogManager.CreateLogger(typeof(SettingsMenuManager));
         
         internal static void CreateMenus(GuiFormat guiFormat, MenuSelector menuSelector, List<IDrawable> drawables)
         {
-            CreateModsMenu(guiFormat, menuSelector, drawables);
+            CreateModsMenu(menuSelector, drawables);
             
             foreach (var (plugin, name, configMenu) in Menus)
             {
-                var modMenuSelector = GetOrAddModSettingsMenu(guiFormat, menuSelector, plugin, drawables);
+                var modMenuSelector = GetOrAddModSettingsMenu(PluginsMenu.PluginOptionsGuiFormat, menuSelector, plugin, drawables);
 
-                GuiFormat menuGuiFormat = guiFormat;
+                GuiFormat menuGuiFormat = PluginsMenu.PluginOptionsGuiFormat;
 
                 var menu = configMenu.CreateMenu(menuGuiFormat, name, modMenuSelector, drawables);
                 drawables.Add(menu);
@@ -39,7 +42,6 @@ namespace JKMP.Core.Configuration.UI
                 modMenu.Initialize();
             }
 
-            modsMenu!.Initialize();
             menusCreated = true;
         }
 
@@ -62,17 +64,17 @@ namespace JKMP.Core.Configuration.UI
                 return value;
 
             value = new MenuSelector(guiFormat);
-            modsMenu!.AddChild(new TextButton(plugin.Info.Name, value));
+            modsMenu!.AddChild(new TextButton(plugin.Info.Name, value, JKContentManager.Font.MenuFontSmall, Color.LightGray));
             
             drawables.Add(value);
             ModMenus.Add(plugin, value);
             return value;
         }
 
-        private static void CreateModsMenu(GuiFormat guiFormat, MenuSelector optionsMenu, List<IDrawable> drawables)
+        private static void CreateModsMenu(MenuSelector optionsMenu, List<IDrawable> drawables)
         {
-            modsMenu = new MenuSelector(guiFormat);
-            optionsMenu.AddChild(new TextButton("Mods", modsMenu));
+            modsMenu = new PluginsMenu();
+            optionsMenu.AddChild(new TextButton("Configure plugins", modsMenu));
             drawables.Add(modsMenu);
         }
     }
