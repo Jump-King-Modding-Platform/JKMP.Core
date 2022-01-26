@@ -16,7 +16,7 @@ namespace JKMP.Core.Configuration.UI
     internal static class SettingsMenuManager
     {
         private static readonly List<(Plugin, string, IConfigMenu)> Menus = new();
-        private static readonly Dictionary<Plugin, MenuSelector> ModMenus = new();
+        private static readonly Dictionary<Plugin, AdvancedMenuSelector> ModMenus = new();
 
         private static bool menusCreated;
         private static PluginsMenu? modsMenu;
@@ -34,12 +34,7 @@ namespace JKMP.Core.Configuration.UI
                 GuiFormat menuGuiFormat = PluginsMenu.PluginOptionsGuiFormat;
 
                 var menu = configMenu.CreateMenu(menuGuiFormat, name, modMenuSelector, drawables);
-                drawables.Add(menu);
-            }
-
-            foreach (var modMenu in ModMenus.Values)
-            {
-                modMenu.Initialize();
+                drawables.Add((IDrawable)menu);
             }
 
             menusCreated = true;
@@ -58,12 +53,12 @@ namespace JKMP.Core.Configuration.UI
             Menus.Add((owner, name, menu));
         }
 
-        private static MenuSelector GetOrAddModSettingsMenu(GuiFormat guiFormat, MenuSelector parent, Plugin plugin, List<IDrawable> drawables)
+        private static AdvancedMenuSelector GetOrAddModSettingsMenu(GuiFormat guiFormat, MenuSelector parent, Plugin plugin, List<IDrawable> drawables)
         {
-            if (ModMenus.TryGetValue(plugin, out MenuSelector? value))
+            if (ModMenus.TryGetValue(plugin, out AdvancedMenuSelector? value))
                 return value;
 
-            value = new MenuSelector(guiFormat);
+            value = new AdvancedMenuSelector(guiFormat);
             modsMenu!.AddChild(new TextButton(plugin.Info.Name, value, JKContentManager.Font.MenuFontSmall, Color.LightGray));
             
             drawables.Add(value);

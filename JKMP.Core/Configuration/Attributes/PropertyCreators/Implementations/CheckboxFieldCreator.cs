@@ -15,7 +15,7 @@ namespace JKMP.Core.Configuration.Attributes.PropertyCreators.Implementations
             typeof(bool)
         };
         
-        public override IMenuItem CreateField(object config, string fieldName, PropertyInfo propertyInfo, CheckboxFieldAttribute attribute, MenuSelector menu, List<IDrawable> drawables)
+        public override IMenuItem CreateField(object config, string fieldName, PropertyInfo propertyInfo, CheckboxFieldAttribute attribute, List<IDrawable> drawables)
         {
             var result = new CheckboxField(fieldName, (bool)propertyInfo.GetValue(config));
 

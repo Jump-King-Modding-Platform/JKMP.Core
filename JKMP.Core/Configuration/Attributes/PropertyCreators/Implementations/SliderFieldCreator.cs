@@ -16,7 +16,7 @@ namespace JKMP.Core.Configuration.Attributes.PropertyCreators.Implementations
             typeof(int)
         };
         
-        public override IMenuItem CreateField(object config, string fieldName, PropertyInfo propertyInfo, SliderFieldAttribute attribute, MenuSelector menu, List<IDrawable> drawables)
+        public override IMenuItem CreateField(object config, string fieldName, PropertyInfo propertyInfo, SliderFieldAttribute attribute, List<IDrawable> drawables)
         {
             var result = new SliderField(fieldName, (float)Convert.ChangeType(propertyInfo.GetValue(config), TypeCode.Single), attribute.MinValue, attribute.MaxValue, attribute.StepSize);
 

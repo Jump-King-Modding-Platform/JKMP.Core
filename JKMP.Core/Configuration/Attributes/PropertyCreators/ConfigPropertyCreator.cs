@@ -13,16 +13,16 @@ namespace JKMP.Core.Configuration.Attributes.PropertyCreators
         
         public abstract ICollection<Type> SupportedTypes { get; }
 
-        public abstract IMenuItem CreateField(object config, string fieldName, PropertyInfo propertyInfo, SettingsOptionAttribute attribute, MenuSelector menu, List<IDrawable> drawables);
+        public abstract IMenuItem CreateField(object config, string fieldName, PropertyInfo propertyInfo, SettingsOptionAttribute attribute, List<IDrawable> drawables);
     }
 
     public abstract class ConfigPropertyCreator<T> : ConfigPropertyCreator where T : SettingsOptionAttribute
     {
-        public sealed override IMenuItem CreateField(object config, string fieldName, PropertyInfo propertyInfo, SettingsOptionAttribute attribute, MenuSelector menu, List<IDrawable> drawables)
+        public sealed override IMenuItem CreateField(object config, string fieldName, PropertyInfo propertyInfo, SettingsOptionAttribute attribute, List<IDrawable> drawables)
         {
-            return CreateField(config, fieldName, propertyInfo, (T)attribute, menu, drawables);
+            return CreateField(config, fieldName, propertyInfo, (T)attribute, drawables);
         }
 
-        public abstract IMenuItem CreateField(object config, string fieldName, PropertyInfo propertyInfo, T attribute, MenuSelector menu, List<IDrawable> drawables);
+        public abstract IMenuItem CreateField(object config, string fieldName, PropertyInfo propertyInfo, T attribute, List<IDrawable> drawables);
     }
 }

@@ -7,6 +7,7 @@ using JKMP.Core.Configuration.Attributes;
 using JKMP.Core.Configuration.Attributes.PropertyCreators;
 using JKMP.Core.Logging;
 using JKMP.Core.Plugins;
+using JKMP.Core.UI;
 using JumpKing.PauseMenu;
 using JumpKing.PauseMenu.BT;
 using JumpKing.Util;
@@ -31,11 +32,10 @@ namespace JKMP.Core.Configuration.UI
             Values = owner.Configs.LoadConfig<T>(sourceName);
         }
 
-        public MenuSelector CreateMenu(GuiFormat format, string name, MenuSelector parent, List<IDrawable> drawables)
+        public IBTnode CreateMenu(GuiFormat format, string name, AdvancedMenuSelector parent, List<IDrawable> drawables)
         {
-            var menu = new MenuSelector(format);
+            var menu = new AdvancedMenuSelector(format);
             CreateFields(menu, drawables);
-            menu.Initialize();
             drawables.Add(menu);
 
             parent.AddChild(new TextButton(name, menu));
@@ -43,7 +43,7 @@ namespace JKMP.Core.Configuration.UI
             return menu;
         }
 
-        private void CreateFields(MenuSelector menu, List<IDrawable> drawables)
+        private void CreateFields(AdvancedMenuSelector menu, List<IDrawable> drawables)
         {            
             // Get all properties that are not static
             var properties = Values.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -103,7 +103,7 @@ namespace JKMP.Core.Configuration.UI
                 string fieldName = optionAttribute.Name ?? property.Name;
                 
                 // Create the field
-                IMenuItem field = propertyCreator.CreateField(Values, fieldName, property, optionAttribute, menu, drawables);
+                IMenuItem field = propertyCreator.CreateField(Values, fieldName, property, optionAttribute, drawables);
 
                 // Add the field to the menu. We need to cast the menu to IBTcomposite and the field to IBTnode
                 // because the MenuSelector.AddChild method has a constrained generic that we can't use at compile time
