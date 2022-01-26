@@ -14,7 +14,7 @@ namespace JKMP.Core.Patches
     {
         private static readonly MethodInfo CreateAudioOptionsMethod = AccessTools.Method(typeof(MenuFactory), "CreateAudioOptions");
         private static readonly FieldInfo DrawablesField = AccessTools.Field(typeof(MenuFactory), "m_drawables");
-        private static readonly MethodInfo CreateMultiplayerOptionsMenuMethod = AccessTools.Method(typeof(OptionsMenuPatch), nameof(CreateOptionsMenu));
+        private static readonly MethodInfo CreateOptionsMenuMethod = AccessTools.Method(typeof(OptionsMenuPatch), nameof(CreateOptionsMenu));
 
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
@@ -36,7 +36,7 @@ namespace JKMP.Core.Patches
                     yield return new CodeInstruction(OpCodes.Ldloc_0); // Load first local variable onto stack
                     yield return new CodeInstruction(OpCodes.Ldarg_0); // Load this onto stack
                     yield return new CodeInstruction(OpCodes.Ldfld, DrawablesField); // Load m_drawables from this onto stack
-                    yield return new CodeInstruction(OpCodes.Call, CreateMultiplayerOptionsMenuMethod); // Call CreateMultiplayerOptionsMenu
+                    yield return new CodeInstruction(OpCodes.Call, CreateOptionsMenuMethod); // Call CreateMultiplayerOptionsMenu
                 }
                 else
                 {
