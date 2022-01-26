@@ -25,6 +25,7 @@ namespace JKMP.Core.Configuration.UI
         
         internal static void CreateMenus(GuiFormat guiFormat, MenuSelector menuSelector, List<IDrawable> drawables)
         {
+            ModMenus.Clear(); // Clear old menus in case we're returning to the menu
             CreateModsMenu(menuSelector, drawables);
             
             foreach (var (plugin, name, configMenu) in Menus)
