@@ -8,10 +8,12 @@ using JKMP.Core.Configuration.Attributes.PropertyCreators;
 using JKMP.Core.Logging;
 using JKMP.Core.Plugins;
 using JKMP.Core.UI;
+using JumpKing;
 using JumpKing.PauseMenu;
 using JumpKing.PauseMenu.BT;
-using JumpKing.Util;
+using Microsoft.Xna.Framework;
 using Serilog;
+using IDrawable = JumpKing.Util.IDrawable;
 
 namespace JKMP.Core.Configuration.UI
 {
@@ -38,7 +40,7 @@ namespace JKMP.Core.Configuration.UI
             CreateFields(menu, drawables);
             drawables.Add(menu);
 
-            parent.AddChild(new TextButton(name, menu));
+            parent.AddChild("Options", new TextButton(name, menu, JKContentManager.Font.MenuFontSmall, Color.LightGray));
 
             return menu;
         }
@@ -105,9 +107,7 @@ namespace JKMP.Core.Configuration.UI
                 // Create the field
                 IMenuItem field = propertyCreator.CreateField(Values, fieldName, property, optionAttribute, drawables);
 
-                // Add the field to the menu. We need to cast the menu to IBTcomposite and the field to IBTnode
-                // because the MenuSelector.AddChild method has a constrained generic that we can't use at compile time
-                ((IBTcomposite)menu).AddChild((IBTnode)field);
+                menu.AddChild((IBTnode)field);
             }
         }
     }

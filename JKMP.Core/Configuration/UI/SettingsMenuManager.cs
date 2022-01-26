@@ -59,7 +59,7 @@ namespace JKMP.Core.Configuration.UI
                 return value;
 
             value = new AdvancedMenuSelector(guiFormat);
-            modsMenu!.AddChild(new TextButton(plugin.Info.Name, value, JKContentManager.Font.MenuFontSmall, Color.LightGray));
+            modsMenu!.AddChild("Plugins", new TextButton(plugin.Info.Name, value, JKContentManager.Font.MenuFontSmall, Color.LightGray));
             
             drawables.Add(value);
             ModMenus.Add(plugin, value);

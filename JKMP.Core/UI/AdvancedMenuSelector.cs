@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BehaviorTree;
+using HarmonyLib;
 using JumpKing;
 using JumpKing.Controller;
 using JumpKing.PauseMenu;
@@ -31,6 +32,9 @@ namespace JKMP.Core.UI
             }
         }
 
+        private readonly Dictionary<string, List<IMenuItem>> categories = new();
+        private readonly List<IMenuItem> uncategorizedItems = new();
+        private readonly Dictionary<string, string> categoryNames = new();
         private readonly GuiFrame bgFrame;
         private readonly bool autoSize;
 
@@ -49,21 +53,49 @@ namespace JKMP.Core.UI
 
         public IEnumerable<IMenuItem> GetMenuItems() => Children.Cast<IMenuItem>();
 
-        public virtual void AddChild<T>(T menuItem) where T : IBTnode, IMenuItem
+        public void AddChild<T>(string category, T menuItem) where T : IBTnode, IMenuItem
         {
-            base.AddChild(menuItem);
-            Invalidate();
+            AddChild(category, (IMenuItem)menuItem);
         }
         
-        public virtual void AddChild(IMenuItem menuItem)
+        public void AddChild(string? category, IMenuItem menuItem)
         {
             if (menuItem is not IBTnode item)
             {
                 throw new ArgumentException("Menu item must inherit IBTnode", nameof(menuItem));
             }
 
-            base.AddChild(item);
+            string? lowerCategory = category?.ToLowerInvariant();
+
+            if (lowerCategory == null)
+            {
+                uncategorizedItems.Add(menuItem);
+            }
+            else
+            {
+                if (!categoryNames.ContainsKey(lowerCategory))
+                {
+                    categoryNames.Add(lowerCategory, category!);
+                }
+
+                if (!categories.TryGetValue(lowerCategory, out var menuItems))
+                {
+                    menuItems = new List<IMenuItem>();
+                    categories.Add(lowerCategory, menuItems);
+                }
+
+                menuItems.Add(menuItem);
+            }
+
             Invalidate();
+        }
+
+        public new void AddChild(IBTnode node)
+        {
+            if (node is not IMenuItem item)
+                throw new ArgumentException("Node must implement IMenuItem", nameof(node));
+            
+            AddChild(null, item);
         }
 
         public void Invalidate()
@@ -149,12 +181,15 @@ namespace JKMP.Core.UI
                 }
             }
 
-            var hoverResult = Children[HoverItemIndex].Run(tickData);
-
-            if (hoverResult != BTresult.Failure && activeItem?.last_result != BTresult.Running)
+            if (Children.Length > 0)
             {
-                activeItem = Children[HoverItemIndex];
-                JKContentManager.Audio.Menu.OnSelect();
+                var hoverResult = Children[HoverItemIndex].Run(tickData);
+
+                if (hoverResult != BTresult.Failure && activeItem?.last_result != BTresult.Running)
+                {
+                    activeItem = Children[HoverItemIndex];
+                    JKContentManager.Audio.Menu.OnSelect();
+                }
             }
 
             return BTresult.Running;
@@ -194,6 +229,44 @@ namespace JKMP.Core.UI
 
         protected virtual void OnDirty()
         {
+            var newChildren = new List<IBTnode>();
+
+            /*// Add plugins title
+            newChildren.Add(new TextInfo("Plugins", Color.White));
+            
+            // Add plugin menus
+            foreach (var menu in pluginMenus)
+            {
+                newChildren.Add(menu);
+            }
+
+            // Add core options
+            newChildren.Add(new TextInfo("Core options", Color.White));
+            newChildren.Add(new TextButton("Load order", pluginLoadOrderMenu, JKContentManager.Font.MenuFontSmall, Color.LightGray));*/
+
+            // Add categorized items
+            foreach (KeyValuePair<string, List<IMenuItem>> kv in categories)
+            {
+                // The original name of the category which has casing kept intact
+                string displayName = categoryNames[kv.Key];
+
+                newChildren.Add(new TextInfo(displayName, Color.White));
+
+                foreach (IMenuItem menuItem in kv.Value)
+                {
+                    newChildren.Add((IBTnode)menuItem);
+                }
+            }
+            
+            // Add uncategorized items
+            foreach (IMenuItem item in uncategorizedItems)
+            {
+                newChildren.Add((IBTnode)item);
+            }
+
+            // Set children
+            Traverse.Create(this).Field<IBTnode[]>("m_children").Value = newChildren.ToArray();
+            
             activeItem = null;
             allItems = GetMenuItems().ToArray();
             bgFrame.SetBounds(autoSize ? guiFormat.CalculateBounds(allItems) : GetBackgroundRectangle());
