@@ -109,7 +109,32 @@ namespace JKMP.Core.UI
                 return;
             
             bgFrame.Draw();
-            guiFormat.DrawMenuItemsWithCursor(allItems, guiFormat.CalculateBounds(allItems), hoverItemIndex);
+            DrawMenuItems();
+        }
+
+        private void DrawMenuItems()
+        {
+            if (allItems == null)
+                return;
+
+            Vector2 drawPos = guiFormat.CalculateBounds(allItems).Location.ToVector2();
+            drawPos.Y += guiFormat.padding.top;
+
+            for (int i = 0; i < allItems.Length; i++)
+            {
+                float x = drawPos.X + guiFormat.padding.left;
+                float y = drawPos.Y;
+
+                if (i == hoverItemIndex && allItems[i] is not UnSelectable)
+                {
+                    Game1.spriteBatch.Draw(JKContentManager.GUI.Cursor, drawPos, Color.White);
+                    x += 5;
+                }
+
+                allItems[i].Draw((int)x, (int)y, hoverItemIndex == i);
+
+                drawPos.Y += guiFormat.element_margin + allItems[i].GetSize().Y;
+            }
         }
 
         protected override BTresult MyRun(TickData tickData)
@@ -230,19 +255,6 @@ namespace JKMP.Core.UI
         protected virtual void OnDirty()
         {
             var newChildren = new List<IBTnode>();
-
-            /*// Add plugins title
-            newChildren.Add(new TextInfo("Plugins", Color.White));
-            
-            // Add plugin menus
-            foreach (var menu in pluginMenus)
-            {
-                newChildren.Add(menu);
-            }
-
-            // Add core options
-            newChildren.Add(new TextInfo("Core options", Color.White));
-            newChildren.Add(new TextButton("Load order", pluginLoadOrderMenu, JKContentManager.Font.MenuFontSmall, Color.LightGray));*/
 
             // Add categorized items
             foreach (KeyValuePair<string, List<IMenuItem>> kv in categories)
