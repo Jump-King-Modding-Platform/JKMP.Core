@@ -55,7 +55,7 @@ jobs:
           regex: (v[0-9]+\.[0-9]+\.[0-9]+)(?:-(.+))?$
       - name: Create prerelease (if tag allows it)
         uses: ncipollo/release-action@v1
-        if: ${{ tag-match.outputs.group2 != '' }} # Tag has a -prerelease (or other) suffix
+        if: ${{ steps.tag-match.outputs.group2 != '' }} # Tag has a -prerelease (or other) suffix
         with:
           name: Modular prerelease
           artifacts: out/JKMP.Core.zip
@@ -65,7 +65,7 @@ jobs:
           prerelease: true
       - name: Create release (if tag allows it)
         uses: ncipollo/release-action@v1
-        if: ${{ tag-match.outputs.group2 == '' }} # Tag has no -prerelease (or other) suffix
+        if: ${{ steps.tag-match.outputs.group2 == '' }} # Tag has no -prerelease (or other) suffix
         with:
           name: Modular prerelease
           artifacts: out/JKMP.Core.zip
