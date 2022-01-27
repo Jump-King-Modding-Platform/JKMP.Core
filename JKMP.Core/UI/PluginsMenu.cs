@@ -42,12 +42,12 @@ namespace JKMP.Core.UI
 
         public PluginsMenu(List<IDrawable> drawables) : base(PluginsGuiFormat, autoSize: false)
         {
-            pluginLoadOrderMenu = new();
             drawables.Add(this);
-            drawables.Add(pluginLoadOrderMenu);
             
+            /*pluginLoadOrderMenu = new();
+            drawables.Add(pluginLoadOrderMenu);
             AddChild("Core options", new TextButton("Plugin load order", pluginLoadOrderMenu, JKContentManager.Font.MenuFontSmall, Color.LightGray));
-            SetCategoryOrder("Core options", 10); // Core options should be last
+            SetCategoryOrder("Core options", 10); // Core options should be last*/
         }
 
         public override void Draw()
