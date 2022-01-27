@@ -47,51 +47,28 @@ jobs:
             JKMP.Core/bin/Release/net462/Newtonsoft.Json.dll
             JKMP.Core/bin/Release/net462/Facepunch.Steamworks.Win32.dll
           dest: out/JKMP.Core.zip
-      - name: Upload artifact
-        uses: actions/upload-artifact@v2.3.1
+      - name: Set tag output
+        id: tag-match
+        uses: actions-ecosystem/action-regex-match@v2
         with:
-          name: JKMP.Core.zip
-          path: out/JKMP.Core.zip
-  release:
-    runs-on: ubuntu-latest
-    needs: package
-    
-    # Only create release if the tag does not have a -prerelease (or other) suffix
-    if: endsWith(github.ref, 'v[0-9]+\.[0-9]+\.[0-9]+')
-    
-    steps:
-      - name: Downlod artifact
-        uses: actions/download-artifact@v2.1.0
-        with:
-          name: JKMP.Core.zip
-          path: JKMP.Core.zip
-      - name: Create release
+          text: ${{ github.ref }}
+          regex: (v[0-9]+\.[0-9]+\.[0-9]+)(?:-(.+))?$
+      - name: Create prerelease (if tag allows it)
         uses: ncipollo/release-action@v1
-        with:
-          name: Modular release
-          artifacts: JKMP.Core.zip
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref }}
-          generateReleaseNotes: true
-  prerelease:
-    runs-on: ubuntu-latest
-    needs: package
-    
-    # Only create release if the tag ends with -prerelease (or other) suffix
-    if: endsWith(github.ref, 'v[0-9]+\.[0-9]+\.[0-9]+-.+')
-    
-    steps:
-      - name: Downlod artifact
-        uses: actions/download-artifact@v2.1.0
-        with:
-          name: JKMP.Core.zip
-          path: JKMP.Core.zip
-      - name: Create release
-        uses: ncipollo/release-action@v1
+        if: ${{ tag-match.outputs.group2 != '' }} # Tag has a -prerelease (or other) suffix
         with:
           name: Modular prerelease
-          artifacts: JKMP.Core.zip
+          artifacts: out/JKMP.Core.zip
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }}
           generateReleaseNotes: true
           prerelease: true
+      - name: Create release (if tag allows it)
+        uses: ncipollo/release-action@v1
+        if: ${{ tag-match.outputs.group2 == '' }} # Tag has no -prerelease (or other) suffix
+        with:
+          name: Modular prerelease
+          artifacts: out/JKMP.Core.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref }}
+          generateReleaseNotes: true
