@@ -69,9 +69,8 @@ namespace JKMP.Core.Configuration.UI
 
         private static void CreateModsMenu(MenuSelector optionsMenu, List<IDrawable> drawables)
         {
-            modsMenu = new PluginsMenu();
+            modsMenu = new PluginsMenu(drawables);
             optionsMenu.AddChild(new TextButton("Configure plugins", modsMenu));
-            drawables.Add(modsMenu);
         }
     }
 }
