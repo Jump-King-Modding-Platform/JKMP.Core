@@ -32,9 +32,12 @@ namespace JKMP.Core.UI
             }
         }
 
+        public GuiFormat GuiFormat => guiFormat;
+
         private readonly Dictionary<string, List<IMenuItem>> categories = new();
         private readonly List<IMenuItem> uncategorizedItems = new();
         private readonly Dictionary<string, string> categoryNames = new();
+        private readonly Dictionary<string, int> categoryOrder = new();
         private readonly GuiFrame bgFrame;
         private readonly bool autoSize;
 
@@ -60,7 +63,7 @@ namespace JKMP.Core.UI
         
         public void AddChild(string? category, IMenuItem menuItem)
         {
-            if (menuItem is not IBTnode item)
+            if (menuItem is not IBTnode)
             {
                 throw new ArgumentException("Menu item must inherit IBTnode", nameof(menuItem));
             }
@@ -82,6 +85,7 @@ namespace JKMP.Core.UI
                 {
                     menuItems = new List<IMenuItem>();
                     categories.Add(lowerCategory, menuItems);
+                    categoryOrder[lowerCategory] = 0;
                 }
 
                 menuItems.Add(menuItem);
@@ -96,6 +100,11 @@ namespace JKMP.Core.UI
                 throw new ArgumentException("Node must implement IMenuItem", nameof(node));
             
             AddChild(null, item);
+        }
+
+        public void SetCategoryOrder(string category, int order)
+        {
+            categoryOrder[category.ToLowerInvariant()] = order;
         }
 
         public void Invalidate()
@@ -239,25 +248,16 @@ namespace JKMP.Core.UI
 
         private Rectangle GetBackgroundRectangle()
         {
-            var result = new Rectangle();
-
-            var bounds = guiFormat.anchor_bounds;
-            var margin = guiFormat.margin;
-            
-            result.X = bounds.X + margin.left;
-            result.Y = bounds.Y + margin.bottom;
-            result.Width = bounds.Width - margin.left - margin.right;
-            result.Height = bounds.Height - margin.top - margin.bottom;
-            
-            return result;
+            return guiFormat.GetBounds();
         }
 
         protected virtual void OnDirty()
         {
             var newChildren = new List<IBTnode>();
 
-            // Add categorized items
-            foreach (KeyValuePair<string, List<IMenuItem>> kv in categories)
+            // Add categorized items, order by custom order then alphabetical
+            var orderedCategories = categories.OrderBy(kv => categoryOrder[kv.Key]).ThenBy(kv => kv.Key);
+            foreach (KeyValuePair<string, List<IMenuItem>> kv in orderedCategories)
             {
                 // The original name of the category which has casing kept intact
                 string displayName = categoryNames[kv.Key];
