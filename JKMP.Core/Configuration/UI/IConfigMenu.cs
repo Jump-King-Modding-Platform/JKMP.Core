@@ -42,7 +42,7 @@ namespace JKMP.Core.Configuration.UI
         }
 
         /// <inheritdoc />
-        public delegate void PropertyChangedEventHandler(object sender, PropertyChangedEventArgs propertyName);
+        public delegate void PropertyChangedEventHandler(object sender, PropertyChangedEventArgs args);
 
         /// <summary>
         /// Invoked when a property changes.
