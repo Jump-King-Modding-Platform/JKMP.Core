@@ -85,16 +85,17 @@ namespace JKMP.Core.Configuration.UI
 
                 propertyCreator.ValueChanged += newValue =>
                 {
-                    PropertyChanged?.Invoke(this, new IConfigMenu.PropertyChangedEventArgs(property.Name, newValue));
-                    
                     if (newValue.GetType() == property.PropertyType)
                     {
                         property.SetValue(Values, newValue);
                     }
                     else
                     {
-                        property.SetValue(Values, Convert.ChangeType(newValue, property.PropertyType));
+                        newValue = Convert.ChangeType(newValue, property.PropertyType);
+                        property.SetValue(Values, newValue);
                     }
+                    
+                    PropertyChanged?.Invoke(this, new IConfigMenu.PropertyChangedEventArgs(property.Name, newValue));
 
                     try
                     {
