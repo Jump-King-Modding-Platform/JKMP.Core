@@ -9,25 +9,68 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace JKMP.Core.UI.MenuFields
 {
+    /// <summary>
+    /// The visibility of the text in a <see cref="TextInputField"/>.
+    /// </summary>
     public enum TextVisibility
     {
+        /// <summary>
+        /// The text is visible at all times. This is the default value.
+        /// </summary>
         Visible,
+        
+        /// <summary>
+        /// The text is always masked (i.e. replaced with asterisks).
+        /// </summary>
         Hidden,
+        
+        /// <summary>
+        /// The text is only visible when the field is focused and text can be edited.
+        /// </summary>
         HiddenWhenUnfocused
     }
     
+    /// <summary>
+    /// A text field that can be used to enter text with optional masking.
+    /// </summary>
     public class TextInputField : IBTnode, IMenuItem
     {
+        /// <summary>
+        /// The name of the field.
+        /// </summary>
         public string Name { get; set; }
+        
+        /// <summary>
+        /// The value of the field.
+        /// </summary>
         public string Value { get; set; }
+        
+        /// <summary>
+        /// The maximum length of the value.
+        /// </summary>
         public int MaxLength { get; set; }
+        
+        /// <summary>
+        /// If true, the value is trimmed from whitespace when it's set.
+        /// </summary>
         public bool TrimWhitespace { get; set; }
+        
+        /// <summary>
+        /// The visibility of the text.
+        /// </summary>
         public TextVisibility Visibility { get; set; }
+        
+        /// <summary>
+        /// If true the text can't be changed.
+        /// </summary>
         public bool Readonly { get; set; }
 
+        /// <summary>
+        /// Invoked when the value of the field changes.
+        /// </summary>
         public Action<string>? ValueChanged { get; set; }
 
-        private SpriteFont font;
+        private readonly SpriteFont font;
 
         private bool focused;
         private string pendingValue;
@@ -35,6 +78,15 @@ namespace JKMP.Core.UI.MenuFields
         private bool drawCursor = true;
         private float elapsedTimeSinceCursorToggle;
         
+        /// <summary>
+        /// Instantiates a new <see cref="TextInputField"/>.
+        /// </summary>
+        /// <param name="name">The name of the field.</param>
+        /// <param name="initialValue">The initial value. Can not be null.</param>
+        /// <param name="maxLength">The maximum length of the value. Should not be more than about 10 at the moment due to limited screen width and no text scrolling.</param>
+        /// <param name="font">The font to use to draw the name and text.</param>
+        /// <exception cref="ArgumentOutOfRangeException">Thrown when maxLength is &lt;= 0.</exception>
+        /// <exception cref="ArgumentNullException">Throw when name or value is null.</exception>
         public TextInputField(string name, string initialValue = "", int maxLength = 15, SpriteFont? font = null)
         {
             if (maxLength <= 0) throw new ArgumentOutOfRangeException(nameof(maxLength));
@@ -45,6 +97,7 @@ namespace JKMP.Core.UI.MenuFields
             this.font = font ?? JKContentManager.Font.MenuFont;
         }
 
+        /// <inheritdoc />
         protected override BTresult MyRun(TickData tickData)
         {
             var menuController = ControllerManager.instance.MenuController;
@@ -184,6 +237,7 @@ namespace JKMP.Core.UI.MenuFields
             }
         }
 
+        /// <inheritdoc />
         public void Draw(int x, int y, bool selected)
         {
             Vector2 nameSize = font.MeasureString(Name + ":");
@@ -228,6 +282,7 @@ namespace JKMP.Core.UI.MenuFields
             }
         }
 
+        /// <inheritdoc />
         public Point GetSize()
         {
             Vector2 maxValueSize = font.MeasureString(new string('_', MaxLength));

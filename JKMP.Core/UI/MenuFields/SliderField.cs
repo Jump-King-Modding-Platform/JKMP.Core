@@ -9,8 +9,15 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace JKMP.Core.UI.MenuFields
 {
+    /// <summary>
+    /// A slider field that can be used to adjust a value between a min and max value.
+    /// </summary>
     public class SliderField : IBTnode, IMenuItem
     {
+        /// <summary>
+        /// The name of the field.
+        /// </summary>
+        /// <exception cref="ArgumentNullException"></exception>
         public string Name
         {
             get => name;
@@ -27,6 +34,9 @@ namespace JKMP.Core.UI.MenuFields
             }
         }
 
+        /// <summary>
+        /// The value of the field.
+        /// </summary>
         public float Value
         {
             get => value;
@@ -36,16 +46,33 @@ namespace JKMP.Core.UI.MenuFields
             }
         }
 
+        /// <summary>
+        /// The minimum value of the field.
+        /// </summary>
         public float MinValue { get; set; }
+        
+        /// <summary>
+        /// The maximum value of the field.
+        /// </summary>
         public float MaxValue { get; set; }
+        
+        /// <summary>
+        /// The amount the value changes when the slider cursor is moved.
+        /// </summary>
         public float StepSize { get; set; }
 
+        /// <summary>
+        /// The normalized value of the slider (between 0 and 1).
+        /// </summary>
         public float NormalizedValue
         {
             get => (Value - MinValue) / (MaxValue - MinValue);
             set => Value = MinValue + value * (MaxValue - MinValue);
         }
 
+        /// <summary>
+        /// Invoked when the value of the field changes.
+        /// </summary>
         public Action<float>? ValueChanged { get; set; }
 
         private Vector2 textSize;
@@ -58,6 +85,15 @@ namespace JKMP.Core.UI.MenuFields
         private const int TextPadding = 2;
         private const int SliderLineWidth = 50;
 
+        /// <summary>
+        /// Instantiates a new <see cref="SliderField"/>.
+        /// </summary>
+        /// <param name="name">The name of the field.</param>
+        /// <param name="initialValue">The initial value.</param>
+        /// <param name="minValue">The minimum value.</param>
+        /// <param name="maxValue">The maximum value.</param>
+        /// <param name="stepSize">The amount the value should increment/decrement.</param>
+        /// <param name="font">The font to use to draw the name.</param>
         public SliderField(string name, float initialValue, float minValue, float maxValue, float stepSize, SpriteFont? font = null)
         {
             this.font = font ?? JKContentManager.Font.MenuFont;
@@ -72,6 +108,7 @@ namespace JKMP.Core.UI.MenuFields
             sliderCursor = JKContentManager.GUI.SliderCursor;
         }
 
+        /// <inheritdoc />
         protected override BTresult MyRun(TickData tickData)
         {
             var padState = ControllerManager.instance.MenuController.GetPadState();
@@ -92,6 +129,7 @@ namespace JKMP.Core.UI.MenuFields
             return BTresult.Success;
         }
 
+        /// <inheritdoc />
         public void Draw(int x, int y, bool selected)
         {
             // Draw the name
@@ -109,6 +147,7 @@ namespace JKMP.Core.UI.MenuFields
             sliderCursor.Draw(drawPos.X + sliderLeft.source.Width + (SliderLineWidth * NormalizedValue), drawPos.Y);
         }
 
+        /// <inheritdoc />
         public Point GetSize()
         {
             return new Point((int)(sliderLeft.source.Width + sliderRight.source.Width + SliderLineWidth + textSize.X + TextPadding), (int)Math.Max(sliderLeft.source.Height, textSize.Y));

@@ -104,16 +104,36 @@ namespace JKMP.Core.Configuration
         }
 
         /// <summary>
-        /// Adds an menu in the settings under mods that will let the user modify the loaded config in game.
+        /// Adds a menu in the settings that will let the user modify the loaded config in-game.
         /// Values are saved automatically when they are changed.
+        /// The properties are parsed by the following attributes:
+        /// <para>
+        /// <see cref="SettingsOptionAttribute"/> (and any class that inherits it)
+        /// To implement your own settings option attribute, inherit this class and add the <see cref="SettingsOptionCreatorAttribute"/>.
+        /// </para>
         /// </summary>
         /// <param name="name">The name of the sub-menu.</param>
         /// <param name="sourceName">The source filename of the config.</param>
-        /// <typeparam name="T">The type that contains the values of the config. Note that it needs to have the <see cref="SettingsMenuAttribute"/>.</typeparam>
-        /// <returns></returns>
+        /// <typeparam name="T">The type that contains the values of the config.</typeparam>
+        /// <returns>Returns the config menu. With it you can access the config or subscribe to an event that is invoked when any value changes.</returns>
         public IConfigMenu<T> CreateConfigMenu<T>(string name, string sourceName) where T : class, new()
         {
-            var menu = new ReflectedConfigMenu<T>(owner, sourceName);
+            return CreateConfigMenu<ReflectedConfigMenu<T>, T>(name, sourceName, menuName => new ReflectedConfigMenu<T>(owner, menuName));
+        }
+        
+        /// <summary>
+        /// Adds a custom menu in the settings that will let the user modify the loader config in-game.
+        /// </summary>
+        /// <param name="name">The name of the menu.</param>
+        /// <param name="sourceName">The source filename of the config.</param>
+        /// <param name="configMenuFactory">The factory func that is invoked to create the config menu. The passed parameters is the </param>
+        /// <typeparam name="TConfigMenuType">The type of the menu.</typeparam>
+        /// <typeparam name="TConfigType">The config type that this menu will be configuring.</typeparam>
+        /// <returns>Returns the config menu. With it you can access the config or subscribe to an event that is invoked when any value changes.</returns>
+        public IConfigMenu<TConfigType> CreateConfigMenu<TConfigMenuType, TConfigType>(string name, string sourceName, Func<string, TConfigMenuType> configMenuFactory)
+            where TConfigType : class, new() where TConfigMenuType : IConfigMenu<TConfigType>
+        {
+            var menu = configMenuFactory(sourceName);
             SettingsMenuManager.AddMenu(owner, name, menu);
 
             return menu;

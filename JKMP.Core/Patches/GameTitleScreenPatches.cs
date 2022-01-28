@@ -30,7 +30,7 @@ namespace JKMP.Core.Patches
                 if (i > 1)
                 {
                     var previousInstruction = list[i - 1];
-                    bool previousInstructionIsField = previousInstruction.opcode == OpCodes.Ldfld && previousInstruction.operand == GameTitleScreenMenuField;
+                    bool previousInstructionIsField = previousInstruction.opcode == OpCodes.Ldfld && (FieldInfo)previousInstruction.operand == GameTitleScreenMenuField;
                     
                     if (instruction.Calls(IBTnodeIsRunningMethod) && previousInstructionIsField)
                     {

@@ -9,7 +9,7 @@ namespace JKMP.Core.UI
 {
     internal class PluginLoadOrderMenu : AdvancedMenuSelector
     {
-        private static readonly GuiFormat GuiFormat = new()
+        private new static readonly GuiFormat GuiFormat = new()
         {
             anchor_bounds = new Rectangle(0, 0, Game1.WIDTH, Game1.HEIGHT),
             all_margin = 16,

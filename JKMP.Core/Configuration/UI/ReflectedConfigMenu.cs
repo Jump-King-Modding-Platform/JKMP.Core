@@ -21,6 +21,8 @@ namespace JKMP.Core.Configuration.UI
     {
         public T Values { get; }
 
+        public event IConfigMenu.PropertyChangedEventHandler? PropertyChanged;
+
         private readonly Plugin owner;
         private readonly string sourceName;
 
@@ -83,6 +85,8 @@ namespace JKMP.Core.Configuration.UI
 
                 propertyCreator.ValueChanged += newValue =>
                 {
+                    PropertyChanged?.Invoke(this, new IConfigMenu.PropertyChangedEventArgs(property.Name, newValue));
+                    
                     if (newValue.GetType() == property.PropertyType)
                     {
                         property.SetValue(Values, newValue);

@@ -15,7 +15,7 @@ using IDrawable = JumpKing.Util.IDrawable;
 
 namespace JKMP.Core.UI
 {
-    public class PluginsMenu : AdvancedMenuSelector
+    internal class PluginsMenu : AdvancedMenuSelector
     {
         public static readonly GuiFormat PluginOptionsGuiFormat = new()
         {
