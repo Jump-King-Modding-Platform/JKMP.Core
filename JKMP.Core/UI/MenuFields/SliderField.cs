@@ -30,7 +30,8 @@ namespace JKMP.Core.UI.MenuFields
                     return;
                 
                 name = value;
-                textSize = font.MeasureString(value);
+                nameTextSize = font.MeasureString(value);
+                valueTextSize = font.MeasureString($" {Value:0.00}");
             }
         }
 
@@ -75,7 +76,8 @@ namespace JKMP.Core.UI.MenuFields
         /// </summary>
         public Action<float>? ValueChanged { get; set; }
 
-        private Vector2 textSize;
+        private Vector2 nameTextSize;
+        private Vector2 valueTextSize;
         private readonly SpriteFont font;
 
         private readonly Sprite sliderLeft, sliderRight, sliderLine, sliderCursor;
@@ -121,6 +123,9 @@ namespace JKMP.Core.UI.MenuFields
                 Value -= StepSize;
             if (padState.right)
                 Value += StepSize;
+            
+            // Round the value to 2 fractional digits
+            Value = (float)Math.Round(value, digits: 2, MidpointRounding.ToEven);
 
             // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (Value != oldValue)
@@ -135,8 +140,8 @@ namespace JKMP.Core.UI.MenuFields
             // Draw the name
             Vector2 drawPos = new Vector2(x, y);
             TextHelper.DrawString(font, Name, drawPos, Color.White, Vector2.Zero);
-            drawPos.X += textSize.X + TextPadding;
-            drawPos.Y += (int)(textSize.Y / 2f - sliderLeft.source.Height / 2f);
+            drawPos.X += nameTextSize.X + TextPadding;
+            drawPos.Y += (int)(nameTextSize.Y / 2f - sliderLeft.source.Height / 2f);
 
             // Draw the slider
             sliderLine.Draw(new Rectangle((int)(drawPos.X + sliderLeft.source.Width), (int)drawPos.Y, SliderLineWidth, sliderLine.source.Height));
@@ -145,12 +150,18 @@ namespace JKMP.Core.UI.MenuFields
 
             // Draw the cursor
             sliderCursor.Draw(drawPos.X + sliderLeft.source.Width + (SliderLineWidth * NormalizedValue), drawPos.Y);
+            
+            // Draw the value
+            var valueDrawPos = new Vector2(drawPos.X + SliderLineWidth + sliderLeft.source.Width + sliderRight.source.Width - 2, drawPos.Y);
+            TextHelper.DrawString(JKContentManager.Font.MenuFontSmall, $" {Value:0.00}", valueDrawPos, Color.White, new Vector2(0, 0.25f));
         }
 
         /// <inheritdoc />
         public Point GetSize()
         {
-            return new Point((int)(sliderLeft.source.Width + sliderRight.source.Width + SliderLineWidth + textSize.X + TextPadding), (int)Math.Max(sliderLeft.source.Height, textSize.Y));
+            int x = (int)(sliderLeft.source.Width + sliderRight.source.Width + SliderLineWidth + nameTextSize.X + TextPadding + valueTextSize.X);
+            int y = (int)Math.Max(sliderLeft.source.Height, nameTextSize.Y);
+            return new Point(x, y);
         }
     }
 }
