@@ -127,7 +127,7 @@ namespace JKMP.Core.Plugins
                     pluginContainer.Plugin.Configs = new PluginConfigs(pluginContainer.Plugin);
                     pluginContainer.Plugin.Configs.JsonSerializerSettings = CreateDefaultJsonSerializerSettings();
 
-                    loadedPlugins[pluginDirectory.ToLowerInvariant()] = pluginContainer;
+                    loadedPlugins[Path.GetFileName(pluginDirectory).ToLowerInvariant()] = pluginContainer;
 
                     Logger.Verbose("Plugin loaded");
                 }
