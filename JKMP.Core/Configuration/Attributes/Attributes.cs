@@ -38,6 +38,11 @@ namespace JKMP.Core.Configuration.Attributes
         /// The name of the property. If null the property name will be used.
         /// </summary>
         public string? Name { get; set; }
+        
+        /// <summary>
+        /// The description of the property. Only visible if value is not null or empty.
+        /// </summary>
+        public string? Description { get; set; }
     }
 
     /// <summary>

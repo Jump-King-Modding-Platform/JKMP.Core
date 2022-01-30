@@ -107,6 +107,12 @@ namespace JKMP.Core.Configuration.UI
                     }
                 };
 
+                // Create the description text if it's not empty/null
+                if (!string.IsNullOrEmpty(optionAttribute.Description))
+                {
+                    menu.AddChild(new TextInfo(optionAttribute.Description, Color.Gray, JKContentManager.Font.MenuFontSmall));
+                }
+
                 string fieldName = optionAttribute.Name ?? property.Name;
                 
                 // Create the field
