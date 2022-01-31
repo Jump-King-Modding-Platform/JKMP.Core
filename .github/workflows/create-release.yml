@@ -67,7 +67,7 @@ jobs:
         uses: ncipollo/release-action@v1
         if: ${{ steps.tag-match.outputs.group2 == '' }} # Tag has no -prerelease (or other) suffix
         with:
-          name: Modular prerelease
+          name: Modular release
           artifacts: out/JKMP.Core.zip
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref }}
