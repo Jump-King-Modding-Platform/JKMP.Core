@@ -1,4 +1,5 @@
 using JKMP.Core.Configuration;
+using JKMP.Core.Input;
 using Newtonsoft.Json;
 
 namespace JKMP.Core.Plugins
@@ -26,6 +27,14 @@ namespace JKMP.Core.Plugins
         /// Gets the configuration manager for this plugin.
         /// </summary>
         public PluginConfigs Configs { get; internal set; } = null!;
+
+        /// <summary>
+        /// Gets the input manager for this plugin. It can be used to register input bindings.
+        /// Registered input bindings will be configurable in-game.
+        /// Note that registering input bindings must be done during initialization, preferably from overriding the <see cref="CreateInputActions"/> method.
+        /// An exception will be thrown if an attempt to register input bindings is made after initialization.
+        /// </summary>
+        public PluginInput Input { get; internal set; } = null!;
         
         /// <summary>
         /// Called after all plugins have been loaded.
@@ -35,6 +44,21 @@ namespace JKMP.Core.Plugins
         /// Called right after the plugin was loaded.
         /// </summary>
         public virtual void OnLoaded() { }
+        
+        /// <summary>
+        /// <para>
+        /// Called when the plugin should create its input actions.
+        /// </para>
+        /// Example usage:
+        /// <code>
+        /// Input.RegisterAction("Jump", "space");
+        /// Input.RegisterAction("WalkLeft", "Walk left", "a");
+        ///
+        /// // Later on in the game...
+        /// Input.BindAction("Jump", pressed => { /* do something */ });
+        /// </code>
+        /// </summary>
+        public virtual void CreateInputActions() { }
 
         /// <summary>
         /// Sets the json serialization settings that is used when serializing and deserializing json files.

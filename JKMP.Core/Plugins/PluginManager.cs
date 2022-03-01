@@ -126,6 +126,7 @@ namespace JKMP.Core.Plugins
                     pluginContainer.Plugin.Container = pluginContainer;
                     pluginContainer.Plugin.Configs = new PluginConfigs(pluginContainer.Plugin);
                     pluginContainer.Plugin.Configs.JsonSerializerSettings = CreateDefaultJsonSerializerSettings();
+                    pluginContainer.Plugin.Input = new();
 
                     loadedPlugins[Path.GetFileName(pluginDirectory).ToLowerInvariant()] = pluginContainer;
 
@@ -148,6 +149,12 @@ namespace JKMP.Core.Plugins
                 }
 
                 pluginContainer?.Plugin.OnLoaded();
+            }
+
+            foreach (var pluginContainer in loadedPlugins.Values)
+            {
+                pluginContainer.Plugin.CreateInputActions();
+                pluginContainer.Plugin.Input.FinalizeActions();
             }
 
             foreach (var pluginContainer in loadedPlugins.Values)
