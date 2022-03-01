@@ -1,4 +1,5 @@
 using System;
+using JKMP.Core.Plugins;
 
 namespace JKMP.Core.Input
 {
@@ -8,6 +9,12 @@ namespace JKMP.Core.Input
     public class PluginInput
     {
         private bool finalized;
+        private readonly Plugin owner;
+
+        internal PluginInput(Plugin owner)
+        {
+            this.owner = owner;
+        }
 
         /// <summary>
         /// Register an input action that can be bound to a mouse or keyboard button.
@@ -33,12 +40,11 @@ namespace JKMP.Core.Input
         /// <exception cref="InvalidOperationException">Thrown if this method is called after the plugin has been initialized.</exception>
         public bool RegisterAction(string name, string uiName, string? defaultKey)
         {
+            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (uiName == null) throw new ArgumentNullException(nameof(uiName));
             ThrowIfFinalized();
-
-            if (defaultKey != null && !InputManager.ValidKeyNames.Contains(defaultKey))
-                throw new ArgumentException($"Invalid key name: {defaultKey}");
-
-            throw new NotImplementedException();
+            
+            return InputManager.RegisterAction(owner, name, uiName, defaultKey);
         }
 
         /// <summary>
@@ -57,8 +63,8 @@ namespace JKMP.Core.Input
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
             if (callback == null) throw new ArgumentNullException(nameof(callback));
-            
-            throw new NotImplementedException();
+
+            InputManager.BindAction(owner, name, callback);
         }
 
         /// <summary>
@@ -73,8 +79,8 @@ namespace JKMP.Core.Input
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
             if (callback == null) throw new ArgumentNullException(nameof(callback));
-            
-            throw new NotImplementedException();
+
+            return InputManager.UnbindAction(owner, name, callback);
         }
 
         /// <summary>

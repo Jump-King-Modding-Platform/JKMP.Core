@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JKMP.Core.Logging;
+using JKMP.Core.Plugins;
 using JKMP.Core.Windows;
 using Microsoft.Xna.Framework.Input;
 
@@ -66,7 +67,34 @@ namespace JKMP.Core.Input
                 _ => ValidKeyNames.Contains(name) ? WinNative.GetKeyName(KeyMapReversed[name]) : name
             };
         }
+        
+        public static void BindAction(Plugin? plugin, string actionName, PluginInput.BindActionCallback callback)
+        {
+            if (actionName == null) throw new ArgumentNullException(nameof(actionName));
+            if (callback == null) throw new ArgumentNullException(nameof(callback));
+            
+            
+        }
+        
+        public static bool UnbindAction(Plugin? plugin, string actionName, PluginInput.BindActionCallback callback)
+        {
+            if (actionName == null) throw new ArgumentNullException(nameof(actionName));
+            if (callback == null) throw new ArgumentNullException(nameof(callback));
 
+            return false;
+        }
+
+        public static bool RegisterAction(Plugin? plugin, string name, string uiName, string? defaultKey)
+        {
+            if (name == null) throw new ArgumentNullException(nameof(name));
+            if (uiName == null) throw new ArgumentNullException(nameof(uiName));
+
+            if (defaultKey != null && !ValidKeyNames.Contains(defaultKey))
+                throw new ArgumentException($"Invalid default key: {defaultKey}");
+
+            return false;
+        }
+        
         public static void Update()
         {
             pressedKeys.Clear();
