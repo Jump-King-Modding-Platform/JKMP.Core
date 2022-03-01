@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using JKMP.Core.Configuration;
 using JKMP.Core.Input;
 using Newtonsoft.Json;
@@ -12,6 +13,8 @@ namespace JKMP.Core.Plugins
     /// </summary>
     public abstract class Plugin
     {
+        internal static readonly Plugin InternalPlugin = new NoOpPlugin();
+        
         /// <summary>
         /// Gets the container that holds this plugin.
         /// Contains various information about this plugin, such as the relative path (from game root) to the content/configuration/root directory.
@@ -67,6 +70,24 @@ namespace JKMP.Core.Plugins
         protected void SetJsonSerializationSettings(JsonSerializerSettings? settings)
         {
             Configs.JsonSerializerSettings = settings ?? PluginManager.CreateDefaultJsonSerializerSettings();
+        }
+    }
+
+    /// <summary>
+    /// A no-op plugin that does nothing. Only used internally for built-in Core functionality in situations where a plugin is needed.
+    /// There should only be one instance of this plugin.
+    /// </summary>
+    internal class NoOpPlugin : Plugin
+    {
+        public NoOpPlugin()
+        {
+            Container = new PluginContainer(this, new PluginInfo
+            {
+                Name = "Core",
+                Description = "Internal plugin used for core functionality.",
+                Version = JKCore.Instance.Version,
+                Authors = new List<string>() { "JKMP" }
+            }, null);
         }
     }
 }

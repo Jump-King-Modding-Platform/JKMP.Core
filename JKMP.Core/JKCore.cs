@@ -47,6 +47,8 @@ namespace JKMP.Core
             
             Plugins = new();
             Plugins.LoadPlugins();
+
+            InputManager.Initialize();
             
             Events.PreGameUpdate += OnPreGameUpdate;
         }

@@ -14,6 +14,8 @@ namespace JKMP.Core.Input
         internal static readonly Dictionary<Keys, string> KeyMap = new();
         internal static readonly Dictionary<string, Keys> KeyMapReversed;
 
+        private static readonly Dictionary<Plugin, Bindings> PluginBindings = new();
+
         private static KeyboardState? lastKeyboardState;
         private static MouseState? lastMouseState;
         
@@ -72,8 +74,9 @@ namespace JKMP.Core.Input
         {
             if (actionName == null) throw new ArgumentNullException(nameof(actionName));
             if (callback == null) throw new ArgumentNullException(nameof(callback));
-            
-            
+
+            Bindings bindings = GetOrCreateBindings(plugin);
+            bindings.AddActionCallback(actionName, callback);
         }
         
         public static bool UnbindAction(Plugin? plugin, string actionName, PluginInput.BindActionCallback callback)
@@ -81,7 +84,8 @@ namespace JKMP.Core.Input
             if (actionName == null) throw new ArgumentNullException(nameof(actionName));
             if (callback == null) throw new ArgumentNullException(nameof(callback));
 
-            return false;
+            Bindings bindings = GetOrCreateBindings(plugin);
+            return bindings.RemoveActionCallback(actionName, callback);
         }
 
         public static bool RegisterAction(Plugin? plugin, string name, string uiName, string? defaultKey)
@@ -92,7 +96,17 @@ namespace JKMP.Core.Input
             if (defaultKey != null && !ValidKeyNames.Contains(defaultKey))
                 throw new ArgumentException($"Invalid default key: {defaultKey}");
 
-            return false;
+            Bindings bindings = GetOrCreateBindings(plugin);
+            return bindings.RegisterAction(name, uiName, defaultKey);
+        }
+
+        /// <summary>
+        /// Should be called after registering actions.
+        /// This method loads the saved or default key bindings for the registered actions.
+        /// </summary>
+        public static void Initialize()
+        {
+            
         }
         
         public static void Update()
@@ -149,8 +163,28 @@ namespace JKMP.Core.Input
                     releasedKeys.Add("mouse5");
             }
 
+            FireEvents();
+
             lastKeyboardState = keyboardState;
             lastMouseState = mouseState;
+        }
+
+        private static void FireEvents()
+        {
+            
+        }
+
+        private static Bindings GetOrCreateBindings(Plugin? plugin)
+        {
+            plugin ??= Plugin.InternalPlugin;
+
+            if (!PluginBindings.TryGetValue(plugin, out var result))
+            {
+                result = new();
+                PluginBindings.Add(plugin, result);
+            }
+            
+            return result;
         }
     }
 }
