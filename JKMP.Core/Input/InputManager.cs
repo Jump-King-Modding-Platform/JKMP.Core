@@ -5,6 +5,7 @@ using JKMP.Core.Logging;
 using JKMP.Core.Plugins;
 using JKMP.Core.Windows;
 using Microsoft.Xna.Framework.Input;
+using Steamworks;
 
 namespace JKMP.Core.Input
 {
@@ -26,6 +27,8 @@ namespace JKMP.Core.Input
 
         private static KeyboardState? lastKeyboardState;
         private static MouseState? lastMouseState;
+
+        private static bool steamOverlayOpened;
         
         /// <summary>
         /// A list of all the keys that was just pressed down.
@@ -83,7 +86,7 @@ namespace JKMP.Core.Input
                 _ => ValidKeyNames.Contains(name) ? WinNative.GetKeyName(KeyMapReversed[name]) : name
             };
         }
-        
+
         public static void BindAction(Plugin? plugin, string actionName, PluginInput.BindActionCallback callback)
         {
             if (actionName == null) throw new ArgumentNullException(nameof(actionName));
@@ -178,10 +181,22 @@ namespace JKMP.Core.Input
                         bindings.MapAction(actionInfo.DefaultKeyBind.Value, actionInfo.Name);
                 }
             }
+            
+            SteamFriends.OnGameOverlayActivated += OnGameOverlayToggled;
         }
-        
+
+        private static void OnGameOverlayToggled(bool open)
+        {
+            steamOverlayOpened = open;
+            PressedKeys.Clear();
+            ReleasedKeys.Clear();
+        }
+
         public static void Update()
         {
+            if (steamOverlayOpened)
+                return;
+            
             PressedKeys.Clear();
             ReleasedKeys.Clear();
             var keyboardState = Keyboard.GetState();
