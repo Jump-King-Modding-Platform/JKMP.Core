@@ -43,8 +43,8 @@ namespace JKMP.Core.Input
             if (name == null) throw new ArgumentNullException(nameof(name));
             if (uiName == null) throw new ArgumentNullException(nameof(uiName));
             ThrowIfFinalized();
-            
-            return InputManager.RegisterAction(owner, name, uiName, defaultKey);
+
+            return InputManager.RegisterAction(owner, name, uiName, defaultKey == null ? (InputManager.KeyBind?)null : (InputManager.KeyBind)defaultKey);
         }
 
         /// <summary>

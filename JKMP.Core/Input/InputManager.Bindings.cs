@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Microsoft.Xna.Framework.Input;
 
 namespace JKMP.Core.Input
 {
@@ -11,14 +12,96 @@ namespace JKMP.Core.Input
         {
             public readonly string Name;
             public readonly string UiName;
-            public readonly string? DefaultKey;
+            public readonly KeyBind? DefaultKeyBind;
 
-            public ActionInfo(string name, string uiName, string? defaultKey)
+            public ActionInfo(string name, string uiName, KeyBind? defaultKeyBind)
             {
                 Name = name;
                 UiName = uiName;
-                DefaultKey = defaultKey;
+                DefaultKeyBind = defaultKeyBind;
             }
+        }
+        
+        [Flags]
+        public enum ModifierKeys : short
+        {
+            None = 0,
+            LeftShift = 1 << 0,
+            RightShift = 1 << 1,
+            LeftControl = 1 << 2,
+            RightControl = 1 << 3,
+            LeftAlt = 1 << 4,
+            RightAlt = 1 << 5,
+            LeftWin = 1 << 6,
+            RightWin = 1 << 7,
+        }
+
+        public readonly struct KeyBind
+        {
+            public readonly ModifierKeys Modifiers;
+            public readonly string KeyName;
+
+            public KeyBind(string keyName, ModifierKeys modifiers)
+            {
+                KeyName = keyName?.ToLowerInvariant() ?? throw new ArgumentNullException(nameof(keyName));
+
+                if (!ValidKeyNames.Contains(keyName))
+                    throw new ArgumentException($"Invalid key name: {keyName}", nameof(keyName));
+                
+                Modifiers = modifiers;
+            }
+            
+            public KeyBind(string bindName)
+            {
+                if (bindName == null) throw new ArgumentNullException(nameof(bindName));
+                
+                if (!bindName.Contains("+"))
+                {
+                    Modifiers = ModifierKeys.None;
+                    KeyName = bindName.ToLowerInvariant();
+                    
+                    if (!ValidKeyNames.Contains(KeyName))
+                        throw new ArgumentException($"Invalid key name: {KeyName}", nameof(bindName));
+                }
+                else
+                {
+                    var parts = bindName.Split('+');
+                    string[] modifiers = parts[0].Split(',');
+                    KeyName = parts[1].ToLowerInvariant();
+
+                    if (!ValidKeyNames.Contains(KeyName))
+                        throw new ArgumentException($"Invalid key name: {KeyName}", nameof(bindName));
+
+                    Modifiers = ModifierKeys.None;
+
+                    foreach (string modifier in modifiers)
+                    {
+                        if (Enum.TryParse(modifier, ignoreCase: true, out ModifierKeys modifierKey))
+                        {
+                            Modifiers |= modifierKey;
+                        }
+                        else
+                        {
+                            throw new ArgumentException($"Unknown modifier key: {modifier}");
+                        }
+                    }
+                }
+            }
+
+            public override string ToString()
+            {
+                return $"[{Modifiers} + {KeyName}]";
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((int)Modifiers * 397) ^ KeyName.GetHashCode();
+                }
+            }
+
+            public static implicit operator KeyBind(string key) => new(key);
         }
 
         /// <summary>
@@ -29,7 +112,7 @@ namespace JKMP.Core.Input
             /// <summary>
             /// Maps input key names to one or several actions.
             /// </summary>
-            private readonly Dictionary<string, HashSet<string>> mappings = new();
+            private readonly Dictionary<KeyBind, HashSet<string>> mappings = new();
             
             /// <summary>
             /// Maps action names to one or several callbacks.
@@ -41,12 +124,9 @@ namespace JKMP.Core.Input
             /// </summary>
             private readonly Dictionary<string, ActionInfo> registeredActions = new();
 
-            public IReadOnlyCollection<string> GetActionsForKey(string keyName)
+            public IReadOnlyCollection<string> GetActionsForKey(KeyBind keyBind)
             {
-                if (!ValidKeyNames.Contains(keyName))
-                    throw new ArgumentException($"Invalid key name: {keyName}");
-                
-                if (!mappings.TryGetValue(keyName, out var actions))
+                if (!mappings.TryGetValue(keyBind, out var actions))
                     return Array.Empty<string>();
 
                 return new ReadOnlyCollection<string>(actions.ToList());
@@ -56,9 +136,9 @@ namespace JKMP.Core.Input
             /// Gets the mapped actions for a key. Note that this copies the list so it should not be called often due to GC pressure.
             /// </summary>
             /// <returns></returns>
-            public IReadOnlyDictionary<string, IReadOnlyCollection<ActionInfo>> GetMappings()
+            public IReadOnlyDictionary<KeyBind, IReadOnlyCollection<ActionInfo>> GetMappings()
             {
-                return new ReadOnlyDictionary<string, IReadOnlyCollection<ActionInfo>>(
+                return new ReadOnlyDictionary<KeyBind, IReadOnlyCollection<ActionInfo>>(
                     mappings.ToDictionary(
                         kv => kv.Key,
                         kv => (IReadOnlyCollection<ActionInfo>)new ReadOnlyCollection<ActionInfo>(kv.Value.Select(action => registeredActions[action]).ToList())
@@ -86,13 +166,10 @@ namespace JKMP.Core.Input
                 return new ReadOnlyCollection<PluginInput.BindActionCallback>(callbacks);
             }
 
-            public bool RegisterAction(string name, string uiName, string? defaultKey)
+            public bool RegisterAction(string name, string uiName, KeyBind? defaultKey)
             {
                 if (name == null) throw new ArgumentNullException(nameof(name));
                 if (uiName == null) throw new ArgumentNullException(nameof(uiName));
-
-                if (defaultKey != null && !InputManager.ValidKeyNames.Contains(defaultKey))
-                    throw new ArgumentException($"Invalid default key name: {defaultKey}");
                 
                 if (registeredActions.ContainsKey(name))
                     return false;
@@ -125,36 +202,30 @@ namespace JKMP.Core.Input
                 return callbacks.Remove(callback);
             }
 
-            public void MapAction(string keyName, string actionName)
+            public void MapAction(KeyBind keyBind, string actionName)
             {
-                if (!ValidKeyNames.Contains(keyName))
-                    throw new ArgumentException($"Invalid key name: {keyName}");
-
                 if (!registeredActions.ContainsKey(actionName))
-                    throw new ArgumentException($"Invalid action name: {actionName}");
+                    throw new ArgumentException($"Unknown action: {actionName}");
 
-                var keyActions = GetOrCreateActionsForKey(keyName);
+                var keyActions = GetOrCreateActionsForKey(keyBind);
                 keyActions.Add(actionName);
             }
 
-            public void UnmapAction(string keyName, string actionName)
+            public void UnmapAction(KeyBind keyBind, string actionName)
             {
-                if (!ValidKeyNames.Contains(keyName))
-                    throw new ArgumentException($"Invalid key name: {keyName}");
-
                 if (!registeredActions.ContainsKey(actionName))
-                    throw new ArgumentException($"Invalid action name: {actionName}");
+                    throw new ArgumentException($"Unknown action: {actionName}");
 
-                var keyActions = GetOrCreateActionsForKey(keyName);
-                keyActions.Remove(keyName);
+                var keyActions = GetOrCreateActionsForKey(keyBind);
+                keyActions.Remove(actionName);
             }
 
-            private HashSet<string> GetOrCreateActionsForKey(string keyName)
+            private HashSet<string> GetOrCreateActionsForKey(KeyBind keyBind)
             {
-                if (!mappings.TryGetValue(keyName, out var result))
+                if (!mappings.TryGetValue(keyBind, out var result))
                 {
                     result = new();
-                    mappings[keyName] = result;
+                    mappings[keyBind] = result;
                 }
 
                 return result;

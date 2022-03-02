@@ -14,6 +14,14 @@ namespace JKMP.Core.Input
         internal static readonly Dictionary<Keys, string> KeyMap = new();
         internal static readonly Dictionary<string, Keys> KeyMapReversed;
 
+        internal static readonly HashSet<string> ModifierKeyNames = new()
+        {
+            "leftshift", "rightshift",
+            "leftcontrol", "rightcontrol",
+            "leftalt", "rightalt",
+            "leftwin", "rightwin",
+        };
+
         private static readonly Dictionary<Plugin, Bindings> PluginBindings = new();
 
         private static KeyboardState? lastKeyboardState;
@@ -28,6 +36,12 @@ namespace JKMP.Core.Input
         /// A list of all the keys that was just released.
         /// </summary>
         private static readonly List<string> ReleasedKeys = new();
+
+        /// <summary>
+        /// A list of all key binds that are currently pressed down.
+        /// They may or may not be bound to an action.
+        /// </summary>
+        private static readonly HashSet<KeyBind> PressedKeyBinds = new();
 
         static InputManager()
         {
@@ -88,39 +102,55 @@ namespace JKMP.Core.Input
             return bindings.RemoveActionCallback(actionName, callback);
         }
 
-        public static bool RegisterAction(Plugin? plugin, string name, string uiName, string? defaultKey)
+        public static bool RegisterAction(Plugin? plugin, string name, string uiName, KeyBind? defaultKey)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
             if (uiName == null) throw new ArgumentNullException(nameof(uiName));
-
-            if (defaultKey != null && !ValidKeyNames.Contains(defaultKey))
-                throw new ArgumentException($"Invalid default key: {defaultKey}");
 
             Bindings bindings = GetOrCreateBindings(plugin);
             return bindings.RegisterAction(name, uiName, defaultKey);
         }
 
-        public static void PressKey(string key)
+        public static void PressKey(KeyBind keyBind)
         {
-            if (!ValidKeyNames.Contains(key))
-                throw new ArgumentException($"Invalid key: {key}");
-
-            InvokeActionCallbacksForInputKey(key, true);
+            if (!PressedKeyBinds.Add(keyBind))
+                return;
+            
+            InvokeActionCallbacksForInputKey(keyBind, true);
         }
 
-        public static void ReleaseKey(string key)
+        public static void ReleaseKey(KeyBind keyBind)
         {
-            if (!ValidKeyNames.Contains(key))
-                throw new ArgumentException($"Invalid key: {key}");
+            if (PressedKeyBinds.Remove(keyBind))
+            {
+                InvokeActionCallbacksForInputKey(keyBind, false);
+            }
 
-            InvokeActionCallbacksForInputKey(key, false);
+            // If there's no modifiers, release any other key binds that use the same key but also has modifiers
+            if (keyBind.Modifiers == ModifierKeys.None)
+            {
+                List<KeyBind> toRemove = new();
+
+                foreach (KeyBind key in PressedKeyBinds.Where(k => k.KeyName == keyBind.KeyName))
+                {
+                    toRemove.Add(key);
+                    InvokeActionCallbacksForInputKey(key, false);
+                }
+
+                foreach (KeyBind key in toRemove)
+                    PressedKeyBinds.Remove(key);
+            }
         }
 
-        private static void InvokeActionCallbacksForInputKey(string key, bool pressed)
+        private static void InvokeActionCallbacksForInputKey(KeyBind keyBind, bool pressed)
         {
             foreach (var bindings in PluginBindings.Values)
             {
-                var actions = bindings.GetActionsForKey(key);
+                var actions = bindings.GetActionsForKey(keyBind);
+
+                // If there's no actions bound to this key + modifiers check if there's any actions bound to this key without any modifiers
+                if (actions.Count == 0)
+                    actions = bindings.GetActionsForKey(new KeyBind(keyBind.KeyName, ModifierKeys.None));
 
                 foreach (string actionName in actions)
                 {
@@ -143,9 +173,9 @@ namespace JKMP.Core.Input
                 foreach (ActionInfo actionInfo in bindings.GetActions())
                 {
                     // todo: load saved key binding
-                    
-                    if (actionInfo.DefaultKey != null)
-                        bindings.MapAction(actionInfo.DefaultKey, actionInfo.Name);
+
+                    if (actionInfo.DefaultKeyBind != null)
+                        bindings.MapAction(actionInfo.DefaultKeyBind.Value, actionInfo.Name);
                 }
             }
         }
@@ -204,22 +234,56 @@ namespace JKMP.Core.Input
                     ReleasedKeys.Add("mouse5");
             }
 
-            FireEvents();
+            {
+                ModifierKeys modifiers = ModifierKeys.None;
+
+                if (keyboardState.IsKeyDown(Keys.LeftControl))
+                    modifiers |= ModifierKeys.LeftControl;
+                
+                if (keyboardState.IsKeyDown(Keys.RightControl))
+                    modifiers |= ModifierKeys.RightControl;
+                
+                if (keyboardState.IsKeyDown(Keys.LeftShift))
+                    modifiers |= ModifierKeys.LeftShift;
+                
+                if (keyboardState.IsKeyDown(Keys.RightShift))
+                    modifiers |= ModifierKeys.RightShift;
+                
+                if (keyboardState.IsKeyDown(Keys.LeftAlt))
+                    modifiers |= ModifierKeys.LeftAlt;
+                
+                if (keyboardState.IsKeyDown(Keys.RightAlt))
+                    modifiers |= ModifierKeys.RightAlt;
+
+                if (keyboardState.IsKeyDown(Keys.LeftWindows))
+                    modifiers |= ModifierKeys.LeftWin;
+
+                if (keyboardState.IsKeyDown(Keys.RightWindows))
+                    modifiers |= ModifierKeys.RightWin;
+                
+                FireEvents(modifiers);
+            }
 
             lastKeyboardState = keyboardState;
             lastMouseState = mouseState;
         }
 
-        private static void FireEvents()
+        private static void FireEvents(ModifierKeys modifierKeys)
         {
             foreach (string key in PressedKeys)
             {
-                PressKey(key);
+                if (!ModifierKeyNames.Contains(key))
+                    PressKey(new KeyBind(key, modifierKeys));
+                else
+                    PressKey(new KeyBind(key, ModifierKeys.None));
             }
 
             foreach (string key in ReleasedKeys)
             {
-                ReleaseKey(key);
+                if (!ModifierKeyNames.Contains(key))
+                    ReleaseKey(new KeyBind(key, modifierKeys));
+                else
+                    ReleaseKey(new KeyBind(key, ModifierKeys.None));
             }
         }
 
