@@ -13,6 +13,8 @@ namespace JKMP.Core.Input
         /// </summary>
         private static class Persistence
         {
+            const string FilePath ="./JKMP/Keybinds.json";
+            
             public static void SaveMappings(Dictionary<Plugin, Bindings> pluginBindings, Dictionary<Plugin, List<string>> unboundActions)
             {
                 Dictionary<string, Dictionary<string, List<string>>> pluginMappings = new();
@@ -58,7 +60,7 @@ namespace JKMP.Core.Input
                 }
 
                 var json = JsonConvert.SerializeObject(pluginMappings, Formatting.Indented);
-                File.WriteAllText("./JKMP/Keybinds.json", json);
+                File.WriteAllText(FilePath, json);
             }
 
             /// <summary>
@@ -68,9 +70,9 @@ namespace JKMP.Core.Input
             {
                 Dictionary<string, Dictionary<string, List<string>>>? mappings = null;
 
-                if (File.Exists("./JKMP/Keybinds.json"))
+                if (File.Exists(FilePath))
                 {
-                    string json = File.ReadAllText("./JKMP/Keybinds.json");
+                    string json = File.ReadAllText(FilePath);
 
                     try
                     {
