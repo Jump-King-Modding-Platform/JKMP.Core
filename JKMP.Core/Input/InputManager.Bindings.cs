@@ -111,7 +111,7 @@ namespace JKMP.Core.Input
         /// <summary>
         /// Holds bindings for a single plugin.
         /// </summary>
-        private class Bindings
+        public class Bindings
         {
             /// <summary>
             /// Maps input key names to one or several actions.

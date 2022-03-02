@@ -165,6 +165,11 @@ namespace JKMP.Core.Input
             }
         }
 
+        public static void CreateVanillaKeyBinds()
+        {
+            VanillaKeyBindRouter.InitializeActions();
+        }
+
         /// <summary>
         /// Should be called after registering actions.
         /// This method loads the saved or default key bindings for the registered actions.
@@ -281,6 +286,8 @@ namespace JKMP.Core.Input
 
             lastKeyboardState = keyboardState;
             lastMouseState = mouseState;
+
+            VanillaKeyBindRouter.Update();
         }
 
         private static void FireEvents(ModifierKeys modifierKeys)
@@ -313,6 +320,11 @@ namespace JKMP.Core.Input
             }
             
             return result;
+        }
+
+        public static Bindings GetBindings(Plugin? plugin)
+        {
+            return GetOrCreateBindings(plugin);
         }
     }
 }

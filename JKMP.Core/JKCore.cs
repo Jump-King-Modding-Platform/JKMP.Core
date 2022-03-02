@@ -44,6 +44,8 @@ namespace JKMP.Core
             
             harmony = new Harmony("com.jkmp.core");
             harmony.PatchAll(typeof(JKCore).Assembly);
+
+            InputManager.CreateVanillaKeyBinds();
             
             Plugins = new();
             Plugins.LoadPlugins();
