@@ -100,13 +100,54 @@ namespace JKMP.Core.Input
             return bindings.RegisterAction(name, uiName, defaultKey);
         }
 
+        public static void PressKey(string key)
+        {
+            if (!ValidKeyNames.Contains(key))
+                throw new ArgumentException($"Invalid key: {key}");
+
+            InvokeActionCallbacksForInputKey(key, true);
+        }
+
+        public static void ReleaseKey(string key)
+        {
+            if (!ValidKeyNames.Contains(key))
+                throw new ArgumentException($"Invalid key: {key}");
+
+            InvokeActionCallbacksForInputKey(key, false);
+        }
+
+        private static void InvokeActionCallbacksForInputKey(string key, bool pressed)
+        {
+            foreach (var bindings in PluginBindings.Values)
+            {
+                var actions = bindings.GetActionsForKey(key);
+
+                foreach (string actionName in actions)
+                {
+                    var callbacks = bindings.GetCallbacksForAction(actionName);
+
+                    foreach (var callback in callbacks)
+                        callback.Invoke(pressed);
+                }
+            }
+        }
+
         /// <summary>
         /// Should be called after registering actions.
         /// This method loads the saved or default key bindings for the registered actions.
         /// </summary>
         public static void Initialize()
         {
-            
+            foreach (Bindings bindings in PluginBindings.Values)
+            {
+                foreach (ActionInfo actionInfo in bindings.GetActions())
+                {
+                    // todo: load saved key binding
+                    
+                    if (actionInfo.DefaultKey != null)
+                        bindings.MapAction(actionInfo.DefaultKey, actionInfo.Name);
+                }
+            }
         }
         
         public static void Update()
@@ -171,7 +212,15 @@ namespace JKMP.Core.Input
 
         private static void FireEvents()
         {
-            
+            foreach (string key in pressedKeys)
+            {
+                PressKey(key);
+            }
+
+            foreach (string key in releasedKeys)
+            {
+                ReleaseKey(key);
+            }
         }
 
         private static Bindings GetOrCreateBindings(Plugin? plugin)
