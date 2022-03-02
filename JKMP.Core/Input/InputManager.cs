@@ -78,11 +78,11 @@ namespace JKMP.Core.Input
         {
             return name switch
             {
-                "mouse1" => "Mouse Left",
-                "mouse2" => "Mouse Right",
-                "mouse3" => "Mouse Middle",
-                "mouse4" => "Mouse Btn 4",
-                "mouse5" => "Mouse Btn 5",
+                "mouse1" => "LMB",
+                "mouse2" => "RMB",
+                "mouse3" => "MMB",
+                "mouse4" => "MB4",
+                "mouse5" => "MB5",
                 _ => ValidKeyNames.Contains(name) ? WinNative.GetKeyName(KeyMapReversed[name]) : name
             };
         }
