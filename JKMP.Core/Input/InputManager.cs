@@ -22,12 +22,12 @@ namespace JKMP.Core.Input
         /// <summary>
         /// A list of all the keys that was just pressed down.
         /// </summary>
-        private static readonly List<string> pressedKeys = new();
+        private static readonly List<string> PressedKeys = new();
         
         /// <summary>
         /// A list of all the keys that was just released.
         /// </summary>
-        private static readonly List<string> releasedKeys = new();
+        private static readonly List<string> ReleasedKeys = new();
 
         static InputManager()
         {
@@ -152,8 +152,8 @@ namespace JKMP.Core.Input
         
         public static void Update()
         {
-            pressedKeys.Clear();
-            releasedKeys.Clear();
+            PressedKeys.Clear();
+            ReleasedKeys.Clear();
             var keyboardState = Keyboard.GetState();
             var mouseState = Mouse.GetState();
             
@@ -165,43 +165,43 @@ namespace JKMP.Core.Input
                 var oldKeyNames = oldKeysArray.Where(k => KeyMap.ContainsKey(k)).Select(k => KeyMap[k]).ToList();
                 var keyNames = keysArray.Where(k => KeyMap.ContainsKey(k)).Select(k => KeyMap[k]).ToList();
 
-                pressedKeys.AddRange(keyNames.Except(oldKeyNames));
-                releasedKeys.AddRange(oldKeyNames.Except(keyNames));
+                PressedKeys.AddRange(keyNames.Except(oldKeyNames));
+                ReleasedKeys.AddRange(oldKeyNames.Except(keyNames));
             }
 
             if (lastMouseState != null && mouseState != lastMouseState)
             {
                 // Add pressed mouse buttons
                 if (mouseState.LeftButton == ButtonState.Pressed && lastMouseState.Value.LeftButton == ButtonState.Released)
-                    pressedKeys.Add("mouse1");
+                    PressedKeys.Add("mouse1");
 
                 if (mouseState.RightButton == ButtonState.Pressed && lastMouseState.Value.RightButton == ButtonState.Released)
-                    pressedKeys.Add("mouse2");
+                    PressedKeys.Add("mouse2");
                 
                 if (mouseState.MiddleButton == ButtonState.Pressed && lastMouseState.Value.MiddleButton == ButtonState.Released)
-                    pressedKeys.Add("mouse3");
+                    PressedKeys.Add("mouse3");
                 
                 if (mouseState.XButton1 == ButtonState.Pressed && lastMouseState.Value.XButton1 == ButtonState.Released)
-                    pressedKeys.Add("mouse4");
+                    PressedKeys.Add("mouse4");
                 
                 if (mouseState.XButton2 == ButtonState.Pressed && lastMouseState.Value.XButton2 == ButtonState.Released)
-                    pressedKeys.Add("mouse5");
+                    PressedKeys.Add("mouse5");
                 
                 // Add released mouse buttons
                 if (mouseState.LeftButton == ButtonState.Released && lastMouseState.Value.LeftButton == ButtonState.Pressed)
-                    releasedKeys.Add("mouse1");
+                    ReleasedKeys.Add("mouse1");
                 
                 if (mouseState.RightButton == ButtonState.Released && lastMouseState.Value.RightButton == ButtonState.Pressed)
-                    releasedKeys.Add("mouse2");
+                    ReleasedKeys.Add("mouse2");
                 
                 if (mouseState.MiddleButton == ButtonState.Released && lastMouseState.Value.MiddleButton == ButtonState.Pressed)
-                    releasedKeys.Add("mouse3");
+                    ReleasedKeys.Add("mouse3");
                 
                 if (mouseState.XButton1 == ButtonState.Released && lastMouseState.Value.XButton1 == ButtonState.Pressed)
-                    releasedKeys.Add("mouse4");
+                    ReleasedKeys.Add("mouse4");
                 
                 if (mouseState.XButton2 == ButtonState.Released && lastMouseState.Value.XButton2 == ButtonState.Pressed)
-                    releasedKeys.Add("mouse5");
+                    ReleasedKeys.Add("mouse5");
             }
 
             FireEvents();
@@ -212,12 +212,12 @@ namespace JKMP.Core.Input
 
         private static void FireEvents()
         {
-            foreach (string key in pressedKeys)
+            foreach (string key in PressedKeys)
             {
                 PressKey(key);
             }
 
-            foreach (string key in releasedKeys)
+            foreach (string key in ReleasedKeys)
             {
                 ReleaseKey(key);
             }
