@@ -54,6 +54,10 @@ namespace JKMP.Core.Input
             public KeyBind(string bindName)
             {
                 if (bindName == null) throw new ArgumentNullException(nameof(bindName));
+
+                // Remove/ignore whitespace
+                if (bindName.Contains(" "))
+                    bindName = bindName.Replace(" ", "");
                 
                 if (!bindName.Contains("+"))
                 {
