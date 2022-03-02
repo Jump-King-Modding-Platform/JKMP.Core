@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
+using JKMP.Core.Plugins;
 using Microsoft.Xna.Framework.Input;
 
 namespace JKMP.Core.Input
@@ -12,13 +14,13 @@ namespace JKMP.Core.Input
         {
             public readonly string Name;
             public readonly string UiName;
-            public readonly KeyBind? DefaultKeyBind;
+            public readonly KeyBind[] DefaultKeyBinds;
 
-            public ActionInfo(string name, string uiName, KeyBind? defaultKeyBind)
+            public ActionInfo(string name, string uiName, params KeyBind[] defaultKeyBinds)
             {
                 Name = name;
                 UiName = uiName;
-                DefaultKeyBind = defaultKeyBind;
+                DefaultKeyBinds = defaultKeyBinds;
             }
         }
         
@@ -96,6 +98,35 @@ namespace JKMP.Core.Input
             {
                 return $"[{Modifiers} + {KeyName}]";
             }
+            
+            /// <summary>
+            /// Returns a string representation of the key bind.
+            /// For example "leftshift+a" or "leftcontrol,leftshift+a" or just "a" if there's no modifiers.
+            /// </summary>
+            /// <returns></returns>
+            public string ToSerializedString()
+            {
+                if (Modifiers == ModifierKeys.None)
+                    return KeyName;
+
+                ModifierKeys modifiers = Modifiers;
+                StringBuilder builder = new();
+                
+                // Serialize modifiers to a string array and add them to the builder separated by a comma
+                foreach (var modifier in Enum.GetValues(typeof(ModifierKeys)).Cast<ModifierKeys>().Where(modifier => (modifiers & modifier) != 0))
+                {
+                    builder.Append(modifier.ToString().ToLowerInvariant());
+                    modifiers &= ~modifier;
+
+                    if (modifiers != ModifierKeys.None)
+                        builder.Append(",");
+                }
+
+                builder.Append("+");
+                builder.Append(KeyName);
+
+                return builder.ToString();
+            }
 
             public override int GetHashCode()
             {
@@ -113,6 +144,8 @@ namespace JKMP.Core.Input
         /// </summary>
         public class Bindings
         {
+            private readonly Plugin owner;
+
             /// <summary>
             /// Maps input key names to one or several actions.
             /// </summary>
@@ -127,6 +160,11 @@ namespace JKMP.Core.Input
             /// A set of all actions that have been registered.
             /// </summary>
             private readonly Dictionary<string, ActionInfo> registeredActions = new();
+
+            public Bindings(Plugin owner)
+            {
+                this.owner = owner;
+            }
 
             public IReadOnlyCollection<string> GetActionsForKey(KeyBind keyBind)
             {
@@ -170,7 +208,7 @@ namespace JKMP.Core.Input
                 return new ReadOnlyCollection<PluginInput.BindActionCallback>(callbacks);
             }
 
-            public bool RegisterAction(string name, string uiName, KeyBind? defaultKey)
+            public bool RegisterAction(string name, string uiName, params KeyBind[] defaultKeys)
             {
                 if (name == null) throw new ArgumentNullException(nameof(name));
                 if (uiName == null) throw new ArgumentNullException(nameof(uiName));
@@ -178,7 +216,7 @@ namespace JKMP.Core.Input
                 if (registeredActions.ContainsKey(name))
                     return false;
 
-                registeredActions.Add(name, new ActionInfo(name, uiName, defaultKey));
+                registeredActions.Add(name, new ActionInfo(name, uiName, defaultKeys));
                 return true;
             }
 
@@ -213,6 +251,8 @@ namespace JKMP.Core.Input
 
                 var keyActions = GetOrCreateActionsForKey(keyBind);
                 keyActions.Add(actionName);
+
+                RemoveUnboundAction(owner, actionName);
             }
 
             public void UnmapAction(KeyBind keyBind, string actionName)
@@ -222,6 +262,11 @@ namespace JKMP.Core.Input
 
                 var keyActions = GetOrCreateActionsForKey(keyBind);
                 keyActions.Remove(actionName);
+
+                if (keyActions.Count <= 0 && registeredActions[actionName].DefaultKeyBinds.Length > 0)
+                {
+                    AddUnboundAction(owner, actionName);
+                }
             }
 
             private HashSet<string> GetOrCreateActionsForKey(KeyBind keyBind)

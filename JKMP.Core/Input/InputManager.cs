@@ -46,6 +46,12 @@ namespace JKMP.Core.Input
         /// </summary>
         private static readonly HashSet<KeyBind> PressedKeyBinds = new();
 
+        /// <summary>
+        /// A list of all actions that were not bound to any keys when loaded.
+        /// Used for not overwriting unbound actions with default key binds.
+        /// </summary>
+        private static readonly Dictionary<Plugin, List<string>> UnboundActions = new();
+
         static InputManager()
         {
             foreach (Keys key in Enum.GetValues(typeof(Keys)))
@@ -105,13 +111,13 @@ namespace JKMP.Core.Input
             return bindings.RemoveActionCallback(actionName, callback);
         }
 
-        public static bool RegisterAction(Plugin? plugin, string name, string uiName, KeyBind? defaultKey)
+        public static bool RegisterAction(Plugin? plugin, string name, string uiName, params KeyBind[] defaultKeys)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
             if (uiName == null) throw new ArgumentNullException(nameof(uiName));
 
             Bindings bindings = GetOrCreateBindings(plugin);
-            return bindings.RegisterAction(name, uiName, defaultKey);
+            return bindings.RegisterAction(name, uiName, defaultKeys);
         }
 
         public static void PressKey(KeyBind keyBind)
@@ -176,18 +182,69 @@ namespace JKMP.Core.Input
         /// </summary>
         public static void Initialize()
         {
-            foreach (Bindings bindings in PluginBindings.Values)
+            var loadedMappings = Persistence.LoadMappings();
+            
+            foreach (var kv in PluginBindings)
             {
+                var plugin = kv.Key;
+                var bindings = kv.Value;
+
                 foreach (ActionInfo actionInfo in bindings.GetActions())
                 {
-                    // todo: load saved key binding
+                    // todo: add a unique name property for plugins that isn't normally renamed.
+                    if (!loadedMappings.TryGetValue(plugin.Container.Info.Name!, out Dictionary<string, List<string>>? mappings))
+                        mappings = new Dictionary<string, List<string>>();
 
-                    if (actionInfo.DefaultKeyBind != null)
-                        bindings.MapAction(actionInfo.DefaultKeyBind.Value, actionInfo.Name);
+                    if (mappings.TryGetValue(actionInfo.Name, out var keyNames))
+                    {
+                        if (keyNames.Count > 0)
+                        {
+                            foreach (string keyName in keyNames)
+                            {
+                                bindings.MapAction(keyName, actionInfo.Name);
+                            }
+                        }
+                        else if (actionInfo.DefaultKeyBinds.Length > 0)
+                        {
+                            // Prevent the saved unbound action from being reset to default after the next restart
+                            AddUnboundAction(plugin, actionInfo.Name);
+                        }
+                    }
+                    else
+                    {
+                        foreach (var defaultKeyBind in actionInfo.DefaultKeyBinds)
+                        {
+                            bindings.MapAction(defaultKeyBind, actionInfo.Name);
+                        }
+                    }
                 }
             }
-            
+
+            Persistence.SaveMappings(PluginBindings, UnboundActions);
+
             SteamFriends.OnGameOverlayActivated += OnGameOverlayToggled;
+        }
+
+        private static void AddUnboundAction(Plugin plugin, string actionName)
+        {
+            if (!UnboundActions.TryGetValue(plugin, out var actions))
+            {
+                actions = new();
+                UnboundActions[plugin] = actions;
+            }
+
+            actions.Add(actionName);
+        }
+
+        private static void RemoveUnboundAction(Plugin plugin, string actionName)
+        {
+            if (!UnboundActions.TryGetValue(plugin, out var actions))
+                return;
+
+            actions.Remove(actionName);
+
+            if (actions.Count <= 0)
+                UnboundActions.Remove(plugin);
         }
 
         private static void OnGameOverlayToggled(bool open)
@@ -315,7 +372,7 @@ namespace JKMP.Core.Input
 
             if (!PluginBindings.TryGetValue(plugin, out var result))
             {
-                result = new();
+                result = new(plugin);
                 PluginBindings.Add(plugin, result);
             }
             

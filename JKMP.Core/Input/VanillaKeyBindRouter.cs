@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using JKMP.Core.Logging;
@@ -64,14 +65,7 @@ namespace JKMP.Core.Input
                 string fieldName = kv.Key;
                 (string uiName, string[] keyNames) = kv.Value;
 
-                InputManager.RegisterAction(plugin: null, fieldName, uiName, defaultKey: null);
-                var bindings = InputManager.GetBindings(plugin: null);
-
-                foreach (string keyName in keyNames)
-                {
-                    bindings.MapAction(keyName, fieldName);
-                }
-                
+                InputManager.RegisterAction(plugin: null, fieldName, uiName, defaultKeys: keyNames.Select(k => (InputManager.KeyBind)k).ToArray());
                 InputManager.BindAction(null, fieldName, pressed => OnKeyToggled(fieldName, pressed));
             }
         }

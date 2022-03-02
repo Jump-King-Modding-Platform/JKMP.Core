@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using JKMP.Core.Plugins;
 
 namespace JKMP.Core.Input
@@ -21,7 +22,7 @@ namespace JKMP.Core.Input
         /// </summary>
         /// <param name="name">
         /// The name should be something descriptive, such as "Jump". This value will also be displayed in the settings menu.
-        /// If you want to display a custom string in the menu use the <see cref="RegisterAction(string,string,string)"/> overload.
+        /// If you want to display a custom string in the menu use the <see cref="RegisterAction(string,string,string[])"/> overload.
         /// </param>
         /// <param name="defaultKey">The default key name. Must be a valid key name from <see cref="InputManager.ValidKeyNames"/>. Can also be null, in which case it'll be unbound by default.</param>
         /// <returns>True if the action did not already exist. Note that action names are unique per plugin. Two different plugins can use the same name.</returns>
@@ -34,17 +35,17 @@ namespace JKMP.Core.Input
         /// </summary>
         /// <param name="name">The name can be anything as long as it's unique for this plugin.</param>
         /// <param name="uiName">This value will be displayed in the settings menu for this action.</param>
-        /// <param name="defaultKey">The default key name. Must be a valid key name from <see cref="InputManager.ValidKeyNames"/>. Can also be null, in which case it'll be unbound by default.</param>
+        /// <param name="defaultKeys">The default key name. Must be a valid key name from <see cref="InputManager.ValidKeyNames"/>. Can also be null, in which case it'll be unbound by default.</param>
         /// <returns>True if the action did not already exist. Note that action names are unique per plugin. Two different plugins can use the same name.</returns>
         /// <exception cref="ArgumentException">Thrown if defaultKey is not part of <see cref="InputManager.ValidKeyNames"/>.</exception>
         /// <exception cref="InvalidOperationException">Thrown if this method is called after the plugin has been initialized.</exception>
-        public bool RegisterAction(string name, string uiName, string? defaultKey)
+        public bool RegisterAction(string name, string uiName, params string[] defaultKeys)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
             if (uiName == null) throw new ArgumentNullException(nameof(uiName));
             ThrowIfFinalized();
 
-            return InputManager.RegisterAction(owner, name, uiName, defaultKey == null ? (InputManager.KeyBind?)null : (InputManager.KeyBind)defaultKey);
+            return InputManager.RegisterAction(owner, name, uiName, defaultKeys.Select(key => (InputManager.KeyBind)key).ToArray());
         }
 
         /// <summary>
