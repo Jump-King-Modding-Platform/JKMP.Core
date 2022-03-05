@@ -1,3 +1,5 @@
+using System;
+using JKMP.Core.Windows;
 using Microsoft.Xna.Framework.Input;
 
 namespace JKMP.Core.Input
@@ -116,6 +118,65 @@ namespace JKMP.Core.Input
                 Keys.OemQuestion => "oemquestionmark",
                 Keys.OemSemicolon => "oemsemicolon",
                 _ => null,
+            };
+        }
+
+        private static string GetKeyDisplayName(Keys key)
+        {
+            return key switch
+            {
+                Keys.Back => "Backspace",
+                Keys.Tab => "Tab",
+                Keys.Enter => "Enter",
+                Keys.CapsLock => "Capslock",
+                Keys.Escape => "Esc",
+                Keys.Space => "Space",
+                Keys.PageUp => "Pgup",
+                Keys.PageDown => "Pgdown",
+                Keys.End => "End",
+                Keys.Home => "Home",
+                Keys.Left => "Left",
+                Keys.Up => "Up",
+                Keys.Right => "Right",
+                Keys.Down => "Down",
+                Keys.Select => "Select",
+                Keys.PrintScreen => "Printscreen",
+                Keys.Insert => "Insert",
+                Keys.Delete => "Delete",
+                Keys.D0 => "0",
+                Keys.D1 => "1",
+                Keys.D2 => "2",
+                Keys.D3 => "3",
+                Keys.D4 => "4",
+                Keys.D5 => "5",
+                Keys.D6 => "6",
+                Keys.D7 => "7",
+                Keys.D8 => "8",
+                Keys.D9 => "9",
+                Keys.LeftWindows => "LWin",
+                Keys.RightWindows => "RWin",
+                Keys.Apps => "Alt gr",
+                Keys.NumPad0 => "Numpad 0",
+                Keys.NumPad1 => "Numpad 1",
+                Keys.NumPad2 => "Numpad 2",
+                Keys.NumPad3 => "Numpad 3",
+                Keys.NumPad4 => "Numpad 4",
+                Keys.NumPad5 => "Numpad 5",
+                Keys.NumPad6 => "Numpad 6",
+                Keys.NumPad7 => "Numpad 7",
+                Keys.NumPad8 => "Numpad 8",
+                Keys.NumPad9 => "Numpad 9",
+                Keys.NumLock => "Numlock",
+                Keys.Scroll => "Scroll lock",
+                Keys.LeftShift => "LShift",
+                Keys.RightShift => "RShift",
+                Keys.LeftControl => "LCtrl",
+                Keys.RightControl => "RCtrl",
+                Keys.LeftAlt => "LAlt",
+                Keys.RightAlt => "RAlt",
+                Keys.Pause => "Pause",
+                Keys.None => throw new ArgumentException("None is not a valid key"),
+                _ => WinNative.GetKeyName(key)
             };
         }
     }

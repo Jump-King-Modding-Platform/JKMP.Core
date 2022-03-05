@@ -22,13 +22,13 @@ namespace JKMP.Core.Input
         /// </summary>
         /// <param name="name">
         /// The name should be something descriptive, such as "Jump". This value will also be displayed in the settings menu.
-        /// If you want to display a custom string in the menu use the <see cref="RegisterAction(string,string,string[])"/> overload.
+        /// If you want to display a custom string in the menu use the <see cref="RegisterActionWithName"/> overload.
         /// </param>
-        /// <param name="defaultKey">The default key name. Must be a valid key name from <see cref="InputManager.ValidKeyNames"/>. Can also be null, in which case it'll be unbound by default.</param>
+        /// <param name="defaultKeys">The default key name. Must be a valid key name from <see cref="InputManager.ValidKeyNames"/>. Can also be null, in which case it'll be unbound by default.</param>
         /// <returns>True if the action did not already exist. Note that action names are unique per plugin. Two different plugins can use the same name.</returns>
         /// <exception cref="ArgumentException">Thrown if defaultKey is not part of <see cref="InputManager.ValidKeyNames"/>.</exception>
         /// <exception cref="InvalidOperationException">Thrown if this method is called after the plugin has been initialized.</exception>
-        public bool RegisterAction(string name, string? defaultKey) => RegisterAction(name, name, defaultKey);
+        public bool RegisterAction(string name, params string[] defaultKeys) => RegisterActionWithName(name, name, defaultKeys);
 
         /// <summary>
         /// Registers an input action with a custom name that can be bound to a mouse or keyboard button.
@@ -39,7 +39,7 @@ namespace JKMP.Core.Input
         /// <returns>True if the action did not already exist. Note that action names are unique per plugin. Two different plugins can use the same name.</returns>
         /// <exception cref="ArgumentException">Thrown if defaultKey is not part of <see cref="InputManager.ValidKeyNames"/>.</exception>
         /// <exception cref="InvalidOperationException">Thrown if this method is called after the plugin has been initialized.</exception>
-        public bool RegisterAction(string name, string uiName, params string[] defaultKeys)
+        public bool RegisterActionWithName(string name, string uiName, params string[] defaultKeys)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
             if (uiName == null) throw new ArgumentNullException(nameof(uiName));

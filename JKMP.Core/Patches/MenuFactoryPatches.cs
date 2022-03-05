@@ -8,9 +8,13 @@ using JKMP.Core.Configuration.UI;
 using JKMP.Core.Input.UI;
 using JumpKing.PauseMenu;
 using JumpKing.PauseMenu.BT;
+using JumpKing.Util;
 
 namespace JKMP.Core.Patches
 {
+    // ReSharper disable InconsistentNaming
+    // ReSharper disable RedundantAssignment
+    
     [HarmonyPatch(typeof(MenuFactory), nameof(MenuFactory.CreateOptionsMenu))]
     internal static class OptionsMenuPatch
     {
@@ -56,11 +60,9 @@ namespace JKMP.Core.Patches
     [HarmonyPatch(typeof(MenuFactory), "CreateBindControls")]
     internal static class ControlsMenuPatch
     {
-        // ReSharper disable once InconsistentNaming
-        // ReSharper disable once RedundantAssignment
-        private static bool Prefix(ref BTsimultaneous __result)
+        private static bool Prefix(ref BTsimultaneous __result, ref List<IDrawable> ___m_drawables)
         {
-            __result = ControlsMenuManager.CreateMenu();
+            __result = new BTsimultaneous(ControlsMenuManager.CreateMenu(___m_drawables));
             return false;
         }
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using JKMP.Core.Logging;
 using JKMP.Core.Plugins;
@@ -89,7 +90,7 @@ namespace JKMP.Core.Input
                 "mouse3" => "MMB",
                 "mouse4" => "MB4",
                 "mouse5" => "MB5",
-                _ => ValidKeyNames.Contains(name) ? WinNative.GetKeyName(KeyMapReversed[name]) : name
+                _ => ValidKeyNames.Contains(name) ? GetKeyDisplayName(KeyMapReversed[name]) : name
             };
         }
 
@@ -382,6 +383,11 @@ namespace JKMP.Core.Input
         public static Bindings GetBindings(Plugin? plugin)
         {
             return GetOrCreateBindings(plugin);
+        }
+
+        public static IReadOnlyDictionary<Plugin, Bindings> GetAllBindings()
+        {
+            return new ReadOnlyDictionary<Plugin, Bindings>(PluginBindings);
         }
     }
 }
