@@ -15,7 +15,7 @@ namespace JKMP.Core.Input
         {
             const string FilePath ="./JKMP/Keybinds.json";
             
-            public static void SaveMappings(Dictionary<Plugin, Bindings> pluginBindings, Dictionary<Plugin, List<string>> unboundActions)
+            public static void SaveMappings(Dictionary<Plugin, Bindings> pluginBindings, Dictionary<Plugin, HashSet<string>> unboundActions)
             {
                 Dictionary<string, Dictionary<string, List<string>>> pluginMappings = new();
 

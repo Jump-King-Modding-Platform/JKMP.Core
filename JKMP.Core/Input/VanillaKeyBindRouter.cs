@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using JKMP.Core.Input.InputMappers;
 using JKMP.Core.Logging;
 using JumpKing.Controller;
 using JumpKing.SaveThread;
@@ -48,7 +49,7 @@ namespace JKMP.Core.Input
                 for (int i = 0; i < value.Length; i++)
                 {
                     Keys key = (Keys)value[i];
-                    string? keyName = InputManager.KeyMap.ContainsKey(key) ? InputManager.KeyMap[key] : null;
+                    string? keyName = KeyboardMapper.KeyMap.ContainsKey(key) ? KeyboardMapper.KeyMap[key] : null;
 
                     if (keyName != null)
                     {

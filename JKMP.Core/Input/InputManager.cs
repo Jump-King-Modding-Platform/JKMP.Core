@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
+using JKMP.Core.Input.InputMappers;
 using JKMP.Core.Logging;
 using JKMP.Core.Plugins;
-using JKMP.Core.Windows;
 using Microsoft.Xna.Framework.Input;
 using Steamworks;
 
@@ -13,21 +14,9 @@ namespace JKMP.Core.Input
     internal static partial class InputManager
     {
         internal static readonly HashSet<string> ValidKeyNames = new();
-        internal static readonly Dictionary<Keys, string> KeyMap = new();
-        internal static readonly Dictionary<string, Keys> KeyMapReversed;
-
-        internal static readonly HashSet<string> ModifierKeyNames = new()
-        {
-            "leftshift", "rightshift",
-            "leftcontrol", "rightcontrol",
-            "leftalt", "rightalt",
-            "leftwin", "rightwin",
-        };
+        internal static readonly HashSet<string> ModifierKeyNames = new();
 
         private static readonly Dictionary<Plugin, Bindings> PluginBindings = new();
-
-        private static KeyboardState? lastKeyboardState;
-        private static MouseState? lastMouseState;
 
         private static bool steamOverlayOpened;
         
@@ -57,47 +46,61 @@ namespace JKMP.Core.Input
         /// A list of all actions that were not bound to any keys when loaded.
         /// Used for not overwriting unbound actions with default key binds.
         /// </summary>
-        private static readonly Dictionary<Plugin, List<string>> UnboundActions = new();
+        private static readonly Dictionary<Plugin, HashSet<string>> UnboundActions = new();
+
+        /// <summary>
+        /// A list of all input mappers that translates arbitrary input into strings that can be used by the input system
+        /// </summary>
+        private static readonly List<IInputMapper> InputMappers = new()
+        {
+            new KeyboardMapper(),
+            new MouseMapper(),
+            new ControllerMapper()
+        };
 
         static InputManager()
         {
-            foreach (Keys key in Enum.GetValues(typeof(Keys)))
+            UpdateValidKeyNames();
+        }
+
+        private static void UpdateValidKeyNames()
+        {
+            foreach (var mapper in InputMappers)
             {
-                string? name = GetKeyName(key);
-
-                if (name != null)
+                foreach (var keyName in mapper.ValidKeyNames)
                 {
-                    if (!ValidKeyNames.Add(name))
-                        throw new InvalidOperationException($"Duplicate key name: {name}");
+                    if (!ValidKeyNames.Add(keyName))
+                        throw new InvalidOperationException($"Duplicate key name: {keyName}");
+                }
 
-                    KeyMap.Add(key, name);
+                foreach (var modifierName in mapper.ModifierKeys)
+                {
+                    if (!mapper.ValidKeyNames.Contains(modifierName))
+                        throw new InvalidOperationException($"Modifier key name not found in list of valid keys: {modifierName}");
+
+                    if (!ModifierKeyNames.Add(modifierName))
+                        throw new InvalidOperationException($"Duplicate modifier key name: {modifierName}");
                 }
             }
-
-            // add mouse1-5
-            for (int i = 1; i <= 5; ++i)
-                ValidKeyNames.Add($"mouse{i}");
-
-            KeyMapReversed = KeyMap.ToDictionary(kv => kv.Value, kv => kv.Key);
         }
 
         /// <summary>
-        /// Returns the name of the given input key name. The key name should be mouse1-5 or one of the names specified in <see cref="GetKeyName"/>.
-        /// If it's not a valid key name, the input value is returned.
+        /// Returns the name of the given input key name. The key name should be a valid name as defined by the input mappers.
+        /// If it's not a valid key name, the input value is returned prefixed with "UNNAMEDKEY_".
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static string GetKeyBindingName(string name)
+        public static string GetKeyDisplayName(in string name)
         {
-            return name switch
+            foreach (var mapper in InputMappers)
             {
-                "mouse1" => "LMB",
-                "mouse2" => "RMB",
-                "mouse3" => "MMB",
-                "mouse4" => "MB4",
-                "mouse5" => "MB5",
-                _ => ValidKeyNames.Contains(name) ? GetKeyDisplayName(KeyMapReversed[name]) : name
-            };
+                string? displayName = mapper.GetKeyDisplayName(name);
+
+                if (displayName != null)
+                    return displayName;
+            }
+
+            return $"UNNAMEDKEY_{name}";
         }
 
         public static void BindAction(Plugin? plugin, string actionName, PluginInput.BindActionCallback callback)
@@ -131,7 +134,7 @@ namespace JKMP.Core.Input
         {
             if (!PressedKeyBinds.Add(keyBind))
                 return;
-            
+
             InvokeActionCallbacksForInputKey(keyBind, true);
         }
 
@@ -143,7 +146,7 @@ namespace JKMP.Core.Input
             }
 
             // If there's no modifiers, release any other key binds that use the same key but also has modifiers
-            if (keyBind.Modifiers == ModifierKeys.None)
+            if (keyBind.Modifiers.Count == 0)
             {
                 List<KeyBind> toRemove = new();
 
@@ -207,7 +210,7 @@ namespace JKMP.Core.Input
 
                 // If there's no actions bound to this key + modifiers check if there's any actions bound to this key without any modifiers
                 if (actions.Count == 0)
-                    actions = bindings.GetActionsForKey(new KeyBind(keyBind.KeyName, ModifierKeys.None));
+                    actions = bindings.GetActionsForKey(new KeyBind(keyBind.KeyName));
 
                 foreach (string actionName in actions)
                 {
@@ -286,7 +289,8 @@ namespace JKMP.Core.Input
                 UnboundActions[plugin] = actions;
             }
 
-            actions.Add(actionName);
+            if (!actions.Add(actionName))
+                throw new InvalidOperationException("This action is already marked as unbound");
         }
 
         private static void RemoveUnboundAction(Plugin plugin, string actionName)
@@ -320,100 +324,39 @@ namespace JKMP.Core.Input
             
             PressedKeys.Clear();
             ReleasedKeys.Clear();
-            var keyboardState = Keyboard.GetState();
-            var mouseState = Mouse.GetState();
-            
-            if (lastKeyboardState != null && keyboardState != lastKeyboardState)
+
+            foreach (IInputMapper inputMapper in InputMappers)
             {
-                var oldKeysArray = lastKeyboardState.Value.GetPressedKeys();
-                var keysArray = keyboardState.GetPressedKeys();
-
-                var oldKeyNames = oldKeysArray.Where(k => KeyMap.ContainsKey(k)).Select(k => KeyMap[k]).ToList();
-                var keyNames = keysArray.Where(k => KeyMap.ContainsKey(k)).Select(k => KeyMap[k]).ToList();
-
-                PressedKeys.AddRange(keyNames.Except(oldKeyNames));
-                ReleasedKeys.AddRange(oldKeyNames.Except(keyNames));
-            }
-
-            if (lastMouseState != null && mouseState != lastMouseState)
-            {
-                // Add pressed mouse buttons
-                if (mouseState.LeftButton == ButtonState.Pressed && lastMouseState.Value.LeftButton == ButtonState.Released)
-                    PressedKeys.Add("mouse1");
-
-                if (mouseState.RightButton == ButtonState.Pressed && lastMouseState.Value.RightButton == ButtonState.Released)
-                    PressedKeys.Add("mouse2");
-                
-                if (mouseState.MiddleButton == ButtonState.Pressed && lastMouseState.Value.MiddleButton == ButtonState.Released)
-                    PressedKeys.Add("mouse3");
-                
-                if (mouseState.XButton1 == ButtonState.Pressed && lastMouseState.Value.XButton1 == ButtonState.Released)
-                    PressedKeys.Add("mouse4");
-                
-                if (mouseState.XButton2 == ButtonState.Pressed && lastMouseState.Value.XButton2 == ButtonState.Released)
-                    PressedKeys.Add("mouse5");
-                
-                // Add released mouse buttons
-                if (mouseState.LeftButton == ButtonState.Released && lastMouseState.Value.LeftButton == ButtonState.Pressed)
-                    ReleasedKeys.Add("mouse1");
-                
-                if (mouseState.RightButton == ButtonState.Released && lastMouseState.Value.RightButton == ButtonState.Pressed)
-                    ReleasedKeys.Add("mouse2");
-                
-                if (mouseState.MiddleButton == ButtonState.Released && lastMouseState.Value.MiddleButton == ButtonState.Pressed)
-                    ReleasedKeys.Add("mouse3");
-                
-                if (mouseState.XButton1 == ButtonState.Released && lastMouseState.Value.XButton1 == ButtonState.Pressed)
-                    ReleasedKeys.Add("mouse4");
-                
-                if (mouseState.XButton2 == ButtonState.Released && lastMouseState.Value.XButton2 == ButtonState.Pressed)
-                    ReleasedKeys.Add("mouse5");
+                inputMapper.Update();
+                PressedKeys.AddRange(inputMapper.GetPressedKeys());
+                ReleasedKeys.AddRange(inputMapper.GetReleasedKeys());
             }
 
             {
-                ModifierKeys modifiers = ModifierKeys.None;
-
-                if (keyboardState.IsKeyDown(Keys.LeftControl))
-                    modifiers |= ModifierKeys.LeftControl;
+                List<string> modifiers = new();
                 
-                if (keyboardState.IsKeyDown(Keys.RightControl))
-                    modifiers |= ModifierKeys.RightControl;
-                
-                if (keyboardState.IsKeyDown(Keys.LeftShift))
-                    modifiers |= ModifierKeys.LeftShift;
-                
-                if (keyboardState.IsKeyDown(Keys.RightShift))
-                    modifiers |= ModifierKeys.RightShift;
-                
-                if (keyboardState.IsKeyDown(Keys.LeftAlt))
-                    modifiers |= ModifierKeys.LeftAlt;
-                
-                if (keyboardState.IsKeyDown(Keys.RightAlt))
-                    modifiers |= ModifierKeys.RightAlt;
-
-                if (keyboardState.IsKeyDown(Keys.LeftWindows))
-                    modifiers |= ModifierKeys.LeftWin;
-
-                if (keyboardState.IsKeyDown(Keys.RightWindows))
-                    modifiers |= ModifierKeys.RightWin;
+                foreach (var keyBind in PressedKeyBinds)
+                {
+                    if (keyBind.Modifiers.Count == 0 && ModifierKeyNames.Contains(keyBind.KeyName))
+                    {
+                        modifiers.Add(keyBind.KeyName);
+                    }
+                }
                 
                 FireEvents(modifiers);
             }
 
-            lastKeyboardState = keyboardState;
-            lastMouseState = mouseState;
-
             VanillaKeyBindRouter.Update();
         }
 
-        private static void FireEvents(ModifierKeys modifierKeys)
+        private static void FireEvents(IReadOnlyList<string> modifierKeys)
         {
             foreach (string key in PressedKeys)
             {
                 if (!ModifierKeyNames.Contains(key))
                     PressKey(new KeyBind(key, modifierKeys));
                 else
-                    PressKey(new KeyBind(key, ModifierKeys.None));
+                    PressKey(new KeyBind(key, ImmutableArray<string>.Empty));
             }
 
             foreach (string key in ReleasedKeys)
@@ -421,7 +364,7 @@ namespace JKMP.Core.Input
                 if (!ModifierKeyNames.Contains(key))
                     ReleaseKey(new KeyBind(key, modifierKeys));
                 else
-                    ReleaseKey(new KeyBind(key, ModifierKeys.None));
+                    ReleaseKey(new KeyBind(key, ImmutableArray<string>.Empty));
             }
         }
 

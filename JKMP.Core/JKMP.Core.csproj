@@ -48,6 +48,7 @@
             <DependencyFiles Include="$(TargetDir)0Harmony.dll" />
             <DependencyFiles Include="$(TargetDir)Semver.dll" />
             <DependencyFiles Include="$(TargetDir)Facepunch.Steamworks.Win32.dll" />
+            <DependencyFiles Include="$(TargetDir)System.Collections.Immutable.dll" />
         </ItemGroup>
         
         <PropertyGroup>

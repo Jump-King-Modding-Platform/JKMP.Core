@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
@@ -44,35 +46,22 @@ namespace JKMP.Core.Input
                 }
             }
         }
-        
-        [Flags]
-        public enum ModifierKeys : short
-        {
-            None = 0,
-            LeftShift = 1 << 0,
-            RightShift = 1 << 1,
-            LeftControl = 1 << 2,
-            RightControl = 1 << 3,
-            LeftAlt = 1 << 4,
-            RightAlt = 1 << 5,
-            LeftWin = 1 << 6,
-            RightWin = 1 << 7,
-        }
 
         public readonly struct KeyBind : IEquatable<KeyBind>
         {
             public readonly bool IsValid;
-            public readonly ModifierKeys Modifiers;
+            public readonly ImmutableSortedSet<string> Modifiers;
             public readonly string KeyName;
 
-            public KeyBind(string keyName, ModifierKeys modifiers)
+            public KeyBind(string keyName, IEnumerable<string> modifiers)
             {
                 KeyName = keyName?.ToLowerInvariant() ?? throw new ArgumentNullException(nameof(keyName));
 
                 if (!ValidKeyNames.Contains(keyName))
                     throw new ArgumentException($"Invalid key name: {keyName}", nameof(keyName));
-                
-                Modifiers = modifiers;
+
+                Modifiers = modifiers.ToImmutableSortedSet();
+
                 IsValid = true;
             }
             
@@ -86,7 +75,7 @@ namespace JKMP.Core.Input
                 
                 if (!bindName.Contains("+"))
                 {
-                    Modifiers = ModifierKeys.None;
+                    Modifiers = ImmutableSortedSet<string>.Empty;
                     KeyName = bindName.ToLowerInvariant();
                     
                     if (!ValidKeyNames.Contains(KeyName))
@@ -101,70 +90,40 @@ namespace JKMP.Core.Input
                     if (!ValidKeyNames.Contains(KeyName))
                         throw new ArgumentException($"Invalid key name: {KeyName}", nameof(bindName));
 
-                    Modifiers = ModifierKeys.None;
+                    Modifiers = modifiers.ToImmutableSortedSet();
 
                     foreach (string modifier in modifiers)
                     {
-                        if (Enum.TryParse(modifier, ignoreCase: true, out ModifierKeys modifierKey))
-                        {
-                            Modifiers |= modifierKey;
-                        }
-                        else
-                        {
+                        if (!ValidKeyNames.Contains(modifier))
                             throw new ArgumentException($"Unknown modifier key: {modifier}");
-                        }
                     }
                 }
 
                 IsValid = true;
             }
 
-            public override string ToString()
-            {
-                if (!IsValid)
-                    return "invalid";
-                
-                if (Modifiers != ModifierKeys.None)
-                    return $"{Modifiers} + {KeyName}";
-
-                return KeyName;
-            }
+            public override string ToString() => ToDisplayString();
 
             public string ToDisplayString()
             {
                 if (!IsValid)
                     return "Invalid Key";
-                
-                if (Modifiers == ModifierKeys.None)
-                    return GetKeyBindingName(KeyName);
 
-                ModifierKeys modifiers = Modifiers;
+                if (Modifiers.Count == 0)
+                    return GetKeyDisplayName(KeyName);
+                
                 StringBuilder builder = new();
 
-                foreach (ModifierKeys modifier in Enum.GetValues(typeof(ModifierKeys)).Cast<ModifierKeys>().Where(modifier => (modifiers & modifier) != 0))
+                for (int i = 0; i < Modifiers.Count; ++i)
                 {
-                    Keys modifierKey = modifier switch
-                    {
-                        ModifierKeys.LeftShift => Keys.LeftShift,
-                        ModifierKeys.RightShift => Keys.RightShift,
-                        ModifierKeys.LeftControl => Keys.LeftControl,
-                        ModifierKeys.RightControl => Keys.RightControl,
-                        ModifierKeys.LeftAlt => Keys.LeftAlt,
-                        ModifierKeys.RightAlt => Keys.RightAlt,
-                        ModifierKeys.LeftWin => Keys.LeftWindows,
-                        ModifierKeys.RightWin => Keys.RightWindows,
-                        _ => throw new ArgumentOutOfRangeException(nameof(modifier), "Unexpected modifier key")
-                    };
+                    builder.Append(GetKeyDisplayName(Modifiers[i]));
 
-                    builder.Append(GetKeyDisplayName(modifierKey));
-                    modifiers &= ~modifier;
-
-                    if (modifiers != ModifierKeys.None)
+                    if (i < Modifiers.Count - 1)
                         builder.Append(", ");
                 }
 
                 builder.Append(" + ");
-                builder.Append(GetKeyBindingName(KeyName));
+                builder.Append(GetKeyDisplayName(KeyName));
 
                 return builder.ToString();
             }
@@ -178,20 +137,18 @@ namespace JKMP.Core.Input
             {
                 if (!IsValid)
                     throw new InvalidOperationException("Can not serialize invalid KeyBind");
-                
-                if (Modifiers == ModifierKeys.None)
+
+                if (Modifiers.Count == 0)
                     return KeyName;
 
-                ModifierKeys modifiers = Modifiers;
                 StringBuilder builder = new();
-                
-                // Serialize modifiers to a string array and add them to the builder separated by a comma
-                foreach (var modifier in Enum.GetValues(typeof(ModifierKeys)).Cast<ModifierKeys>().Where(modifier => (modifiers & modifier) != 0))
-                {
-                    builder.Append(modifier.ToString().ToLowerInvariant());
-                    modifiers &= ~modifier;
 
-                    if (modifiers != ModifierKeys.None)
+                for (var i = 0; i < Modifiers.Count; ++i)
+                {
+                    string modifier = Modifiers[i];
+                    builder.Append(modifier.ToLowerInvariant());
+
+                    if (i < Modifiers.Count - 1)
                         builder.Append(",");
                 }
 
@@ -200,21 +157,40 @@ namespace JKMP.Core.Input
 
                 return builder.ToString();
             }
-
+            
             public override int GetHashCode()
             {
-                if (!IsValid)
-                    throw new InvalidOperationException("Can't calculate hash code for invalid KeyBind");
-                
                 unchecked
                 {
-                    return ((int)Modifiers * 397) ^ KeyName.GetHashCode();
+                    var hashCode = IsValid.GetHashCode();
+                    hashCode = (hashCode * 397) ^ KeyName.GetHashCode();
+                    hashCode = (hashCode * 397) ^ Modifiers.Count;
+
+                    // Use a for loop instead of foreach to get the most performance out of the loop
+                    for (var i = 0; i < Modifiers.Count; ++i)
+                    {
+                        hashCode = (hashCode * 397) ^ Modifiers[i].GetHashCode();
+                    }
+
+                    return hashCode;
                 }
             }
 
             public bool Equals(KeyBind other)
             {
-                return Modifiers == other.Modifiers && KeyName == other.KeyName;
+                if (KeyName != other.KeyName)
+                    return false;
+
+                if (Modifiers.Count != other.Modifiers.Count)
+                    return false;
+
+                for (int i = 0; i < Modifiers.Count; ++i)
+                {
+                    if (!Modifiers[i].Equals(other.Modifiers[i]))
+                        return false;
+                }
+
+                return true;
             }
 
             public override bool Equals(object? obj)
@@ -375,7 +351,7 @@ namespace JKMP.Core.Input
                 var keyActions = GetOrCreateActionsForKey(keyBind);
                 keyActions.Remove(actionName);
 
-                if (keyActions.Count <= 0 && registeredActions[actionName].DefaultKeyBinds.Length > 0)
+                if (registeredActions[actionName].DefaultKeyBinds.Length > 0 && GetKeyBindsForAction(actionName).Count <= 0)
                 {
                     AddUnboundAction(owner, actionName);
                 }
