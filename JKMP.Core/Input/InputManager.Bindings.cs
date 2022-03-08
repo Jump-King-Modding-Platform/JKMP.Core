@@ -62,6 +62,12 @@ namespace JKMP.Core.Input
 
                 Modifiers = modifiers.ToImmutableSortedSet();
 
+                foreach (string modifier in Modifiers)
+                {
+                    if (!ModifierKeyNames.Contains(modifier))
+                        throw new ArgumentException($"Unknown modifier key: {modifier}");
+                }
+
                 IsValid = true;
             }
             
@@ -94,7 +100,7 @@ namespace JKMP.Core.Input
 
                     foreach (string modifier in modifiers)
                     {
-                        if (!ValidKeyNames.Contains(modifier))
+                        if (!ModifierKeyNames.Contains(modifier))
                             throw new ArgumentException($"Unknown modifier key: {modifier}");
                     }
                 }
