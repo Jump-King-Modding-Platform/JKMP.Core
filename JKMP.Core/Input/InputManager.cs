@@ -48,6 +48,12 @@ namespace JKMP.Core.Input
         private static readonly HashSet<KeyBind> PressedKeyBinds = new();
 
         /// <summary>
+        /// A list of all key binds that were pressed last frame.
+        /// They may or may not be bound to an action.
+        /// </summary>
+        private static readonly HashSet<KeyBind> LastPressedKeyBinds = new();
+
+        /// <summary>
         /// A list of all actions that were not bound to any keys when loaded.
         /// Used for not overwriting unbound actions with default key binds.
         /// </summary>
@@ -152,6 +158,47 @@ namespace JKMP.Core.Input
             }
         }
 
+        public static bool IsKeyDown(KeyBind keyBind)
+        {
+            return PressedKeyBinds.Contains(keyBind);
+        }
+
+        /// <summary>
+        /// Returns all currently pressed keys, starting with the last pressed key.
+        /// </summary>
+        public static IEnumerable<KeyBind> GetDownedKeys()
+        {
+            // Return pressed keys in reverse order so that the first item will be the last pressed key.
+            foreach (var key in PressedKeyBinds.Reverse())
+            {
+                yield return key;
+            }
+        }
+
+        /// <summary>
+        /// Returns all keys that were pressed this frame, starting with the last pressed key.
+        /// </summary>
+        public static IEnumerable<KeyBind> GetPressedKeys()
+        {
+            foreach (var key in PressedKeyBinds.Reverse())
+            {
+                if (!LastPressedKeyBinds.Contains(key))
+                    yield return key;
+            }
+        }
+
+        /// <summary>
+        /// Returns all keys that were released this frame, starting with the last released key.
+        /// </summary>
+        public static IEnumerable<KeyBind> GetReleasedKeys()
+        {
+            foreach (var key in LastPressedKeyBinds.Reverse())
+            {
+                if (!PressedKeyBinds.Contains(key))
+                    yield return key;
+            }
+        }
+
         private static void InvokeActionCallbacksForInputKey(KeyBind keyBind, bool pressed)
         {
             foreach (var bindings in PluginBindings.Values)
@@ -226,6 +273,11 @@ namespace JKMP.Core.Input
             SteamFriends.OnGameOverlayActivated += OnGameOverlayToggled;
         }
 
+        internal static void Save()
+        {
+            Persistence.SaveMappings(PluginBindings, UnboundActions);
+        }
+
         private static void AddUnboundAction(Plugin plugin, string actionName)
         {
             if (!UnboundActions.TryGetValue(plugin, out var actions))
@@ -259,6 +311,12 @@ namespace JKMP.Core.Input
         {
             if (steamOverlayOpened)
                 return;
+
+            // Clear last pressed key binds and all items from PressedKeyBinds to it
+            LastPressedKeyBinds.Clear();
+
+            foreach (var key in PressedKeyBinds)
+                LastPressedKeyBinds.Add(key);
             
             PressedKeys.Clear();
             ReleasedKeys.Clear();

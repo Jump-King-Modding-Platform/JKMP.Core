@@ -25,18 +25,19 @@ namespace JKMP.Core.Input.UI
         };
 
         private static readonly float FieldWidth = 450;
+        private static int selectedBindIndex;
         
         public static IBTnode CreateMenu(List<IDrawable> drawables)
         {
             var menuSelector = new AdvancedMenuSelector(GuiFormat);
-
-            AddMenuItems(menuSelector);
-
             drawables.Add(menuSelector);
+
+            AddMenuItems(menuSelector, drawables);
+            
             return menuSelector;
         }
 
-        private static void AddMenuItems(AdvancedMenuSelector menuSelector)
+        private static void AddMenuItems(AdvancedMenuSelector menuSelector, List<IDrawable> drawables)
         {
             IReadOnlyDictionary<Plugin, InputManager.Bindings> allBindings = InputManager.GetAllBindings();
 
@@ -57,7 +58,7 @@ namespace JKMP.Core.Input.UI
                 
                 foreach (ActionInfo action in actions)
                 {
-                    var menuItem = new ActionBindField(bindings, action, FieldWidth);
+                    var menuItem = new ActionBindField(bindings, action, FieldWidth, drawables, () => selectedBindIndex, val => selectedBindIndex = val);
                     menuSelector.AddChild(categoryName, menuItem);
                 }
             }

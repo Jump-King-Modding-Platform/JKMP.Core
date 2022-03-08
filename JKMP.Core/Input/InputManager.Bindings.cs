@@ -121,6 +121,9 @@ namespace JKMP.Core.Input
 
             public override string ToString()
             {
+                if (!IsValid)
+                    return "invalid";
+                
                 if (Modifiers != ModifierKeys.None)
                     return $"{Modifiers} + {KeyName}";
 
@@ -129,6 +132,9 @@ namespace JKMP.Core.Input
 
             public string ToDisplayString()
             {
+                if (!IsValid)
+                    return "Invalid Key";
+                
                 if (Modifiers == ModifierKeys.None)
                     return GetKeyBindingName(KeyName);
 
@@ -170,6 +176,9 @@ namespace JKMP.Core.Input
             /// <returns></returns>
             public string ToSerializedString()
             {
+                if (!IsValid)
+                    throw new InvalidOperationException("Can not serialize invalid KeyBind");
+                
                 if (Modifiers == ModifierKeys.None)
                     return KeyName;
 
@@ -194,6 +203,9 @@ namespace JKMP.Core.Input
 
             public override int GetHashCode()
             {
+                if (!IsValid)
+                    throw new InvalidOperationException("Can't calculate hash code for invalid KeyBind");
+                
                 unchecked
                 {
                     return ((int)Modifiers * 397) ^ KeyName.GetHashCode();
@@ -211,6 +223,16 @@ namespace JKMP.Core.Input
             }
 
             public static implicit operator KeyBind(string key) => new(key);
+            
+            public static bool operator ==(KeyBind a, KeyBind b)
+            {
+                return a.Equals(b);
+            }
+
+            public static bool operator !=(KeyBind a, KeyBind b)
+            {
+                return !(a == b);
+            }
         }
 
         /// <summary>
