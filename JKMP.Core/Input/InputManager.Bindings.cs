@@ -244,7 +244,7 @@ namespace JKMP.Core.Input
                 this.owner = owner;
             }
 
-            public IReadOnlyList<string> GetActionsForKey(KeyBind keyBind)
+            public IReadOnlyList<string> GetActionsForKey(in KeyBind keyBind)
             {
                 if (!mappings.TryGetValue(keyBind, out var actions))
                     return Array.Empty<string>();
@@ -278,7 +278,7 @@ namespace JKMP.Core.Input
                 return new ReadOnlyCollection<ActionInfo>(registeredActions.Values.ToList());
             }
 
-            public IReadOnlyList<PluginInput.BindActionCallback> GetCallbacksForAction(string actionName)
+            public IReadOnlyList<PluginInput.BindActionCallback> GetCallbacksForAction(in string actionName)
             {
                 if (!actionCallbacks.TryGetValue(actionName, out var callbacks))
                     return Array.Empty<PluginInput.BindActionCallback>();
@@ -289,7 +289,7 @@ namespace JKMP.Core.Input
             /// <summary>
             /// Returns all keys bound to the specified action.
             /// </summary>
-            public IReadOnlyList<KeyBind> GetKeyBindsForAction(string actionName)
+            public IReadOnlyList<KeyBind> GetKeyBindsForAction(in string actionName)
             {
                 var result = new List<KeyBind>();
 
@@ -363,7 +363,7 @@ namespace JKMP.Core.Input
                 }
             }
 
-            private HashSet<string> GetOrCreateActionsForKey(KeyBind keyBind)
+            private HashSet<string> GetOrCreateActionsForKey(in KeyBind keyBind)
             {
                 if (!mappings.TryGetValue(keyBind, out var result))
                 {
@@ -374,7 +374,7 @@ namespace JKMP.Core.Input
                 return result;
             }
 
-            private List<PluginInput.BindActionCallback> GetActionCallbacks(string actionName)
+            private List<PluginInput.BindActionCallback> GetActionCallbacks(in string actionName)
             {
                 if (!actionCallbacks.TryGetValue(actionName, out var result))
                 {

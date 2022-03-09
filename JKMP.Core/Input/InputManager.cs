@@ -130,7 +130,7 @@ namespace JKMP.Core.Input
             return bindings.RegisterAction(name, uiName, defaultKeys);
         }
 
-        public static void PressKey(KeyBind keyBind)
+        public static void PressKey(in KeyBind keyBind)
         {
             if (!PressedKeyBinds.Add(keyBind))
                 return;
@@ -138,7 +138,7 @@ namespace JKMP.Core.Input
             InvokeActionCallbacksForInputKey(keyBind, true);
         }
 
-        public static void ReleaseKey(KeyBind keyBind)
+        public static void ReleaseKey(in KeyBind keyBind)
         {
             if (PressedKeyBinds.Remove(keyBind))
             {
@@ -150,7 +150,8 @@ namespace JKMP.Core.Input
             {
                 List<KeyBind> toRemove = new();
 
-                foreach (KeyBind key in PressedKeyBinds.Where(k => k.KeyName == keyBind.KeyName))
+                var keyBindCopy = keyBind;
+                foreach (KeyBind key in PressedKeyBinds.Where(k => k.KeyName == keyBindCopy.KeyName))
                 {
                     toRemove.Add(key);
                     InvokeActionCallbacksForInputKey(key, false);
@@ -161,7 +162,7 @@ namespace JKMP.Core.Input
             }
         }
 
-        public static bool IsKeyDown(KeyBind keyBind)
+        public static bool IsKeyDown(in KeyBind keyBind)
         {
             return PressedKeyBinds.Contains(keyBind);
         }
@@ -202,7 +203,7 @@ namespace JKMP.Core.Input
             }
         }
 
-        private static void InvokeActionCallbacksForInputKey(KeyBind keyBind, bool pressed)
+        private static void InvokeActionCallbacksForInputKey(in KeyBind keyBind, bool pressed)
         {
             foreach (var bindings in PluginBindings.Values)
             {
