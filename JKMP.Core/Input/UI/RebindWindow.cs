@@ -55,6 +55,8 @@ namespace JKMP.Core.Input.UI
         {
             active = false;
             escapeHoldTime = 0;
+            unbindHoldTime = 0;
+            lastPressedKey = default;
         }
 
         protected override BTresult MyRun(TickData tickData)
@@ -81,7 +83,6 @@ namespace JKMP.Core.Input.UI
                 {
                     CurrentBind = default;
                     Hide();
-                    unbindHoldTime = 0;
                     return BTresult.Success;
                 }
             }
