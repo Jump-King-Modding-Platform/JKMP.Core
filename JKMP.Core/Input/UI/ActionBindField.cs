@@ -111,8 +111,6 @@ namespace JKMP.Core.Input.UI
                     {
                         if (result == BTresult.Success)
                         {
-                            LogManager.TempLogger.Verbose("Set {actionName} bind to {keyBind}", action.UiName, rebindWindow.CurrentBind.ToDisplayString());
-
                             KeyBind oldBind = SelectedBindIndex == 0 ? bind1 : bind2;
 
                             // Make sure that new bind is not the same as the alternative bind
