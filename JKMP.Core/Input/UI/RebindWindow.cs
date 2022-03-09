@@ -39,8 +39,8 @@ namespace JKMP.Core.Input.UI
         }
 
         private const int BindingFrameWidth = 350;
-        private const int BindingFrameHeight = 250;
-        private const float CancelTime = 2f;
+        private const int BindingFrameHeight = 150;
+        private const float CancelTime = 1f;
 
         /// <param name="keyBind">The current keybind for this action</param>
         /// <param name="priority">The priority of this keybind, for example "primary" or "secondary"</param>
