@@ -15,12 +15,13 @@ namespace JKMP.Core.UI
         /// The int parameter indicates the index of the button that was pressed.
         /// </param>
         /// <param name="buttonNames">The text for each button.</param>
-        public static void ShowDialog(string message, Action<int?>? onClick = null, params string[] buttonNames)
+        public static ModalDialog ShowDialog(string message, Action<int?>? onClick = null, params string[] buttonNames)
         {
             ThrowIfNotInitialized();
             
             var dialog = new ModalDialog(message, buttonNames, onClick);
             instance!.PushModal(dialog);
+            return dialog;
         }
 
         /// <summary>
@@ -28,7 +29,7 @@ namespace JKMP.Core.UI
         /// </summary>
         /// <param name="message">The message to display</param>
         /// <param name="onClosed">The callback to invoke when the modal is closed. Can be null.</param>
-        public static void ShowInfo(string message, Action? onClosed = null)
+        public static ModalDialog ShowInfo(string message, Action? onClosed = null)
         {
             ThrowIfNotInitialized();
 
@@ -41,6 +42,7 @@ namespace JKMP.Core.UI
 
             var dialog = new ModalDialog(message, new[] { "OK" }, callback);
             instance!.PushModal(dialog);
+            return dialog;
         }
 
         /// <summary>
@@ -49,7 +51,7 @@ namespace JKMP.Core.UI
         /// <param name="message">The message to display.</param>
         /// <param name="onClosed">The callback to invoke when the modal is closed.</param>
         /// <exception cref="ArgumentNullException">Thrown is onClosed is null.</exception>
-        public static void ShowConfirm(string message, Action<bool> onClosed)
+        public static ModalDialog ShowConfirm(string message, Action<bool> onClosed)
         {
             if (onClosed == null) throw new ArgumentNullException(nameof(onClosed));
             
@@ -62,6 +64,7 @@ namespace JKMP.Core.UI
             );
 
             instance!.PushModal(dialog);
+            return dialog;
         }
 
         private static void ThrowIfNotInitialized()
