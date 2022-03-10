@@ -12,14 +12,29 @@ using IDrawable = JumpKing.Util.IDrawable;
 
 namespace JKMP.Core.UI
 {
+    /// <summary>
+    /// A UI element that displays a message and a group of buttons that can be clicked to select an option.
+    /// When opened it takes over the input and the game is paused until the user selects an option.
+    /// </summary>
     public partial class ModalDialog : IBTnode, IDrawable
     {
+        /// <summary>
+        /// The message to display.
+        /// </summary>
         public string Message { get; }
+        
+        /// <summary>
+        /// The buttons to display.
+        /// </summary>
         public string[] Buttons { get; }
+        
+        /// <summary>
+        /// The callback to invoke when the user selects an option.
+        /// </summary>
         public Action<int?>? Callback { get; }
 
-        private SpriteFont Font => JKContentManager.Font.MenuFont;
-        private SpriteFont SmallFont => JKContentManager.Font.MenuFontSmall;
+        private static SpriteFont Font => JKContentManager.Font.MenuFont;
+        private static SpriteFont SmallFont => JKContentManager.Font.MenuFontSmall;
 
         private readonly GuiFrame bgFrame;
         private readonly Rectangle rect;
