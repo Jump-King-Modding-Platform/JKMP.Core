@@ -40,8 +40,8 @@ namespace JKMP.Core.Input.InputMappers
         {
             return keyName switch
             {
-                "xpad-rsb" => "Right stick button",
-                "xpad-lsb" => "Left stick button",
+                "xpad-rsb" => "RS",
+                "xpad-lsb" => "LS",
                 "xpad-rb" => "RB",
                 "xpad-rt" => "RT",
                 "xpad-lb" => "LB",
@@ -57,7 +57,7 @@ namespace JKMP.Core.Input.InputMappers
                 "xpad-ls-left" => "LS left",
                 "xpad-ls-up" => "LS up",
                 "xpad-ls-right" => "LS right",
-                "xpad-ls-down" => "LSdown",
+                "xpad-ls-down" => "LS down",
                 "xpad-rs-left" => "RS left",
                 "xpad-rs-up" => "RS up",
                 "xpad-rs-right" => "RS right",
