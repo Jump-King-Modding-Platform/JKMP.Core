@@ -13,8 +13,15 @@ using IDrawable = JumpKing.Util.IDrawable;
 namespace JKMP.Core.UI
 {
     /// <summary>
+    /// <para>
     /// A UI element that displays a message and a group of buttons that can be clicked to select an option.
     /// When opened it takes over the input and the game is paused until the user selects an option.
+    /// </para>
+    ///
+    /// <para>
+    /// The last_result property is set to Success if an option was selected or Failure if the window was closed by pressing the cancel/back buttons.
+    /// While waiting for an answer, the last_result property is set to Running.
+    /// </para>
     /// </summary>
     public partial class ModalDialog : IBTnode, IDrawable
     {
