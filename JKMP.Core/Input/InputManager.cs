@@ -138,6 +138,9 @@ namespace JKMP.Core.Input
 
         public static void PressKey(in KeyBind keyBind)
         {
+            if (!keyBind.IsValid)
+                return;
+            
             if (!PressedKeyBinds.Add(keyBind))
                 return;
 
@@ -146,13 +149,16 @@ namespace JKMP.Core.Input
 
         public static void ReleaseKey(in KeyBind keyBind)
         {
+            if (!keyBind.IsValid)
+                return;
+            
             if (PressedKeyBinds.Remove(keyBind))
             {
                 InvokeActionCallbacksForInputKey(keyBind, false);
             }
 
             // If there's no modifiers, release any other key binds that use the same key but also has modifiers
-            if (keyBind.Modifiers.Count == 0)
+            if (keyBind.Modifiers!.Count == 0)
             {
                 List<KeyBind> toRemove = new();
 
@@ -170,6 +176,9 @@ namespace JKMP.Core.Input
 
         public static bool IsKeyDown(in KeyBind keyBind)
         {
+            if (!keyBind.IsValid)
+                return false;
+            
             return PressedKeyBinds.Contains(keyBind);
         }
 
@@ -418,6 +427,9 @@ namespace JKMP.Core.Input
 
         public static Dictionary<Plugin, IReadOnlyList<ActionInfo>> GetActionsForKeyBind(in KeyBind keyBind)
         {
+            if (!keyBind.IsValid)
+                throw new ArgumentException("KeyBind is invalid", nameof(keyBind));
+            
             var result = new Dictionary<Plugin, IReadOnlyList<ActionInfo>>();
 
             foreach (var kv in PluginBindings)

@@ -263,6 +263,9 @@ namespace JKMP.Core.Input
 
             public IReadOnlyList<ActionInfo> GetActionsForKey(in KeyBind keyBind)
             {
+                if (!keyBind.IsValid)
+                    throw new ArgumentException("KeyBind is invalid", nameof(keyBind));
+                
                 if (!mappings.TryGetValue(keyBind, out var actions))
                     return Array.Empty<ActionInfo>();
 
@@ -357,6 +360,9 @@ namespace JKMP.Core.Input
 
             public void MapAction(KeyBind keyBind, string actionName)
             {
+                if (!keyBind.IsValid)
+                    throw new ArgumentException($"KeyBind is invalid", nameof(keyBind));
+                
                 if (!registeredActions.ContainsKey(actionName))
                     throw new ArgumentException($"Unknown action: {actionName}");
 
@@ -368,6 +374,9 @@ namespace JKMP.Core.Input
 
             public void UnmapAction(KeyBind keyBind, string actionName)
             {
+                if (!keyBind.IsValid)
+                    throw new ArgumentException($"KeyBind is invalid", nameof(keyBind));
+                
                 if (!registeredActions.ContainsKey(actionName))
                     throw new ArgumentException($"Unknown action: {actionName}");
 
