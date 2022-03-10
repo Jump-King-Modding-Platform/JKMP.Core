@@ -49,12 +49,10 @@ namespace JKMP.Core.UI
         /// Displays a modal with yes and no options. The callback is invoked when the modal is closed.
         /// </summary>
         /// <param name="message">The message to display.</param>
-        /// <param name="onClosed">The callback to invoke when the modal is closed.</param>
+        /// <param name="onClosed">The callback to invoke when the modal is closed. Can be null.</param>
         /// <exception cref="ArgumentNullException">Thrown is onClosed is null.</exception>
-        public static ModalDialog ShowConfirm(string message, Action<bool> onClosed)
+        public static ModalDialog ShowConfirm(string message, Action<bool>? onClosed = null)
         {
-            if (onClosed == null) throw new ArgumentNullException(nameof(onClosed));
-            
             ThrowIfNotInitialized();
 
             var dialog = new ModalDialog(

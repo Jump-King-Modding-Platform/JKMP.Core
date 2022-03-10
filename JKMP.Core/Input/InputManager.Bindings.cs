@@ -50,7 +50,7 @@ namespace JKMP.Core.Input
         public readonly struct KeyBind : IEquatable<KeyBind>
         {
             public readonly bool IsValid;
-            public readonly ImmutableSortedSet<string> Modifiers;
+            public readonly ImmutableSortedSet<string>? Modifiers;
             public readonly string KeyName;
 
             public KeyBind(string keyName, IEnumerable<string> modifiers)
@@ -115,7 +115,7 @@ namespace JKMP.Core.Input
                 if (!IsValid)
                     return "Invalid Key";
 
-                if (Modifiers.Count == 0)
+                if (Modifiers!.Count == 0)
                     return GetKeyDisplayName(KeyName);
                 
                 StringBuilder builder = new();
@@ -144,7 +144,7 @@ namespace JKMP.Core.Input
                 if (!IsValid)
                     throw new InvalidOperationException("Can not serialize invalid KeyBind");
 
-                if (Modifiers.Count == 0)
+                if (Modifiers!.Count == 0)
                     return KeyName;
 
                 StringBuilder builder = new();
@@ -170,12 +170,20 @@ namespace JKMP.Core.Input
                 {
                     var hashCode = IsValid.GetHashCode();
                     hashCode = (hashCode * 397) ^ KeyName.GetHashCode();
-                    hashCode = (hashCode * 397) ^ Modifiers.Count;
 
-                    // Use a for loop instead of foreach to get the most performance out of the loop
-                    for (var i = 0; i < Modifiers.Count; ++i)
+                    if (Modifiers != null)
                     {
-                        hashCode = (hashCode * 397) ^ Modifiers[i].GetHashCode();
+                        hashCode = (hashCode * 397) ^ Modifiers.Count;
+
+                        // Use a for loop instead of foreach to get the most performance out of the loop
+                        for (var i = 0; i < Modifiers.Count; ++i)
+                        {
+                            hashCode = (hashCode * 397) ^ Modifiers[i].GetHashCode();
+                        }
+                    }
+                    else
+                    {
+                        hashCode = (hashCode * 397) ^ 0;
                     }
 
                     return hashCode;
@@ -184,16 +192,22 @@ namespace JKMP.Core.Input
 
             public bool Equals(KeyBind other)
             {
+                if (IsValid != other.IsValid)
+                    return false;
+                
                 if (KeyName != other.KeyName)
                     return false;
 
-                if (Modifiers.Count != other.Modifiers.Count)
+                if (Modifiers?.Count != other.Modifiers?.Count)
                     return false;
 
-                for (int i = 0; i < Modifiers.Count; ++i)
+                if (Modifiers != null && other.Modifiers != null)
                 {
-                    if (!Modifiers[i].Equals(other.Modifiers[i]))
-                        return false;
+                    for (int i = 0; i < Modifiers.Count; ++i)
+                    {
+                        if (!Modifiers[i].Equals(other.Modifiers[i]))
+                            return false;
+                    }
                 }
 
                 return true;
@@ -244,12 +258,12 @@ namespace JKMP.Core.Input
                 this.owner = owner;
             }
 
-            public IReadOnlyList<string> GetActionsForKey(in KeyBind keyBind)
+            public IReadOnlyList<ActionInfo> GetActionsForKey(in KeyBind keyBind)
             {
                 if (!mappings.TryGetValue(keyBind, out var actions))
-                    return Array.Empty<string>();
+                    return Array.Empty<ActionInfo>();
 
-                return new ReadOnlyCollection<string>(actions.ToList());
+                return new ReadOnlyCollection<ActionInfo>(actions.Select(name => registeredActions[name]).ToList());
             }
 
             /// <summary>

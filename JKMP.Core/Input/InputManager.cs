@@ -213,9 +213,9 @@ namespace JKMP.Core.Input
                 if (actions.Count == 0)
                     actions = bindings.GetActionsForKey(new KeyBind(keyBind.KeyName));
 
-                foreach (string actionName in actions)
+                foreach (var action in actions)
                 {
-                    var callbacks = bindings.GetCallbacksForAction(actionName);
+                    var callbacks = bindings.GetCallbacksForAction(action.Name);
 
                     foreach (var callback in callbacks)
                         callback.Invoke(pressed);
@@ -390,6 +390,23 @@ namespace JKMP.Core.Input
         public static IReadOnlyDictionary<Plugin, Bindings> GetAllBindings()
         {
             return new ReadOnlyDictionary<Plugin, Bindings>(PluginBindings);
+        }
+
+        public static Dictionary<Plugin, IReadOnlyList<ActionInfo>> GetActionsForKeyBind(in KeyBind keyBind)
+        {
+            var result = new Dictionary<Plugin, IReadOnlyList<ActionInfo>>();
+
+            foreach (var kv in PluginBindings)
+            {
+                var keyBinds = kv.Value.GetActionsForKey(keyBind);
+                
+                if (keyBinds.Count > 0)
+                {
+                    result.Add(kv.Key, keyBinds);
+                }
+            }
+            
+            return result;
         }
     }
 }

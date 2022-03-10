@@ -39,6 +39,8 @@ namespace JKMP.Core.UI
         /// The callback to invoke when the user selects an option.
         /// </summary>
         public Action<int?>? Callback { get; }
+        
+        public int? DialogResult { get; private set; }
 
         private static SpriteFont Font => JKContentManager.Font.MenuFont;
         private static SpriteFont SmallFont => JKContentManager.Font.MenuFontSmall;
@@ -79,6 +81,7 @@ namespace JKMP.Core.UI
 
             if (input.cancel || input.pause)
             {
+                DialogResult = null;
                 Callback?.Invoke(null);
                 return BTresult.Failure;
             }
@@ -101,6 +104,7 @@ namespace JKMP.Core.UI
 
             if (input.confirm || input.jump)
             {
+                DialogResult = selectedButton;
                 Callback?.Invoke(selectedButton);
                 JKContentManager.Audio.Menu.OnSelect();
                 return BTresult.Success;

@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using BehaviorTree;
 using JKMP.Core.Logging;
+using JKMP.Core.Plugins;
+using JKMP.Core.UI;
 using JumpKing;
 using JumpKing.Controller;
 using JumpKing.PauseMenu;
@@ -21,6 +24,7 @@ namespace JKMP.Core.Input.UI
         {
             None,
             Binding,
+            WaitingForModal,
         }
         
         private readonly InputManager.Bindings bindings;
@@ -33,7 +37,8 @@ namespace JKMP.Core.Input.UI
         private readonly RebindWindow rebindWindow;
         private readonly Func<int> getSelectedBindIndex;
         private readonly Action<int> setSelectedBindIndex;
-        
+        private readonly Action updateAllBinds;
+
         private IReadOnlyList<KeyBind> keyBinds = null!;
         private KeyBind bind1;
         private KeyBind bind2;
@@ -44,27 +49,36 @@ namespace JKMP.Core.Input.UI
             set => setSelectedBindIndex(value);
         }
         private State currentState;
+        private ModalDialog? modal;
 
         private static SpriteFont Font => JKContentManager.Font.MenuFontSmall;
 
-        public ActionBindField(InputManager.Bindings bindings, InputManager.ActionInfo action, float fieldWidth, List<IDrawable> drawables, Func<int> getSelectedBindIndex, Action<int> setSelectedBindIndex)
+        public ActionBindField(InputManager.Bindings bindings,
+            InputManager.ActionInfo action,
+            float fieldWidth,
+            List<IDrawable> drawables,
+            Func<int> getSelectedBindIndex,
+            Action<int> setSelectedBindIndex,
+            Action updateAllBinds
+        )
         {
             this.bindings = bindings ?? throw new ArgumentNullException(nameof(bindings));
             this.action = action;
             this.fieldWidth = fieldWidth;
             this.getSelectedBindIndex = getSelectedBindIndex;
             this.setSelectedBindIndex = setSelectedBindIndex;
+            this.updateAllBinds = updateAllBinds;
             xNameOffset = 0;
             xBind1Offset = (float)Math.Round(fieldWidth * 0.33f);
             xBind2Offset = (float)Math.Round(fieldWidth * 0.66f);
-            
+
             UpdateKeyBinds();
-            
+
             rebindWindow = new(action);
             drawables.Add(rebindWindow);
         }
 
-        private void UpdateKeyBinds()
+        public void UpdateKeyBinds()
         {
             keyBinds = bindings.GetKeyBindsForAction(action.Name);
             bind1 = keyBinds.FirstOrDefault();
@@ -109,64 +123,138 @@ namespace JKMP.Core.Input.UI
 
                     if (result != BTresult.Running)
                     {
+                        ref var targetBind = ref GetSelectedBind(out KeyBind otherBind);
+                        KeyBind oldBind = targetBind;
+                        
                         if (result == BTresult.Success)
                         {
-                            KeyBind oldBind = SelectedBindIndex == 0 ? bind1 : bind2;
-
-                            // Make sure that new bind is not the same as the alternative bind
-                            // However make sure to allow it if both binds are invalid (unbound)
-                            switch (SelectedBindIndex)
+                            if (targetBind == rebindWindow.CurrentBind)
                             {
-                                case 0:
-                                    if (bind2.IsValid && bind2 == rebindWindow.CurrentBind)
-                                    {
-                                        currentState = State.None;
-                                        return BTresult.Failure;
-                                    }
-
-                                    break;
-                                case 1:
-                                    if (bind1.IsValid && bind1 == rebindWindow.CurrentBind)
-                                    {
-                                        currentState = State.None;
-                                        return BTresult.Failure;
-                                    }
-                                    break;
+                                currentState = State.None;
+                                return BTresult.Failure;
                             }
 
-                            // Unmap old key if valid
-                            if (oldBind.IsValid)
+                            // Check if the new key is already bound to this action
+                            if (rebindWindow.CurrentBind == otherBind && otherBind.IsValid)
                             {
-                                bindings.UnmapAction(oldBind, action.Name);
+                                ModalDialog.ShowInfo($"'{rebindWindow.CurrentBind}' is already bound to this action.");
+                                currentState = State.None;
+                                return BTresult.Failure;
                             }
                             
-                            // Map new key if valid
+                            // Check if the new key is already bound to another action
                             if (rebindWindow.CurrentBind.IsValid)
                             {
-                                bindings.MapAction(rebindWindow.CurrentBind, action.Name);
+                                var existingActions = InputManager.GetActionsForKeyBind(rebindWindow.CurrentBind);
+                                if (existingActions.Count > 0)
+                                {
+                                    StringBuilder actionsBuilder = new();
+
+                                    foreach (var kv in existingActions)
+                                    {
+                                        foreach (var actionInfo in kv.Value)
+                                        {
+                                            string pluginName = kv.Key.Info.Name!;
+
+                                            if (kv.Key == Plugin.InternalPlugin)
+                                                pluginName = "Jump King";
+
+                                            actionsBuilder.Append(pluginName);
+                                            actionsBuilder.Append(" - ");
+                                            actionsBuilder.AppendLine(actionInfo.UiName);
+                                        }
+                                    }
+
+                                    modal = ModalDialog.ShowDialog(
+                                        $"'{rebindWindow.CurrentBind}' is already bound to the following actions:\n{actionsBuilder}\nWhat do you want to do?",
+                                        onClick: null,
+                                        "Replace", "Add", "Cancel"
+                                    );
+                                    currentState = State.WaitingForModal;
+                                    return BTresult.Running;
+                                }
                             }
 
-                            switch (SelectedBindIndex)
-                            {
-                                case 0:
-                                    bind1 = rebindWindow.CurrentBind;
-                                    break;
-                                case 1:
-                                    bind2 = rebindWindow.CurrentBind;
-                                    break;
-                            }
+                            DoRebind(ref targetBind);
 
                             InputManager.Save();
                         }
                         
                         currentState = State.None;
+                        return BTresult.Failure;
                     }
-                    
+
                     return result;
+                }
+                case State.WaitingForModal:
+                {
+                    if (modal!.last_result == BTresult.Running)
+                        return BTresult.Running;
+
+                    ref var currentBind = ref GetSelectedBind(out _);
+
+                    switch (modal.DialogResult)
+                    {
+                        case 0: // Overwrite
+                        {
+                            // Remove the keybinds that use the new key
+                            var existingActions = InputManager.GetActionsForKeyBind(rebindWindow.CurrentBind);
+                            
+                            foreach (var kv in existingActions)
+                            {
+                                var pluginBindings = InputManager.GetBindings(kv.Key);
+                                
+                                // ReSharper disable once LocalVariableHidesMember
+                                foreach (InputManager.ActionInfo action in kv.Value)
+                                {
+                                    pluginBindings.UnmapAction(rebindWindow.CurrentBind, action.Name);
+                                }
+                            }
+
+                            DoRebind(ref currentBind);
+                            updateAllBinds();
+
+                            break;
+                        }
+                        case 1: // Add
+                        {
+                            DoRebind(ref currentBind);
+                            break;
+                        }
+                    }
+
+                    currentState = State.None;
+                    modal = null;
+                    return BTresult.Failure;
                 }
             }
 
             return BTresult.Failure;
+        }
+
+        private ref KeyBind GetSelectedBind(out KeyBind otherBind)
+        {
+            ref KeyBind targetBind = ref SelectedBindIndex == 0 ? ref bind1 : ref bind2;
+            otherBind = SelectedBindIndex == 0 ? bind2 : bind1;
+            return ref targetBind;
+        }
+
+        void DoRebind(ref KeyBind targetBind)
+        {
+            // Unmap old key if valid
+            if (targetBind.IsValid)
+            {
+                bindings.UnmapAction(targetBind, action.Name);
+            }
+                            
+            // Map new key if valid
+            if (rebindWindow.CurrentBind.IsValid)
+            {
+                bindings.MapAction(rebindWindow.CurrentBind, action.Name);
+            }
+
+            // Update target bind
+            targetBind = rebindWindow.CurrentBind;
         }
 
         public void Draw(int x, int y, bool selected)

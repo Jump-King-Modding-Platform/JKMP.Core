@@ -58,9 +58,28 @@ namespace JKMP.Core.Input.UI
                 
                 foreach (ActionInfo action in actions)
                 {
-                    var menuItem = new ActionBindField(bindings, action, FieldWidth, drawables, () => selectedBindIndex, val => selectedBindIndex = val);
+                    var menuItem = new ActionBindField(
+                        bindings,
+                        action,
+                        FieldWidth,
+                        drawables,
+                        () => selectedBindIndex,
+                        val => selectedBindIndex = val,
+                        () => UpdateAllBinds(menuSelector)
+                    );
                     menuSelector.AddChild(categoryName, menuItem);
                 }
+            }
+        }
+
+        private static void UpdateAllBinds(AdvancedMenuSelector menuSelector)
+        {
+            foreach (IBTnode menuItem in menuSelector.Children)
+            {
+                if (menuItem is not ActionBindField bindField)
+                    continue;
+
+                bindField.UpdateKeyBinds();
             }
         }
 
