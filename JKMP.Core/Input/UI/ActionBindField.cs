@@ -214,11 +214,14 @@ namespace JKMP.Core.Input.UI
                             DoRebind(ref currentBind);
                             updateAllBinds();
 
+                            InputManager.Save();
+
                             break;
                         }
                         case 1: // Add
                         {
                             DoRebind(ref currentBind);
+                            InputManager.Save();
                             break;
                         }
                     }
