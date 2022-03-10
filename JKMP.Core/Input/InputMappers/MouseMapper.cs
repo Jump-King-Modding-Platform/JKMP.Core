@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JumpKing;
 using Microsoft.Xna.Framework.Input;
 
 namespace JKMP.Core.Input.InputMappers
@@ -35,6 +36,9 @@ namespace JKMP.Core.Input.InputMappers
 
         public IEnumerable<string> GetPressedKeys()
         {
+            if (!Game1.instance.IsActive)
+                yield break;
+            
             if (currentState == default || lastState == default)
                 yield break;
 
@@ -56,6 +60,9 @@ namespace JKMP.Core.Input.InputMappers
 
         public IEnumerable<string> GetReleasedKeys()
         {
+            if (!Game1.instance.IsActive)
+                yield break;
+            
             if (currentState == default || lastState == default)
                 yield break;
 
