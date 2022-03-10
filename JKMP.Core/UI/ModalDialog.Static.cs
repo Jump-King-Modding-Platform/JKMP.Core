@@ -55,7 +55,8 @@ namespace JKMP.Core.UI
             
             ThrowIfNotInitialized();
 
-            var dialog = new ModalDialog(message,
+            var dialog = new ModalDialog(
+                message,
                 new[] { "Yes", "No" },
                 index => { onClosed(index == 0); }
             );
