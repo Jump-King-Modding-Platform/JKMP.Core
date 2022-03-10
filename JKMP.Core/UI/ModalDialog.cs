@@ -48,8 +48,8 @@ namespace JKMP.Core.UI
         private readonly GuiFrame bgFrame;
         private readonly Rectangle rect;
 
-        private const int PaddingX = 30;
-        private const int PaddingY = 50;
+        private const int PaddingX = 25;
+        private const int PaddingY = 30;
         
         int selectedButton = 0;
 
@@ -119,7 +119,7 @@ namespace JKMP.Core.UI
             bgFrame.Draw();
 
             // Draw message
-            TextHelper.DrawString(SmallFont, Message, rect.Center.ToVector2(), Color.White, new Vector2(0.5f, 0.5f));
+            TextHelper.DrawString(SmallFont, Message, new Vector2(rect.Center.X, rect.Top + 14), Color.White, new Vector2(0.5f, 0));
             
             // Draw buttons
             Vector2 position = new Vector2(rect.Left + 14, rect.Bottom - 14 - Font.LineSpacing);
