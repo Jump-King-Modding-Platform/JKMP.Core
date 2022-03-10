@@ -24,28 +24,30 @@ namespace JKMP.Core.Input
         /// The name should be something descriptive, such as "Jump". This value will also be displayed in the settings menu.
         /// If you want to display a custom string in the menu use the <see cref="RegisterActionWithName"/> overload.
         /// </param>
+        /// <param name="onlyGameInput">If true this action can only be triggered if the player is in-game and not paused.</param>
         /// <param name="defaultKeys">The default key name. Must be a valid key name from <see cref="InputManager.ValidKeyNames"/>. Can also be null, in which case it'll be unbound by default.</param>
         /// <returns>True if the action did not already exist. Note that action names are unique per plugin. Two different plugins can use the same name.</returns>
         /// <exception cref="ArgumentException">Thrown if defaultKey is not part of <see cref="InputManager.ValidKeyNames"/>.</exception>
         /// <exception cref="InvalidOperationException">Thrown if this method is called after the plugin has been initialized.</exception>
-        public bool RegisterAction(string name, params string[] defaultKeys) => RegisterActionWithName(name, name, defaultKeys);
+        public bool RegisterAction(string name, bool onlyGameInput, params string[] defaultKeys) => RegisterActionWithName(name, name, onlyGameInput, defaultKeys);
 
         /// <summary>
         /// Registers an input action with a custom name that can be bound to a mouse or keyboard button.
         /// </summary>
         /// <param name="name">The name can be anything as long as it's unique for this plugin.</param>
         /// <param name="uiName">This value will be displayed in the settings menu for this action.</param>
+        /// <param name="onlyGameInput">If true this action can only be triggered if the player is in-game and not paused.</param>
         /// <param name="defaultKeys">The default key name. Must be a valid key name from <see cref="InputManager.ValidKeyNames"/>. Can also be null, in which case it'll be unbound by default.</param>
         /// <returns>True if the action did not already exist. Note that action names are unique per plugin. Two different plugins can use the same name.</returns>
         /// <exception cref="ArgumentException">Thrown if defaultKey is not part of <see cref="InputManager.ValidKeyNames"/>.</exception>
         /// <exception cref="InvalidOperationException">Thrown if this method is called after the plugin has been initialized.</exception>
-        public bool RegisterActionWithName(string name, string uiName, params string[] defaultKeys)
+        public bool RegisterActionWithName(string name, string uiName, bool onlyGameInput, params string[] defaultKeys)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
             if (uiName == null) throw new ArgumentNullException(nameof(uiName));
             ThrowIfFinalized();
 
-            return InputManager.RegisterAction(owner, name, uiName, defaultKeys.Select(key => (InputManager.KeyBind)key).ToArray());
+            return InputManager.RegisterAction(owner, name, uiName, onlyGameInput, defaultKeys.Select(key => (InputManager.KeyBind)key).ToArray());
         }
 
         /// <summary>

@@ -65,8 +65,9 @@ namespace JKMP.Core.Input
             {
                 string fieldName = kv.Key;
                 (string uiName, string[] keyNames) = kv.Value;
-
-                InputManager.RegisterAction(plugin: null, fieldName, uiName, defaultKeys: keyNames.Select(k => (InputManager.KeyBind)k).ToArray());
+                const bool onlyGameInput = false;
+                
+                InputManager.RegisterAction(plugin: null, fieldName, uiName, onlyGameInput, defaultKeys: keyNames.Select(k => (InputManager.KeyBind)k).ToArray());
                 InputManager.BindAction(null, fieldName, pressed => OnKeyToggled(fieldName, pressed));
             }
         }

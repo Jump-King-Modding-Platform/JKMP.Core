@@ -6,6 +6,7 @@ using System.Linq;
 using JKMP.Core.Input.InputMappers;
 using JKMP.Core.Logging;
 using JKMP.Core.Plugins;
+using JumpKing.PauseMenu;
 using Microsoft.Xna.Framework.Input;
 using Steamworks;
 
@@ -121,13 +122,13 @@ namespace JKMP.Core.Input
             return bindings.RemoveActionCallback(actionName, callback);
         }
 
-        public static bool RegisterAction(Plugin? plugin, string name, string uiName, params KeyBind[] defaultKeys)
+        public static bool RegisterAction(Plugin? plugin, string name, string uiName, bool onlyGameInput, params KeyBind[] defaultKeys)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
             if (uiName == null) throw new ArgumentNullException(nameof(uiName));
 
             Bindings bindings = GetOrCreateBindings(plugin);
-            return bindings.RegisterAction(name, uiName, defaultKeys);
+            return bindings.RegisterAction(name, uiName, onlyGameInput, defaultKeys);
         }
 
         public static void PressKey(in KeyBind keyBind)
@@ -215,6 +216,10 @@ namespace JKMP.Core.Input
 
                 foreach (var action in actions)
                 {
+                    // If pressed, check if we're in the main menu (aka PauseManager.instance is null) or paused, and if so, check if the action can be invoked when not in-game.
+                    if (pressed && PauseManager.instance is { IsPaused: true } && action.OnlyGameInput)
+                        continue;
+                    
                     var callbacks = bindings.GetCallbacksForAction(action.Name);
 
                     foreach (var callback in callbacks)

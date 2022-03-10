@@ -16,18 +16,20 @@ namespace JKMP.Core.Input
         {
             public readonly string Name;
             public readonly string UiName;
+            public readonly bool OnlyGameInput;
             public readonly KeyBind[] DefaultKeyBinds;
 
-            public ActionInfo(string name, string uiName, params KeyBind[] defaultKeyBinds)
+            public ActionInfo(string name, string uiName, bool onlyGameInput, params KeyBind[] defaultKeyBinds)
             {
                 Name = name;
                 UiName = uiName;
+                OnlyGameInput = onlyGameInput;
                 DefaultKeyBinds = defaultKeyBinds;
             }
 
             public bool Equals(ActionInfo other)
             {
-                return Name == other.Name && UiName == other.UiName && DefaultKeyBinds.Equals(other.DefaultKeyBinds);
+                return Name == other.Name && UiName == other.UiName && OnlyGameInput == other.OnlyGameInput && DefaultKeyBinds.Equals(other.DefaultKeyBinds);
             }
 
             public override bool Equals(object? obj)
@@ -41,6 +43,7 @@ namespace JKMP.Core.Input
                 {
                     var hashCode = Name.GetHashCode();
                     hashCode = (hashCode * 397) ^ UiName.GetHashCode();
+                    hashCode = (hashCode * 397) ^ OnlyGameInput.GetHashCode();
                     hashCode = (hashCode * 397) ^ DefaultKeyBinds.GetHashCode();
                     return hashCode;
                 }
@@ -316,7 +319,7 @@ namespace JKMP.Core.Input
                 return result.AsReadOnly();
             }
 
-            public bool RegisterAction(string name, string uiName, params KeyBind[] defaultKeys)
+            public bool RegisterAction(string name, string uiName, bool onlyGameInput, params KeyBind[] defaultKeys)
             {
                 if (name == null) throw new ArgumentNullException(nameof(name));
                 if (uiName == null) throw new ArgumentNullException(nameof(uiName));
@@ -324,7 +327,7 @@ namespace JKMP.Core.Input
                 if (registeredActions.ContainsKey(name))
                     return false;
 
-                registeredActions.Add(name, new ActionInfo(name, uiName, defaultKeys));
+                registeredActions.Add(name, new ActionInfo(name, uiName, onlyGameInput, defaultKeys));
                 return true;
             }
 
