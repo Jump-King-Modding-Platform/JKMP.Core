@@ -1,6 +1,7 @@
 using System.Linq;
 using BehaviorTree;
 using JKMP.Core.Logging;
+using JKMP.Core.UI;
 using JumpKing;
 using JumpKing.PauseMenu;
 using JumpKing.Util;
@@ -121,11 +122,11 @@ namespace JKMP.Core.Input.UI
             position.Y += MenuFont.LineSpacing;
             
             // Draw cancel text
-            TextHelper.DrawString(SmallFont, $"Hold escape for {CancelTime - escapeHoldTime:0.#} seconds to cancel", position, Color.White, new Vector2(0.5f, 0));
+            TextHelper.DrawString(SmallFont, $"Hold escape for {CancelTime - escapeHoldTime:0.#} second(s) to cancel", position, Color.White, new Vector2(0.5f, 0));
             position.Y += SmallFont.LineSpacing;
             
             // Draw unbind text
-            TextHelper.DrawString(SmallFont, $"Hold backspace for {CancelTime - unbindHoldTime:0.#} seconds to unbind", position, Color.White, new Vector2(0.5f, 0));
+            TextHelper.DrawString(SmallFont, $"Hold backspace for {CancelTime - unbindHoldTime:0.#} second(s) to unbind", position, Color.White, new Vector2(0.5f, 0));
             position.Y += SmallFont.LineSpacing;
 
             position.X = BgFrame.GetBounds().Left + padding;
