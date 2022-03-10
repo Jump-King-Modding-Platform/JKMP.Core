@@ -50,6 +50,11 @@ namespace JKMP.Core.Input
         private static readonly Dictionary<Plugin, HashSet<string>> UnboundActions = new();
 
         /// <summary>
+        /// A list of all actions that are currently 'active', aka was last called with pressed = true.
+        /// </summary>
+        private static readonly HashSet<ActionInfo> PressedActions = new();
+
+        /// <summary>
         /// A list of all input mappers that translates arbitrary input into strings that can be used by the input system
         /// </summary>
         private static readonly List<IInputMapper> InputMappers = new()
@@ -216,14 +221,28 @@ namespace JKMP.Core.Input
 
                 foreach (var action in actions)
                 {
-                    // If pressed, check if we're in the main menu (aka PauseManager.instance is null) or paused, and if so, check if the action can be invoked when not in-game.
-                    if (pressed && PauseManager.instance is { IsPaused: true } && action.OnlyGameInput)
+                    if (!pressed && !PressedActions.Contains(action))
                         continue;
                     
+                    // If pressed, check if we're in the main menu (aka PauseManager.instance is null) or paused, and if so, check if the action can be invoked when not in-game.
+                    if (pressed && (PauseManager.instance == null || PauseManager.instance is { IsPaused: true }) && action.OnlyGameInput)
+                        continue;
+
                     var callbacks = bindings.GetCallbacksForAction(action.Name);
 
                     foreach (var callback in callbacks)
+                    {
                         callback.Invoke(pressed);
+                        
+                        if (pressed)
+                        {
+                            PressedActions.Add(action);
+                        }
+                        else
+                        {
+                            PressedActions.Remove(action);
+                        }
+                    }
                 }
             }
         }
