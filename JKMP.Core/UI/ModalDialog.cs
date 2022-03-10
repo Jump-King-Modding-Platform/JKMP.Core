@@ -63,12 +63,18 @@ namespace JKMP.Core.UI
 
             if (input.left)
             {
-                selectedButton = MathHelper.Clamp(selectedButton - 1, 0, Buttons.Length - 1);
+                selectedButton--;
+
+                if (selectedButton < 0)
+                    selectedButton = Buttons.Length - 1;
             }
 
             if (input.right)
             {
-                selectedButton = MathHelper.Clamp(selectedButton + 1, 0, Buttons.Length - 1);
+                selectedButton++;
+                
+                if (selectedButton >= Buttons.Length)
+                    selectedButton = 0;
             }
 
             if (input.confirm || input.jump)
