@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using BehaviorTree;
 using HarmonyLib;
+using JKMP.Core.Logging;
 using JKMP.Core.Rendering;
 using JumpKing;
 using JumpKing.Controller;
@@ -16,7 +17,8 @@ using IDrawable = JumpKing.Util.IDrawable;
 namespace JKMP.Core.UI
 {
     /// <summary>
-    /// A class that handles drawing a menu. It is very similar to the <see cref="MenuSelector"/> except it had some more functionality such as categories.
+    /// A class that handles drawing a menu. It is very similar to the <see cref="MenuSelector"/> except it has some more functionality such as categories
+    /// and can be scrolled if there are too many items to fit in the gui format.
     /// </summary>
     public class AdvancedMenuSelector : IBTcomposite, IDrawable
     {
@@ -54,6 +56,10 @@ namespace JKMP.Core.UI
         private readonly GuiFrame bgFrame;
         private readonly bool autoSize;
 
+        private readonly ScrollBar scrollBar;
+        // Used to update the scroll position to the current selected item.
+        private int[]? scrollPositions;
+        
         private readonly RenderTarget2D renderTarget = new(
             Game1.instance.GraphicsDevice,
             Game1.WIDTH,
@@ -64,7 +70,7 @@ namespace JKMP.Core.UI
             preferredMultiSampleCount: 0,
             RenderTargetUsage.DiscardContents
         );
-
+        
         private readonly SpriteBatch spriteBatch = new(Game1.instance.GraphicsDevice);
 
         private static readonly RasterizerState RasterizerState = new()
@@ -89,6 +95,14 @@ namespace JKMP.Core.UI
             this.autoSize = autoSize;
             this.guiFormat = guiFormat;
             bgFrame = new GuiFrame(GetBackgroundRectangle());
+            Rectangle guiFormatBounds = guiFormat.GetBounds();
+            scrollBar = new ScrollBar(Vector2.Zero, GetsScissorRectangle().Size.ToVector2(), Vector2.Zero)
+            {
+                VerticalBarOrigin = new Vector2(guiFormatBounds.Right - 1, guiFormatBounds.Top),
+                HorizontalBarOrigin = new Vector2(guiFormatBounds.Left, guiFormatBounds.Bottom - 1)
+            };
+            
+            UpdateScrollBar();
         }
 
         /// <inheritdoc />
@@ -200,6 +214,7 @@ namespace JKMP.Core.UI
             
             bgFrame.Draw();
             DrawMenuItems();
+            scrollBar.Draw();
         }
 
         private void DrawMenuItems()
@@ -207,11 +222,21 @@ namespace JKMP.Core.UI
             if (allItems == null)
                 return;
 
-            RenderUtility.PushRenderContext(spriteBatch, renderTarget, bgFrame.GetBounds());
+            RenderUtility.PushRenderContext(spriteBatch, renderTarget, GetsScissorRectangle());
             Game1.instance.GraphicsDevice.Clear(Color.Transparent);
             Game1.spriteBatch.Begin(blendState: BlendState.AlphaBlend, samplerState: SamplerState.PointClamp, rasterizerState: RasterizerState);
+            
+            // Set the scrollbar's position to center on the selected item.
+            if (scrollPositions?.Length > 0)
+            {
+                float y = scrollPositions[selectedItemIndex];
 
-            Vector2 drawPos = guiFormat.CalculateBounds(allItems).Location.ToVector2();
+                var position = scrollBar.ScrollPosition;
+                position.Y = y - scrollBar.ViewportSize.Y / 2;
+                scrollBar.ScrollPosition = position;
+            }
+
+            Vector2 drawPos = guiFormat.CalculateBounds(allItems).Location.ToVector2() + scrollBar.GetDrawOffset();
             drawPos.Y += guiFormat.padding.top;
 
             for (int i = 0; i < allItems.Length; i++)
@@ -234,11 +259,15 @@ namespace JKMP.Core.UI
             RenderUtility.PopRenderContext();
 
             Game1.spriteBatch.Draw(renderTarget, Vector2.Zero, Color.White);
+        }
 
-            using (var file = File.Create("test.jpg"))
-            {
-                renderTarget.SaveAsPng(file, renderTarget.Width, renderTarget.Height);
-            }
+        private Rectangle GetsScissorRectangle()
+        {
+            // Use the bgFrame bounds but with padding that accounts for the frame
+            var rect = bgFrame.GetBounds();
+            rect.Location += new Point(4, 4);
+            rect.Size -= new Point(8, 8);
+            return rect;
         }
 
         /// <inheritdoc />
@@ -388,10 +417,44 @@ namespace JKMP.Core.UI
             activeItem = null;
             allItems = Children.Cast<IMenuItem>().ToArray();
             bgFrame.SetBounds(autoSize ? guiFormat.CalculateBounds(allItems) : GetBackgroundRectangle());
+            CalculateItemPositions();
 
             ResetSelectedIndex();
+            UpdateScrollBar();
             
             dirty = false;
+        }
+
+        private void CalculateItemPositions()
+        {
+            if (allItems == null)
+                return;
+
+            scrollPositions = new int[allItems.Length];
+
+            int y = guiFormat.padding.top + guiFormat.margin.top;
+            for (int i = 0; i < allItems.Length; ++i)
+            {
+                scrollPositions[i] = y;
+                y += allItems[i].GetSize().Y;
+            }
+        }
+
+        private void UpdateScrollBar()
+        {
+            Vector2 contentSize = Vector2.Zero;
+            
+            foreach (IBTnode? node in Children)
+            {
+                var item = (IMenuItem)node;
+                Point itemSize = item.GetSize();
+                contentSize.X = Math.Max(scrollBar.ContentSize.X, itemSize.X);
+                contentSize.Y += itemSize.Y;
+            }
+
+            var padding = new Vector2(guiFormat.padding.left + guiFormat.padding.right, guiFormat.padding.top + guiFormat.padding.bottom);
+            var margin = new Vector2(guiFormat.margin.left + guiFormat.margin.right, guiFormat.margin.top + guiFormat.margin.bottom);
+            scrollBar.ContentSize = padding + margin + contentSize;
         }
 
         /// <summary>
