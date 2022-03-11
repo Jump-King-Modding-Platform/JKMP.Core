@@ -91,6 +91,13 @@ namespace JKMP.Core.UI
             bgFrame = new GuiFrame(GetBackgroundRectangle());
         }
 
+        /// <inheritdoc />
+        public override void OnDispose()
+        {
+            renderTarget.Dispose();
+            spriteBatch.Dispose();
+        }
+
         /// <summary>
         /// Returns all children and casts them to <see cref="IMenuItem"/>.
         /// </summary>
