@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using BehaviorTree;
 using HarmonyLib;
+using JKMP.Core.Rendering;
 using JumpKing;
 using JumpKing.Controller;
 using JumpKing.PauseMenu;
 using JumpKing.PauseMenu.BT;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using IDrawable = JumpKing.Util.IDrawable;
 
 namespace JKMP.Core.UI
@@ -50,6 +53,25 @@ namespace JKMP.Core.UI
         private readonly Dictionary<string, int> categoryOrder = new();
         private readonly GuiFrame bgFrame;
         private readonly bool autoSize;
+
+        private readonly RenderTarget2D renderTarget = new(
+            Game1.instance.GraphicsDevice,
+            Game1.WIDTH,
+            Game1.HEIGHT,
+            mipMap: false,
+            SurfaceFormat.Color,
+            DepthFormat.None,
+            preferredMultiSampleCount: 0,
+            RenderTargetUsage.DiscardContents
+        );
+
+        private readonly SpriteBatch spriteBatch = new(Game1.instance.GraphicsDevice);
+
+        private static readonly RasterizerState RasterizerState = new()
+        {
+            CullMode = CullMode.CullCounterClockwiseFace,
+            ScissorTestEnable = true
+        };
 
         private bool dirty = true;
         private IMenuItem[]? allItems;
@@ -178,6 +200,10 @@ namespace JKMP.Core.UI
             if (allItems == null)
                 return;
 
+            RenderUtility.PushRenderContext(spriteBatch, renderTarget, bgFrame.GetBounds());
+            Game1.instance.GraphicsDevice.Clear(Color.Transparent);
+            Game1.spriteBatch.Begin(blendState: BlendState.AlphaBlend, samplerState: SamplerState.PointClamp, rasterizerState: RasterizerState);
+
             Vector2 drawPos = guiFormat.CalculateBounds(allItems).Location.ToVector2();
             drawPos.Y += guiFormat.padding.top;
 
@@ -195,6 +221,16 @@ namespace JKMP.Core.UI
                 allItems[i].Draw((int)x, (int)y, selectedItemIndex == i);
 
                 drawPos.Y += guiFormat.element_margin + allItems[i].GetSize().Y;
+            }
+
+            Game1.spriteBatch.End();
+            RenderUtility.PopRenderContext();
+
+            Game1.spriteBatch.Draw(renderTarget, Vector2.Zero, Color.White);
+
+            using (var file = File.Create("test.jpg"))
+            {
+                renderTarget.SaveAsPng(file, renderTarget.Width, renderTarget.Height);
             }
         }
 
