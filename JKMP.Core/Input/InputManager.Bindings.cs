@@ -389,7 +389,7 @@ namespace JKMP.Core.Input
                 }
             }
 
-            public void ClearBindings()
+            public void ClearMappings()
             {
                 mappings.Clear();
             }

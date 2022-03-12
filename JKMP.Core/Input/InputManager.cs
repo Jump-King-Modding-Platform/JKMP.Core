@@ -451,7 +451,7 @@ namespace JKMP.Core.Input
             
             foreach (var bindings in PluginBindings.Values)
             {
-                bindings.ClearBindings();
+                bindings.ClearMappings();
                 
                 foreach (var action in bindings.GetActions())
                 {
