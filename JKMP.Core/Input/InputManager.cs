@@ -347,7 +347,7 @@ namespace JKMP.Core.Input
             if (steamOverlayOpened)
                 return;
 
-            // Clear last pressed key binds and all items from PressedKeyBinds to it
+            // Clear last pressed key binds and add items from PressedKeyBinds to it
             LastPressedKeyBinds.Clear();
 
             foreach (var key in PressedKeyBinds)
@@ -364,23 +364,32 @@ namespace JKMP.Core.Input
             }
 
             {
-                List<string> modifiers = new();
+                HashSet<string> modifiers = new();
                 
                 foreach (var keyBind in PressedKeyBinds)
                 {
-                    if (keyBind.Modifiers.Count == 0 && ModifierKeyNames.Contains(keyBind.KeyName))
+                    if (keyBind.Modifiers!.Count == 0 && ModifierKeyNames.Contains(keyBind.KeyName))
                     {
                         modifiers.Add(keyBind.KeyName);
                     }
                 }
-                
+
+                // Check if any modifier keys were pressed this frame and add them to the modifiers
+                foreach (string keyName in PressedKeys)
+                {
+                    if (ModifierKeyNames.Contains(keyName) && !modifiers.Contains(keyName))
+                    {
+                        modifiers.Add(keyName);
+                    }
+                }
+
                 FireEvents(modifiers);
             }
 
             VanillaKeyBindRouter.Update();
         }
 
-        private static void FireEvents(IReadOnlyList<string> modifierKeys)
+        private static void FireEvents(ISet<string> modifierKeys)
         {
             foreach (string key in PressedKeys)
             {
