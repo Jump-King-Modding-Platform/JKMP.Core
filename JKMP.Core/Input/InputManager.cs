@@ -157,21 +157,18 @@ namespace JKMP.Core.Input
                 InvokeActionCallbacksForInputKey(keyBind, false);
             }
 
-            // If there's no modifiers, release any other key binds that use the same key but also has modifiers
-            if (keyBind.Modifiers!.Count == 0)
+            // Release any other key binds that use the same key
+            List<KeyBind> toRemove = new();
+
+            var keyBindCopy = keyBind;
+            foreach (KeyBind key in PressedKeyBinds.Where(k => k.KeyName == keyBindCopy.KeyName))
             {
-                List<KeyBind> toRemove = new();
-
-                var keyBindCopy = keyBind;
-                foreach (KeyBind key in PressedKeyBinds.Where(k => k.KeyName == keyBindCopy.KeyName))
-                {
-                    toRemove.Add(key);
-                    InvokeActionCallbacksForInputKey(key, false);
-                }
-
-                foreach (KeyBind key in toRemove)
-                    PressedKeyBinds.Remove(key);
+                toRemove.Add(key);
+                InvokeActionCallbacksForInputKey(key, false);
             }
+
+            foreach (KeyBind key in toRemove)
+                PressedKeyBinds.Remove(key);
         }
 
         public static bool IsKeyDown(in KeyBind keyBind)
