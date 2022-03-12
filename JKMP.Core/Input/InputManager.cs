@@ -234,7 +234,7 @@ namespace JKMP.Core.Input
                         continue;
                     
                     // If pressed, check if we're in the main menu (aka PauseManager.instance is null) or paused, and if so, check if the action can be invoked when not in-game.
-                    if (pressed && (PauseManager.instance == null || PauseManager.instance is { IsPaused: true }) && action.OnlyGameInput)
+                    if (pressed && PauseManager.instance is null or { IsPaused: true } && action.OnlyGameInput)
                         continue;
 
                     var callbacks = bindings.GetCallbacksForAction(action.Name);
