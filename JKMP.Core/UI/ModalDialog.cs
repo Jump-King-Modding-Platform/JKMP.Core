@@ -40,6 +40,10 @@ namespace JKMP.Core.UI
         /// </summary>
         public Action<int?>? Callback { get; }
         
+        /// <summary>
+        /// The index of the selected button (or null if cancelled/undecided).
+        /// To find out if the user has selected an option, use the <see cref="IBTnode.last_result"/> property.
+        /// </summary>
         public int? DialogResult { get; private set; }
 
         private static SpriteFont Font => JKContentManager.Font.MenuFont;
