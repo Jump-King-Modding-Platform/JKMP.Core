@@ -23,7 +23,17 @@ namespace JKMP.Core.UI
                 this.drawables = drawables;
                 instance = this;
             }
-            
+
+            public override void OnDispose()
+            {
+                foreach (var dialog in dialogs)
+                {
+                    dialog.OnDispose();
+                }
+
+                dialogs.Clear();
+            }
+
             public void PushModal(ModalDialog dialog)
             {
                 if (dialogs.Count == 0 && PauseManager.instance?.IsPaused == false)
@@ -37,6 +47,13 @@ namespace JKMP.Core.UI
             
             protected override BTresult MyRun(TickData tickData)
             {
+                // Check that this drawable is the topmost one
+                if (drawables[drawables.Count - 1] != this)
+                {
+                    drawables.Remove(this);
+                    drawables.Add(this);
+                }
+                
                 while (dialogs.Count > 0)
                 {
                     var dialog = dialogs.Peek();
@@ -45,7 +62,7 @@ namespace JKMP.Core.UI
                     if (result == BTresult.Running)
                         return BTresult.Running;
 
-                    dialogs.Pop();
+                    dialogs.Pop().OnDispose();
                 }
                 
                 if (unpauseWhenEmpty)
@@ -61,13 +78,6 @@ namespace JKMP.Core.UI
             {
                 if (last_result != BTresult.Running)
                     return;
-                
-                // Check that this drawable is the topmost one
-                if (drawables[drawables.Count - 1] != this)
-                {
-                    drawables.Remove(this);
-                    drawables.Add(this);
-                }
 
                 // Need to draw in reverse order so that the topmost dialog is drawn last
                 foreach (var dialog in dialogs.Reverse())

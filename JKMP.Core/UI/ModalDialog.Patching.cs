@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BehaviorTree;
+using JKMP.Core.Logging;
 using JumpKing.Util;
 
 namespace JKMP.Core.UI
@@ -8,7 +9,13 @@ namespace JKMP.Core.UI
     {
         internal static IBTnode CreateMainMenuNode(IBTnode mainMenu, List<IDrawable> drawables)
         {
-            instance ??= new ModalManager(drawables);
+            if (instance != null)
+            {
+                instance.OnDispose();
+                instance = null;
+            }
+
+            instance = new ModalManager(drawables);
             drawables.Add(instance);
 
             var result = new BTsimultaneous(instance, mainMenu);
