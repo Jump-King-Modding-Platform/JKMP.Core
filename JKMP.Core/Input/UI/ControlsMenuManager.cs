@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BehaviorTree;
+using JKMP.Core.Logging;
 using JKMP.Core.Plugins;
 using JKMP.Core.UI;
 using JumpKing;
@@ -29,12 +30,25 @@ namespace JKMP.Core.Input.UI
         
         public static IBTnode CreateMenu(List<IDrawable> drawables)
         {
-            var menuSelector = new AdvancedMenuSelector(GuiFormat);
-            drawables.Add(menuSelector);
-
-            AddMenuItems(menuSelector, drawables);
+            var controlsMenu = new AdvancedMenuSelector(new GuiFormat
+            {
+                anchor_bounds = new Rectangle(0, 0, 240, 360),
+                anchor = Vector2.Zero,
+                element_margin = 8,
+                all_padding = 16,
+                all_margin = 16
+            });
+            drawables.Add(controlsMenu);
             
-            return menuSelector;
+            var bindsMenu = new AdvancedMenuSelector(GuiFormat);
+            drawables.Add(bindsMenu);
+
+            AddMenuItems(bindsMenu, drawables);
+
+            controlsMenu.AddChild(null, new TextButton("Keybinds", bindsMenu));
+            controlsMenu.AddChild(null, new TextButton("Reset to default", new ResetKeyBinds(() => UpdateAllBinds(bindsMenu))));
+
+            return controlsMenu;
         }
 
         private static void AddMenuItems(AdvancedMenuSelector menuSelector, List<IDrawable> drawables)
@@ -115,6 +129,44 @@ namespace JKMP.Core.Input.UI
                 var textSize = Font.MeasureString("|").ToPoint();
                 return new Point((int)FieldWidth, textSize.Y);
             }
+        }
+    }
+
+    internal class ResetKeyBinds : IBTnode
+    {
+        private readonly Action updateKeyBindsCallback;
+        private ModalDialog? dialog;
+
+        public ResetKeyBinds(Action updateKeyBindsCallback)
+        {
+            this.updateKeyBindsCallback = updateKeyBindsCallback;
+        }
+
+        protected override BTresult MyRun(TickData tickData)
+        {
+            if (dialog == null)
+            {
+                dialog = ModalDialog.ShowDialog(
+                    "Are you sure you want to reset all\nkeybinds to their default values?",
+                    onClick: OnModalResult,
+                    "Reset", "Cancel"
+                );
+                
+                return BTresult.Success;
+            }
+            
+            return dialog!.last_result == BTresult.Running ? BTresult.Running : BTresult.Failure;
+        }
+
+        private void OnModalResult(int? selectedOption)
+        {
+            if (selectedOption == 0)
+            {
+                InputManager.ResetKeyBinds();
+                updateKeyBindsCallback();
+            }
+
+            dialog = null;
         }
     }
 }

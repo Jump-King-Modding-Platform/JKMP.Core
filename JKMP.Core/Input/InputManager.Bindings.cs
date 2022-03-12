@@ -389,6 +389,11 @@ namespace JKMP.Core.Input
                 }
             }
 
+            public void ClearBindings()
+            {
+                mappings.Clear();
+            }
+
             private HashSet<string> GetOrCreateActionsForKey(in KeyBind keyBind)
             {
                 if (!mappings.TryGetValue(keyBind, out var result))

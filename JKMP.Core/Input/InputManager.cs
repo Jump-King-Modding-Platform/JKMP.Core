@@ -444,5 +444,25 @@ namespace JKMP.Core.Input
             
             return result;
         }
+
+        internal static void ResetKeyBinds()
+        {
+            UnboundActions.Clear();
+            
+            foreach (var bindings in PluginBindings.Values)
+            {
+                bindings.ClearBindings();
+                
+                foreach (var action in bindings.GetActions())
+                {
+                    foreach (var defaultKeyBind in action.DefaultKeyBinds)
+                    {
+                        bindings.MapAction(defaultKeyBind, action.Name);
+                    }
+                }
+            }
+
+            Persistence.SaveMappings(PluginBindings, UnboundActions);
+        }
     }
 }
