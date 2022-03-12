@@ -131,7 +131,7 @@ namespace JKMP.Core.UI
         /// <param name="menuItem">The menu item to add.</param>
         /// <typeparam name="T">The type of the menu item.</typeparam>
         /// <exception cref="ArgumentException">Thrown if the menuItem does not inherit <see cref="IBTnode"/></exception>
-        public void AddChild<T>(string category, T menuItem) where T : IBTnode, IMenuItem
+        public void AddChild<T>(string? category, T menuItem) where T : IBTnode, IMenuItem
         {
             AddChild(category, (IMenuItem)menuItem);
         }
