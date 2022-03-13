@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace JKMP.Core.Input
 {
-    internal static partial class InputManager
+    public static partial class InputManager
     {
         /// <summary>
         /// Handles loading and saving of custom keybinds

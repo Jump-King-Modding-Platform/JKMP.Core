@@ -8,11 +8,15 @@ using JKMP.Core.Logging;
 using JKMP.Core.Plugins;
 using JumpKing.PauseMenu;
 using Microsoft.Xna.Framework.Input;
+using Serilog;
 using Steamworks;
 
 namespace JKMP.Core.Input
 {
-    internal static partial class InputManager
+    /// <summary>
+    /// The input manager is responsible for listening to input devices and mapping keys to actions.
+    /// </summary>
+    public static partial class InputManager
     {
         internal static readonly HashSet<string> ValidKeyNames = new();
         internal static readonly HashSet<string> ModifierKeyNames = new();
@@ -20,12 +24,12 @@ namespace JKMP.Core.Input
         private static readonly Dictionary<Plugin, Bindings> PluginBindings = new();
 
         private static bool steamOverlayOpened;
-        
+
         /// <summary>
         /// A list of all the keys that was just pressed down.
         /// </summary>
         private static readonly List<string> PressedKeys = new();
-        
+
         /// <summary>
         /// A list of all the keys that was just released.
         /// </summary>
@@ -63,6 +67,10 @@ namespace JKMP.Core.Input
             new MouseMapper(),
             new ControllerMapper()
         };
+
+        private static uint disabledInputCount;
+        
+        private static readonly ILogger Logger = LogManager.CreateLogger(typeof(InputManager));
 
         static InputManager()
         {
@@ -109,7 +117,7 @@ namespace JKMP.Core.Input
             return $"UNNAMEDKEY_{name}";
         }
 
-        public static void BindAction(Plugin? plugin, string actionName, PluginInput.BindActionCallback callback)
+        internal static void BindAction(Plugin? plugin, string actionName, PluginInput.BindActionCallback callback)
         {
             if (actionName == null) throw new ArgumentNullException(nameof(actionName));
             if (callback == null) throw new ArgumentNullException(nameof(callback));
@@ -117,8 +125,8 @@ namespace JKMP.Core.Input
             Bindings bindings = GetOrCreateBindings(plugin);
             bindings.AddActionCallback(actionName, callback);
         }
-        
-        public static bool UnbindAction(Plugin? plugin, string actionName, PluginInput.BindActionCallback callback)
+
+        internal static bool UnbindAction(Plugin? plugin, string actionName, PluginInput.BindActionCallback callback)
         {
             if (actionName == null) throw new ArgumentNullException(nameof(actionName));
             if (callback == null) throw new ArgumentNullException(nameof(callback));
@@ -127,7 +135,7 @@ namespace JKMP.Core.Input
             return bindings.RemoveActionCallback(actionName, callback);
         }
 
-        public static bool RegisterAction(Plugin? plugin, string name, string uiName, bool onlyGameInput, params KeyBind[] defaultKeys)
+        internal static bool RegisterAction(Plugin? plugin, string name, string uiName, bool onlyGameInput, params KeyBind[] defaultKeys)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
             if (uiName == null) throw new ArgumentNullException(nameof(uiName));
@@ -136,22 +144,33 @@ namespace JKMP.Core.Input
             return bindings.RegisterAction(name, uiName, onlyGameInput, defaultKeys);
         }
 
+        /// <summary>
+        /// Presses the keybind. If there are any actions bound to the keybind, they will be triggered with pressed = true.
+        /// </summary>
+        /// <param name="keyBind"></param>
         public static void PressKey(in KeyBind keyBind)
         {
             if (!keyBind.IsValid)
                 return;
-            
+
+            if (disabledInputCount > 0)
+                return;
+
             if (!PressedKeyBinds.Add(keyBind))
                 return;
 
             InvokeActionCallbacksForInputKey(keyBind, true);
         }
 
+        /// <summary>
+        /// Releases the keybind. If there are any actions bound to the keybind, they will be triggered with pressed = false.
+        /// </summary>
+        /// <param name="keyBind"></param>
         public static void ReleaseKey(in KeyBind keyBind)
         {
             if (!keyBind.IsValid)
                 return;
-            
+
             if (PressedKeyBinds.Remove(keyBind))
             {
                 InvokeActionCallbacksForInputKey(keyBind, false);
@@ -171,11 +190,16 @@ namespace JKMP.Core.Input
                 PressedKeyBinds.Remove(key);
         }
 
+        /// <summary>
+        /// Returns true if the given keybind is pressed.
+        /// </summary>
+        /// <param name="keyBind"></param>
+        /// <returns></returns>
         public static bool IsKeyDown(in KeyBind keyBind)
         {
             if (!keyBind.IsValid)
                 return false;
-            
+
             return PressedKeyBinds.Contains(keyBind);
         }
 
@@ -229,9 +253,9 @@ namespace JKMP.Core.Input
                 {
                     if (!pressed && !PressedActions.Contains(action))
                         continue;
-                    
+
                     // If pressed, check if we're in the main menu (aka PauseManager.instance is null) or paused, and if so, check if the action can be invoked when not in-game.
-                    if (pressed && PauseManager.instance is null or { IsPaused: true } && action.OnlyGameInput)
+                    if (pressed && action.OnlyGameInput && PauseManager.instance is null or { IsPaused: true })
                         continue;
 
                     var callbacks = bindings.GetCallbacksForAction(action.Name);
@@ -239,7 +263,7 @@ namespace JKMP.Core.Input
                     foreach (var callback in callbacks)
                     {
                         callback.Invoke(pressed);
-                        
+
                         if (pressed)
                         {
                             PressedActions.Add(action);
@@ -253,7 +277,7 @@ namespace JKMP.Core.Input
             }
         }
 
-        public static void CreateVanillaKeyBinds()
+        internal static void CreateVanillaKeyBinds()
         {
             VanillaKeyBindRouter.InitializeActions();
         }
@@ -262,10 +286,10 @@ namespace JKMP.Core.Input
         /// Should be called after registering actions.
         /// This method loads the saved or default key bindings for the registered actions.
         /// </summary>
-        public static void Initialize()
+        internal static void Initialize()
         {
             var loadedMappings = Persistence.LoadMappings();
-            
+
             foreach (var kv in PluginBindings)
             {
                 var plugin = kv.Key;
@@ -342,7 +366,7 @@ namespace JKMP.Core.Input
             ReleasedKeys.Clear();
         }
 
-        public static void Update()
+        internal static void Update()
         {
             if (steamOverlayOpened)
                 return;
@@ -352,7 +376,7 @@ namespace JKMP.Core.Input
 
             foreach (var key in PressedKeyBinds)
                 LastPressedKeyBinds.Add(key);
-            
+
             PressedKeys.Clear();
             ReleasedKeys.Clear();
 
@@ -365,7 +389,7 @@ namespace JKMP.Core.Input
 
             {
                 HashSet<string> modifiers = new();
-                
+
                 foreach (var keyBind in PressedKeyBinds)
                 {
                     if (keyBind.Modifiers!.Count == 0 && ModifierKeyNames.Contains(keyBind.KeyName))
@@ -417,48 +441,70 @@ namespace JKMP.Core.Input
                 result = new(plugin);
                 PluginBindings.Add(plugin, result);
             }
-            
+
             return result;
         }
 
-        public static Bindings GetBindings(Plugin? plugin)
+        internal static Bindings GetBindings(Plugin? plugin)
         {
             return GetOrCreateBindings(plugin);
         }
 
-        public static IReadOnlyDictionary<Plugin, Bindings> GetAllBindings()
+        internal static IReadOnlyDictionary<Plugin, Bindings> GetAllBindings()
         {
             return new ReadOnlyDictionary<Plugin, Bindings>(PluginBindings);
         }
 
-        public static Dictionary<Plugin, IReadOnlyList<ActionInfo>> GetActionsForKeyBind(in KeyBind keyBind)
+        internal static Dictionary<Plugin, IReadOnlyList<ActionInfo>> GetActionsForKeyBind(in KeyBind keyBind)
         {
             if (!keyBind.IsValid)
                 throw new ArgumentException("KeyBind is invalid", nameof(keyBind));
-            
+
             var result = new Dictionary<Plugin, IReadOnlyList<ActionInfo>>();
 
             foreach (var kv in PluginBindings)
             {
                 var keyBinds = kv.Value.GetActionsForKey(keyBind);
-                
+
                 if (keyBinds.Count > 0)
                 {
                     result.Add(kv.Key, keyBinds);
                 }
             }
-            
+
             return result;
+        }
+
+        /// <summary>
+        /// Disables listening for input. If called multiple times, you would have to call <see cref="EnableInput"/> as many times to re-enable listening.
+        /// </summary>
+        public static void DisableInput()
+        {
+            ++disabledInputCount;
+        }
+
+        /// <summary>
+        /// Re-enables listening for input. If <see cref="DisableInput"/> was called multiple times, you would have to call this as many times to re-enable listening.
+        /// </summary>
+        public static void EnableInput()
+        {
+            if (disabledInputCount == 0)
+            {
+                Logger.Warning("Input is already enabled");
+                return;
+            }
+            
+            --disabledInputCount;
         }
 
         internal static void ResetKeyBinds()
         {
             UnboundActions.Clear();
-            
+
             foreach (var bindings in PluginBindings.Values)
             {
                 bindings.ClearMappings();
-                
+
                 foreach (var action in bindings.GetActions())
                 {
                     foreach (var defaultKeyBind in action.DefaultKeyBinds)
