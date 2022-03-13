@@ -58,7 +58,7 @@ namespace JKMP.Core.UI
             var dialog = new ModalDialog(
                 message,
                 new[] { "Yes", "No" },
-                index => { onClosed(index == 0); }
+                index => { onClosed?.Invoke(index == 0); }
             );
 
             instance!.PushModal(dialog);
