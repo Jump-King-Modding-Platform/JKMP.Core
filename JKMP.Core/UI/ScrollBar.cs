@@ -93,7 +93,7 @@ namespace JKMP.Core.UI
                 Rectangle drawRect = new(
                     VerticalBar.X,
                     (int)barOffset.Y + VerticalBar.Y,
-                    2,
+                    VerticalBar.Width,
                     (int)Math.Ceiling(BarSize.Y)
                 );
 
@@ -107,7 +107,7 @@ namespace JKMP.Core.UI
                     (int)barOffset.X + VerticalBar.X,
                     HorizontalBar.Y,
                     (int)Math.Ceiling(BarSize.X),
-                    2
+                    HorizontalBar.Height
                 );
 
                 Game1.spriteBatch.Draw(pixel, drawRect, Color.White);
