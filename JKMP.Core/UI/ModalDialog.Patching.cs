@@ -9,11 +9,8 @@ namespace JKMP.Core.UI
     {
         internal static IBTnode CreateMainMenuNode(IBTnode mainMenu, List<IDrawable> drawables)
         {
-            if (instance != null)
-            {
-                instance.OnDispose();
-                instance = null;
-            }
+            // Dispose the old instance if it exists
+            instance?.OnDispose();
 
             instance = new ModalManager(drawables);
             drawables.Add(instance);
