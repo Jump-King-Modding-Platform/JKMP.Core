@@ -9,9 +9,6 @@ namespace JKMP.Core.UI
 {
     internal class ScrollBar : IDrawable
     {
-        public Vector2 HorizontalBarOrigin { get; set; }
-        public Vector2 VerticalBarOrigin { get; set; }
-
         public bool ShowVerticalBar { get; set; } = true;
         public bool ShowHorizontalBar { get; set; } = false;
 
@@ -19,6 +16,26 @@ namespace JKMP.Core.UI
         {
             get => scrollPosition;
             set => scrollPosition = Vector2.Clamp(value, Vector2.Zero, ContentSize - ViewportSize);
+        }
+        
+        public Rectangle HorizontalBar
+        {
+            get => horizontalBar;
+            set
+            {
+                horizontalBar = value;
+                UpdateProperties();
+            }
+        }
+
+        public Rectangle VerticalBar
+        {
+            get => verticalBar;
+            set
+            {
+                verticalBar = value;
+                UpdateProperties();
+            }
         }
 
         public Vector2 ViewportSize
@@ -44,6 +61,8 @@ namespace JKMP.Core.UI
         private Vector2 viewportSize;
         private Vector2 contentSize;
         private Vector2 scrollPosition;
+        private Rectangle verticalBar;
+        private Rectangle horizontalBar;
 
         /// <summary>
         /// The size of the scrollbar.
@@ -63,40 +82,39 @@ namespace JKMP.Core.UI
         public void Draw()
         {
             Texture2D pixel = JKContentManager.Pixel.texture;
-            
+            Vector2 barOffset = ScrollPosition * (ViewportSize / ContentSize);
+
             // Draw the vertical scrollbar
             if (ShowVerticalBar && BarSize.Y < ViewportSize.Y)
             {
+                // Draw background
+                Game1.spriteBatch.Draw(pixel, VerticalBar, Color.Gray);
+
                 Rectangle drawRect = new(
-                    (int)VerticalBarOrigin.X,
-                    (int)(VerticalBarOrigin.Y + ScrollPosition.Y),
-                    1,
-                    (int)BarSize.Y
+                    VerticalBar.X,
+                    (int)barOffset.Y + VerticalBar.Y,
+                    2,
+                    (int)Math.Ceiling(BarSize.Y)
                 );
-                
+
                 Game1.spriteBatch.Draw(pixel, drawRect, Color.White);
             }
-            
+
             // Draw the horizontal scrollbar
             if (ShowHorizontalBar && BarSize.X < ViewportSize.X)
             {
                 Rectangle drawRect = new(
-                    (int)(HorizontalBarOrigin.X + ScrollPosition.X),
-                    (int)HorizontalBarOrigin.Y,
-                    (int)BarSize.X,
-                    1
+                    (int)barOffset.X + VerticalBar.X,
+                    HorizontalBar.Y,
+                    (int)Math.Ceiling(BarSize.X),
+                    2
                 );
 
                 Game1.spriteBatch.Draw(pixel, drawRect, Color.White);
             }
         }
 
-        //public Vector2 GetDrawOffset() => new((float)-Math.Round(ContentSize.X - ScrollPosition.X), (float)-Math.Round(ContentSize.Y - ScrollPosition.Y));
-
-        public Vector2 GetDrawOffset()
-        {
-            return -ScrollPosition;
-        }
+        public Vector2 GetDrawOffset() => -ScrollPosition;
 
         private void UpdateProperties()
         {
@@ -104,24 +122,23 @@ namespace JKMP.Core.UI
                 
             if (ViewportSize.X >= ContentSize.X)
             {
-                barSize.X = ViewportSize.X;
+                barSize.X = HorizontalBar.Width;
             }
             else
             {
-                barSize.X = ViewportSize.X * (ViewportSize.X / ContentSize.X);
+                barSize.X = HorizontalBar.Width * (ViewportSize.X / ContentSize.X);
             }
                 
             if (ViewportSize.Y >= ContentSize.Y)
             {
-                barSize.Y = ViewportSize.Y;
+                barSize.Y = VerticalBar.Height;
             }
             else
             {
-                barSize.Y = ViewportSize.Y * (ViewportSize.Y / ContentSize.Y);
+                barSize.Y = VerticalBar.Height * (ViewportSize.Y / ContentSize.Y);
             }
 
             BarSize = barSize;
-
             ScrollPosition = ScrollPosition; // Clamps the scroll position to the new content size
         }
     }

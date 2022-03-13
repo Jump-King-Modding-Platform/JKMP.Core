@@ -59,7 +59,7 @@ namespace JKMP.Core.UI
         private readonly ScrollBar scrollBar;
         // Used to update the scroll position to the current selected item.
         private int[]? scrollPositions;
-        
+
         private readonly RenderTarget2D renderTarget = new(
             Game1.instance.GraphicsDevice,
             Game1.WIDTH,
@@ -94,14 +94,15 @@ namespace JKMP.Core.UI
         {
             this.autoSize = autoSize;
             this.guiFormat = guiFormat;
-            bgFrame = new GuiFrame(GetBackgroundRectangle());
+            bgFrame = new GuiFrame(guiFormat.GetBounds());
             Rectangle guiFormatBounds = guiFormat.GetBounds();
-            scrollBar = new ScrollBar(Vector2.Zero, GetsScissorRectangle().Size.ToVector2(), Vector2.Zero)
+            var scissorRectangle = GetScissorRectangle();
+            scrollBar = new ScrollBar(Vector2.Zero, scissorRectangle.Size.ToVector2(), Vector2.Zero)
             {
-                VerticalBarOrigin = new Vector2(guiFormatBounds.Right - 1, guiFormatBounds.Top),
-                HorizontalBarOrigin = new Vector2(guiFormatBounds.Left, guiFormatBounds.Bottom - 1)
+                VerticalBar = new Rectangle(guiFormatBounds.Right, scissorRectangle.Top, 2, scissorRectangle.Height),
+                HorizontalBar = new Rectangle(scissorRectangle.Left, guiFormatBounds.Bottom, scissorRectangle.Width, 2)
             };
-            
+
             UpdateScrollBar();
         }
 
@@ -222,7 +223,7 @@ namespace JKMP.Core.UI
             if (allItems == null)
                 return;
 
-            RenderUtility.PushRenderContext(spriteBatch, renderTarget, GetsScissorRectangle());
+            RenderUtility.PushRenderContext(spriteBatch, renderTarget, GetScissorRectangle());
             Game1.instance.GraphicsDevice.Clear(Color.Transparent);
             Game1.spriteBatch.Begin(blendState: BlendState.AlphaBlend, samplerState: SamplerState.PointClamp, rasterizerState: RasterizerState);
             
@@ -261,7 +262,7 @@ namespace JKMP.Core.UI
             Game1.spriteBatch.Draw(renderTarget, Vector2.Zero, Color.White);
         }
 
-        private Rectangle GetsScissorRectangle()
+        private Rectangle GetScissorRectangle()
         {
             // Use the bgFrame bounds but with padding that accounts for the frame
             var rect = bgFrame.GetBounds();
@@ -377,11 +378,6 @@ namespace JKMP.Core.UI
             ControllerManager.instance.MenuController.ConsumePadPresses();
         }
 
-        private Rectangle GetBackgroundRectangle()
-        {
-            return guiFormat.GetBounds();
-        }
-
         /// <summary>
         /// Called when Invalidate() has been called and the menu needs to be redrawn.
         /// Make sure to call the base method if you override this method.
@@ -416,7 +412,7 @@ namespace JKMP.Core.UI
             
             activeItem = null;
             allItems = Children.Cast<IMenuItem>().ToArray();
-            bgFrame.SetBounds(autoSize ? guiFormat.CalculateBounds(allItems) : GetBackgroundRectangle());
+            bgFrame.SetBounds(autoSize ? guiFormat.CalculateBounds(allItems) : guiFormat.GetBounds());
             CalculateItemPositions();
 
             ResetSelectedIndex();
@@ -428,33 +424,42 @@ namespace JKMP.Core.UI
         private void CalculateItemPositions()
         {
             if (allItems == null)
+            {
+                scrollPositions = Array.Empty<int>();
                 return;
+            }
 
             scrollPositions = new int[allItems.Length];
 
             int y = guiFormat.padding.top + guiFormat.margin.top;
             for (int i = 0; i < allItems.Length; ++i)
             {
-                scrollPositions[i] = y;
-                y += allItems[i].GetSize().Y;
+                Point size = allItems[i].GetSize();
+                scrollPositions[i] = y + size.Y / 2;
+                y += size.Y;
+
+                if (i < allItems.Length - 1)
+                    y += guiFormat.element_margin;
             }
         }
 
         private void UpdateScrollBar()
         {
             Vector2 contentSize = Vector2.Zero;
-            
-            foreach (IBTnode? node in Children)
+
+            for (var i = 0; i < Children.Length; ++i)
             {
-                var item = (IMenuItem)node;
+                var item = (IMenuItem)Children[i];
                 Point itemSize = item.GetSize();
-                contentSize.X = Math.Max(scrollBar.ContentSize.X, itemSize.X);
+                contentSize.X = Math.Max(contentSize.X, itemSize.X);
                 contentSize.Y += itemSize.Y;
+
+                if (i < Children.Length - 1)
+                    contentSize.Y += guiFormat.element_margin;
             }
 
             var padding = new Vector2(guiFormat.padding.left + guiFormat.padding.right, guiFormat.padding.top + guiFormat.padding.bottom);
-            var margin = new Vector2(guiFormat.margin.left + guiFormat.margin.right, guiFormat.margin.top + guiFormat.margin.bottom);
-            scrollBar.ContentSize = padding + margin + contentSize;
+            scrollBar.ContentSize = padding + contentSize;
         }
 
         /// <summary>
