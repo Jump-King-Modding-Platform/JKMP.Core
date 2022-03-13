@@ -11,6 +11,7 @@ namespace JKMP.Core.UI
         {
             // Dispose the old instance if it exists
             instance?.OnDispose();
+            instance = null; // Prevents the ModalManager ctor from throwing an exception that the instance already exists
 
             instance = new ModalManager(drawables);
             drawables.Add(instance);
