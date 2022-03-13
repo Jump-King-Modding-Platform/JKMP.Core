@@ -7,17 +7,34 @@ using IDrawable = JumpKing.Util.IDrawable;
 
 namespace JKMP.Core.UI
 {
-    internal class ScrollBar : IDrawable
+    /// <summary>
+    /// A scrollbar that can be used to visualize how much content is visible relative to the viewport size.
+    /// A scrollbar shows both a vertical and horizontal scrollbar (horizontal is hidden by default).
+    /// </summary>
+    public class ScrollBar : IDrawable
     {
+        /// <summary>
+        /// If true the vertical scrollbar is drawn.
+        /// </summary>
         public bool ShowVerticalBar { get; set; } = true;
+        
+        /// <summary>
+        /// If true the horizontal scrollbar is drawn.
+        /// </summary>
         public bool ShowHorizontalBar { get; set; } = false;
 
+        /// <summary>
+        /// The position of the viewport relative to the content in pixels.
+        /// </summary>
         public Vector2 ScrollPosition
         {
             get => scrollPosition;
             set => scrollPosition = Vector2.Clamp(value, Vector2.Zero, ContentSize - ViewportSize);
         }
         
+        /// <summary>
+        /// The position and size of the horizontal scrollbar.
+        /// </summary>
         public Rectangle HorizontalBar
         {
             get => horizontalBar;
@@ -28,6 +45,9 @@ namespace JKMP.Core.UI
             }
         }
 
+        /// <summary>
+        /// The position and size of the vertical scrollbar.
+        /// </summary>
         public Rectangle VerticalBar
         {
             get => verticalBar;
@@ -38,6 +58,9 @@ namespace JKMP.Core.UI
             }
         }
 
+        /// <summary>
+        /// The size of the viewport in pixels.
+        /// </summary>
         public Vector2 ViewportSize
         {
             get => viewportSize;
@@ -48,6 +71,9 @@ namespace JKMP.Core.UI
             }
         }
 
+        /// <summary>
+        /// The size of the content in pixels.
+        /// </summary>
         public Vector2 ContentSize
         {
             get => contentSize;
@@ -71,14 +97,21 @@ namespace JKMP.Core.UI
         /// </summary>
         public Vector2 BarSize { get; private set; }
         
+        /// <summary>
+        /// Instantiates a new scrollbar.
+        /// </summary>
+        /// <param name="startPosition">The initial ScrollPosition. Note that it is clamped to a value relating to viewport and content size.</param>
+        /// <param name="viewportSize">The size of the viewport.</param>
+        /// <param name="contentSize">The size of the content. This can also be updated at any point using the <see cref="ContentSize"/> property.</param>
         public ScrollBar(Vector2 startPosition, Vector2 viewportSize, Vector2 contentSize)
         {
-            ScrollPosition = startPosition;
-            ViewportSize = viewportSize;
             ContentSize = contentSize;
+            ViewportSize = viewportSize;
+            ScrollPosition = startPosition;
             UpdateProperties();
         }
 
+        /// <inheritdoc />
         public void Draw()
         {
             Texture2D pixel = JKContentManager.Pixel.texture;
@@ -114,6 +147,9 @@ namespace JKMP.Core.UI
             }
         }
 
+        /// <summary>
+        /// Returns the draw offset to add when drawing the contents.
+        /// </summary>
         public Vector2 GetDrawOffset() => -ScrollPosition;
 
         private void UpdateProperties()
