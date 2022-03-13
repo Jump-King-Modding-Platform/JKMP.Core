@@ -431,7 +431,7 @@ namespace JKMP.Core.UI
 
             scrollPositions = new int[allItems.Length];
 
-            int y = guiFormat.padding.top + guiFormat.margin.top;
+            int y = guiFormat.padding.top;
             for (int i = 0; i < allItems.Length; ++i)
             {
                 Point size = allItems[i].GetSize();
