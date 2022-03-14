@@ -31,8 +31,8 @@ namespace JKMP.Core.Input
             // Holds <fieldName, (uiName, keyName)> pairs
             Dictionary<string, (string uiName, string[] keyName)> vanillaBinds = new();
             
-            // Load vanilla keybinds or get default
-            PadBinding keyboard = SaveLube.LoadControllerBinding(new KeyboardPad().GetSaveIdentifier()) ?? new KeyboardPad().GetDefaultBind();
+            // Get default binds
+            PadBinding keyboard = new KeyboardPad().GetDefaultBind();
 
             // Have to use reflection to iterate the fields due to jump king+ potentially being installed which adds more fields.
             var fields = typeof(PadBinding).GetFields(BindingFlags.Public | BindingFlags.Instance);
