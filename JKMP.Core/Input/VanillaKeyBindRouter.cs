@@ -7,6 +7,7 @@ using JKMP.Core.Input.InputMappers;
 using JKMP.Core.Logging;
 using JumpKing.Controller;
 using JumpKing.SaveThread;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 namespace JKMP.Core.Input
@@ -33,6 +34,7 @@ namespace JKMP.Core.Input
             
             // Get default binds
             PadBinding keyboard = new KeyboardPad().GetDefaultBind();
+            PadBinding controller = new XboxPad(PlayerIndex.One).GetDefaultBind();
 
             // Have to use reflection to iterate the fields due to jump king+ potentially being installed which adds more fields.
             var fields = typeof(PadBinding).GetFields(BindingFlags.Public | BindingFlags.Instance);
@@ -42,22 +44,34 @@ namespace JKMP.Core.Input
                 if (field.FieldType != typeof(int[]))
                     continue;
                 
-                var value = (int[])field.GetValue(keyboard);
+                var keyboardValue = (int[])field.GetValue(keyboard);
+                var controllerValue = (int[])field.GetValue(controller);
 
-                string[] keyNames = new string[value.Length];
+                List<string> keyNames = new();
                 
-                for (int i = 0; i < value.Length; i++)
+                for (int i = 0; i < keyboardValue.Length; i++)
                 {
-                    Keys key = (Keys)value[i];
+                    Keys key = (Keys)keyboardValue[i];
                     string? keyName = KeyboardMapper.KeyMap.ContainsKey(key) ? KeyboardMapper.KeyMap[key] : null;
 
                     if (keyName != null)
                     {
-                        keyNames[i] = keyName;
+                        keyNames.Add(keyName);
                     }
                 }
 
-                vanillaBinds.Add(field.Name, (PrettifyFieldName(field.Name), keyNames));
+                for (int i = 0; i < controllerValue.Length; ++i)
+                {
+                    Buttons button = (Buttons)controllerValue[i];
+                    string? keyName = ControllerMapper.KeyMap.ContainsKey(button) ? ControllerMapper.KeyMap[button] : null;
+
+                    if (keyName != null)
+                    {
+                        keyNames.Add(keyName);
+                    }
+                }
+
+                vanillaBinds.Add(field.Name, (PrettifyFieldName(field.Name), keyNames.ToArray()));
                 KeyStates[field.Name] = false;
             }
 

@@ -9,7 +9,7 @@ namespace JKMP.Core.Input.InputMappers
 {
     internal partial class ControllerMapper : IInputMapper
     {
-        private static readonly Dictionary<Buttons, string> KeyMap = new();
+        internal static readonly Dictionary<Buttons, string> KeyMap = new();
         private static readonly HashSet<Buttons> AllButtons;
 
         static ControllerMapper()
