@@ -52,13 +52,20 @@ namespace JKMP.Core.Patches
             }
         }
 
+        private static readonly string VersionName = Assembly.GetExecutingAssembly().GetName().Version.ToString(fieldCount: 3);
+        private static string? logoText;
+
         private static void DrawLogo()
         {
+            if (logoText == null)
+            {
+                int pluginsCount = JKCore.Instance.Plugins.Count;
+                string numPluginsText = $"{pluginsCount} plugin" + (pluginsCount != 1 ? "s" : "");
+                logoText = $"jkmp core v{VersionName} ({numPluginsText} loaded)";
+            }
+            
             Vector2 drawPosition = new Vector2(45, 160);
-            string version = Assembly.GetExecutingAssembly().GetName().Version.ToString(fieldCount: 3);
-            var pluginCount = JKCore.Instance.Plugins.Count;
-            string numPlugins = $"{pluginCount} plugin" + (pluginCount != 1 ? "s" : "");
-            TextHelper.DrawString(JKContentManager.Font.MenuFont, $"jkmp core v{version} ({numPlugins} loaded)", drawPosition, Color.Gold, Vector2.Zero);
+            TextHelper.DrawString(JKContentManager.Font.MenuFont, logoText, drawPosition, Color.Gold, Vector2.Zero);
         }
     }
 }
