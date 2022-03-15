@@ -25,7 +25,7 @@ namespace JKMP.Core.Input.UI
             element_margin = 2
         };
 
-        private static readonly float FieldWidth = 450;
+        private static readonly float ColWidth = 150;
         private static int selectedBindIndex;
         
         public static IBTnode CreateMenu(List<IDrawable> drawables)
@@ -75,10 +75,9 @@ namespace JKMP.Core.Input.UI
                     var menuItem = new ActionBindField(
                         bindings,
                         action,
-                        FieldWidth,
                         drawables,
                         () => selectedBindIndex,
-                        val => selectedBindIndex = val,
+                        val => OnBindIndexChanged(val, menuSelector),
                         () => UpdateAllBinds(menuSelector)
                     );
                     menuSelector.AddChild(categoryName, menuItem);
@@ -97,19 +96,22 @@ namespace JKMP.Core.Input.UI
             }
         }
 
+        private static void OnBindIndexChanged(int colIndex, AdvancedMenuSelector menuSelector)
+        {
+            selectedBindIndex = colIndex;
+        }
+
         private class HeaderField : IBTnode, IMenuItem, UnSelectable
         {
             private static readonly SpriteFont Font = JKContentManager.Font.MenuFont;
 
             private readonly float col1Offset;
             private readonly float col2Offset;
-            private readonly float col3Offset;
 
             public HeaderField()
             {
                 col1Offset = 0;
-                col2Offset = (float)Math.Round(FieldWidth * 0.33f);
-                col3Offset = (float)Math.Round(FieldWidth * 0.66f);
+                col2Offset = (float)Math.Round(ColWidth);
             }
 
             protected override BTresult MyRun(TickData tickData)
@@ -120,14 +122,12 @@ namespace JKMP.Core.Input.UI
             public void Draw(int x, int y, bool selected)
             {
                 TextHelper.DrawString(Font, "Action", new Vector2(x + col1Offset, y), Color.White, Vector2.Zero);
-                TextHelper.DrawString(Font, "Primary key", new Vector2(x + col2Offset, y), Color.White, Vector2.Zero);
-                TextHelper.DrawString(Font, "Secondary key", new Vector2(x + col3Offset, y), Color.White, Vector2.Zero);
+                TextHelper.DrawString(Font, "Binds", new Vector2(x + col2Offset, y), Color.White, Vector2.Zero);
             }
 
             public Point GetSize()
             {
-                var textSize = Font.MeasureString("|").ToPoint();
-                return new Point((int)FieldWidth, textSize.Y);
+                return new Point((int)ColWidth, Font.LineSpacing);
             }
         }
     }

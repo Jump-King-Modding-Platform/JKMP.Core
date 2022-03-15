@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using BehaviorTree;
-using JKMP.Core.Logging;
 using JKMP.Core.Plugins;
 using JKMP.Core.UI;
 using JumpKing;
@@ -29,33 +28,37 @@ namespace JKMP.Core.Input.UI
         
         private readonly InputManager.Bindings bindings;
         private readonly InputManager.ActionInfo action;
-
-        private readonly float fieldWidth;
-        private readonly float xNameOffset;
-        private readonly float xBind1Offset;
-        private readonly float xBind2Offset;
         private readonly RebindWindow rebindWindow;
         private readonly Func<int> getSelectedBindIndex;
         private readonly Action<int> setSelectedBindIndex;
         private readonly Action updateAllBinds;
 
-        private IReadOnlyList<KeyBind> keyBinds = null!;
-        private KeyBind bind1;
-        private KeyBind bind2;
+        private KeyBind[] keyBinds = null!;
 
         private int SelectedBindIndex
         {
             get => getSelectedBindIndex();
-            set => setSelectedBindIndex(value);
+            set
+            {
+                // Clamp index if it's out of bounds
+                if (value > keyBinds.Length)
+                {
+                    value = keyBinds.Length;
+                }
+
+                setSelectedBindIndex(value);
+            }
         }
+
         private State currentState;
         private ModalDialog? modal;
 
         private static SpriteFont Font => JKContentManager.Font.MenuFontSmall;
 
+        private const int XSizePerCol = 150;
+
         public ActionBindField(InputManager.Bindings bindings,
             InputManager.ActionInfo action,
-            float fieldWidth,
             List<IDrawable> drawables,
             Func<int> getSelectedBindIndex,
             Action<int> setSelectedBindIndex,
@@ -64,13 +67,9 @@ namespace JKMP.Core.Input.UI
         {
             this.bindings = bindings ?? throw new ArgumentNullException(nameof(bindings));
             this.action = action;
-            this.fieldWidth = fieldWidth;
             this.getSelectedBindIndex = getSelectedBindIndex;
             this.setSelectedBindIndex = setSelectedBindIndex;
             this.updateAllBinds = updateAllBinds;
-            xNameOffset = 0;
-            xBind1Offset = (float)Math.Round(fieldWidth * 0.33f);
-            xBind2Offset = (float)Math.Round(fieldWidth * 0.66f);
 
             UpdateKeyBinds();
 
@@ -80,13 +79,13 @@ namespace JKMP.Core.Input.UI
 
         public void UpdateKeyBinds()
         {
-            keyBinds = bindings.GetKeyBindsForAction(action.Name);
-            bind1 = keyBinds.FirstOrDefault();
-            bind2 = keyBinds.Skip(1).FirstOrDefault();
+            keyBinds = bindings.GetKeyBindsForAction(action.Name).ToArray();
         }
 
         protected override BTresult MyRun(TickData tickData)
         {
+            SelectedBindIndex = SelectedBindIndex; // Clamps index if it's out of bounds
+            
             var inputData = ControllerManager.instance.MenuController.GetPadState();
 
             switch (currentState)
@@ -99,19 +98,26 @@ namespace JKMP.Core.Input.UI
 
                         if (inputData.confirm)
                         {
-                            rebindWindow.Show(SelectedBindIndex == 0 ? bind1 : bind2, SelectedBindIndex == 0 ? "primary" : "secondary");
+                            KeyBind keyBind = default;
+                            
+                            if (SelectedBindIndex < keyBinds.Length)
+                            {
+                                keyBind = keyBinds[SelectedBindIndex];
+                            }
+
+                            rebindWindow.Show(keyBind, GetRebindWindowPriorityText());
                             currentState = State.Binding;
                             return BTresult.Running;
                         }
 
                         if (inputData.left)
                         {
-                            SelectedBindIndex = MathHelper.Clamp(SelectedBindIndex - 1, 0, 1);
+                            SelectedBindIndex = MathHelper.Clamp(SelectedBindIndex - 1, 0, keyBinds.Length);
                         }
                         
                         if (inputData.right)
                         {
-                            SelectedBindIndex = MathHelper.Clamp(SelectedBindIndex + 1, 0, 1);
+                            SelectedBindIndex = MathHelper.Clamp(SelectedBindIndex + 1, 0, keyBinds.Length);
                         }
                     }
                     break;
@@ -123,9 +129,8 @@ namespace JKMP.Core.Input.UI
 
                     if (result != BTresult.Running)
                     {
-                        ref var targetBind = ref GetSelectedBind(out KeyBind otherBind);
-                        KeyBind oldBind = targetBind;
-                        
+                        KeyBind targetBind = SelectedBindIndex < keyBinds.Length ? keyBinds[SelectedBindIndex] : default;
+
                         if (result == BTresult.Success)
                         {
                             if (targetBind == rebindWindow.CurrentBind)
@@ -133,18 +138,18 @@ namespace JKMP.Core.Input.UI
                                 currentState = State.None;
                                 return BTresult.Failure;
                             }
-
-                            // Check if the new key is already bound to this action
-                            if (rebindWindow.CurrentBind == otherBind && otherBind.IsValid)
-                            {
-                                ModalDialog.ShowInfo($"'{rebindWindow.CurrentBind}' is already bound to this action.");
-                                currentState = State.None;
-                                return BTresult.Failure;
-                            }
                             
                             // Check if the new key is already bound to another action
                             if (rebindWindow.CurrentBind.IsValid)
                             {
+                                // Check if the new key is already bound to this action
+                                if (keyBinds.Contains(rebindWindow.CurrentBind))
+                                {
+                                    ModalDialog.ShowInfo($"'{rebindWindow.CurrentBind}' is already bound to this action.");
+                                    currentState = State.None;
+                                    return BTresult.Failure;
+                                }
+                                
                                 var existingActions = InputManager.GetActionsForKeyBind(rebindWindow.CurrentBind);
                                 if (existingActions.Count > 0)
                                 {
@@ -175,7 +180,7 @@ namespace JKMP.Core.Input.UI
                                 }
                             }
 
-                            DoRebind(ref targetBind);
+                            DoRebind();
 
                             InputManager.Save();
                         }
@@ -190,8 +195,6 @@ namespace JKMP.Core.Input.UI
                 {
                     if (modal!.last_result == BTresult.Running)
                         return BTresult.Running;
-
-                    ref var currentBind = ref GetSelectedBind(out _);
 
                     switch (modal.DialogResult)
                     {
@@ -211,16 +214,15 @@ namespace JKMP.Core.Input.UI
                                 }
                             }
 
-                            DoRebind(ref currentBind);
+                            DoRebind();
                             updateAllBinds();
-
                             InputManager.Save();
 
                             break;
                         }
                         case 1: // Add
                         {
-                            DoRebind(ref currentBind);
+                            DoRebind();
                             InputManager.Save();
                             break;
                         }
@@ -235,15 +237,27 @@ namespace JKMP.Core.Input.UI
             return BTresult.Failure;
         }
 
-        private ref KeyBind GetSelectedBind(out KeyBind otherBind)
+        private string GetRebindWindowPriorityText()
         {
-            ref KeyBind targetBind = ref SelectedBindIndex == 0 ? ref bind1 : ref bind2;
-            otherBind = SelectedBindIndex == 0 ? bind2 : bind1;
-            return ref targetBind;
+            var index = SelectedBindIndex + 1;
+            switch (index)
+            {
+                case 1: return index + "st";
+                case 2: return index + "nd";
+                case 3: return index + "rd";
+                default: return index + "th";
+            }
         }
 
-        void DoRebind(ref KeyBind targetBind)
+        private ref KeyBind GetSelectedBind()
         {
+            return ref keyBinds[SelectedBindIndex];
+        }
+
+        void DoRebind()
+        {
+            KeyBind targetBind = SelectedBindIndex < keyBinds.Length ? GetSelectedBind() : default;
+            
             // Unmap old key if valid
             if (targetBind.IsValid)
             {
@@ -256,26 +270,64 @@ namespace JKMP.Core.Input.UI
                 bindings.MapAction(rebindWindow.CurrentBind, action.Name);
             }
 
-            // Update target bind
-            targetBind = rebindWindow.CurrentBind;
+            UpdateKeyBinds();
         }
 
         public void Draw(int x, int y, bool selected)
         {
             Color drawColor = selected ? Color.White : Color.LightGray;
-            
+            int drawBindIndex = (SelectedBindIndex / 2) * 2;
+
             // Draw action name
-            TextHelper.DrawString(Font, action.UiName, new Vector2(x + xNameOffset, y), drawColor, Vector2.Zero);
+            TextHelper.DrawString(Font, action.UiName, new Vector2(x, y), drawColor, Vector2.Zero);
+
+            // Draw bindings
+            for (int i = drawBindIndex; i < keyBinds.Length; ++i)
+            {
+                int drawIndex = i - drawBindIndex;
+                DrawBind(keyBinds[i], x + XSizePerCol * (drawIndex + 1), y, selected && SelectedBindIndex == i);
+            }
             
-            // Draw primary binding
-            DrawBind(bind1, x + xBind1Offset, y, selected && SelectedBindIndex == 0);
-            DrawBind(bind2, x + xBind2Offset, y, selected && SelectedBindIndex == 1);
+            // Draw previous/next page indicators
+            if (drawBindIndex > 0) // Left indicator
+            {
+                TextHelper.DrawString(Font, "<", new Vector2(x + (XSizePerCol * 1) - 10, y), drawColor, Vector2.Zero);
+            }
+            
+            if (drawBindIndex + 2 <= keyBinds.Length) // Right indicator
+            {
+                ref readonly KeyBind bind = ref keyBinds[drawBindIndex + 1];
+                string measureText = bind.ToDisplayString();
+                
+                if (selected && SelectedBindIndex == drawBindIndex + 1)
+                {
+                    measureText = $"[{measureText}]";
+                }
+                
+                Vector2 size = Font.MeasureString(measureText);
+
+                TextHelper.DrawString(Font, ">", new Vector2((x + size.X + 3) + (XSizePerCol * 2), y), drawColor, Vector2.Zero);
+            }
+
+            if (keyBinds.Length >= drawBindIndex) // Only draw add button if it's on the current "page"
+            {
+                // Draw add button
+                Vector2 drawPosition = new Vector2(x + XSizePerCol * (keyBinds.Length + 1 - drawBindIndex), y);
+                string text = "(add bind)";
+
+                if (selected && SelectedBindIndex == keyBinds.Length)
+                {
+                    text = $"[{text}]";
+                }
+
+                TextHelper.DrawString(Font, text, drawPosition, drawColor, Vector2.Zero);
+            }
         }
 
         private void DrawBind(KeyBind bind, float x, float y, bool selected)
         {
             Color drawColor = selected ? Color.White : Color.LightGray;
-            string text = bind.IsValid ? bind.ToDisplayString() : "(unbound)";
+            string text = bind.ToDisplayString();
 
             if (selected)
                 text = $"[{text}]";
@@ -285,10 +337,12 @@ namespace JKMP.Core.Input.UI
 
         public Point GetSize()
         {
-            var point = Font.MeasureString(action.UiName).ToPoint();
-            point.X = (int)Math.Round(fieldWidth);
+            Point size = Point.Zero;
+
+            size.X = (keyBinds.Length + 2) * XSizePerCol; // Add 2 to account for action name and the add button
+            size.Y = Font.LineSpacing;
             
-            return point;
+            return size;
         }
     }
 }
