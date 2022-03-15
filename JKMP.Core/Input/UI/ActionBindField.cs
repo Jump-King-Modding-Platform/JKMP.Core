@@ -276,7 +276,7 @@ namespace JKMP.Core.Input.UI
         public void Draw(int x, int y, bool selected)
         {
             Color drawColor = selected ? Color.White : Color.LightGray;
-            int drawBindIndex = (SelectedBindIndex / 2) * 2;
+            int drawBindIndex = (int)Math.Floor(SelectedBindIndex / 2d) * 2; // Floor index to closest 2,4,6,8 etc
 
             // Draw action name
             TextHelper.DrawString(Font, action.UiName, new Vector2(x, y), drawColor, Vector2.Zero);
