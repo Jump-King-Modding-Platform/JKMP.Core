@@ -46,6 +46,7 @@ jobs:
             JKMP.Core/bin/Release/net462/Semver.dll
             JKMP.Core/bin/Release/net462/Newtonsoft.Json.dll
             JKMP.Core/bin/Release/net462/Facepunch.Steamworks.Win32.dll
+            JKMP.Core/bin/Release/net462/System.Collections.Immutable.dll
           dest: out/JKMP.Core.zip
       - name: Set tag output
         id: tag-match
