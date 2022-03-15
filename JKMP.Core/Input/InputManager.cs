@@ -7,7 +7,6 @@ using JKMP.Core.Input.InputMappers;
 using JKMP.Core.Logging;
 using JKMP.Core.Plugins;
 using JumpKing.PauseMenu;
-using Microsoft.Xna.Framework.Input;
 using Serilog;
 using Steamworks;
 
@@ -18,6 +17,12 @@ namespace JKMP.Core.Input
     /// </summary>
     public static partial class InputManager
     {
+        /// <summary>
+        /// Gets whether input is currently enabled.
+        /// To enable or disable input, use <see cref="EnableInput"/> and <see cref="DisableInput"/>.
+        /// </summary>
+        public static bool InputEnabled => disabledInputCount == 0;
+
         internal static readonly HashSet<string> ValidKeyNames = new();
         internal static readonly HashSet<string> ModifierKeyNames = new();
 
