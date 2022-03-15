@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using JKMP.Core.Plugins;
@@ -36,24 +37,56 @@ namespace JKMP.Core.Input
             public readonly KeyBind[] DefaultKeyBinds;
 
             /// <summary>
+            /// Gets whether or not this action is currently being pressed down.
+            /// </summary>
+            [Pure]
+            public bool IsPressed => IsActionPressed(this);
+
+            internal readonly Plugin Owner;
+
+            /// <summary>
             /// Instantiates a new <see cref="ActionInfo"/>.
             /// </summary>
             /// <param name="name">The name of the action.</param>
             /// <param name="uiName">The display name of the action.</param>
             /// <param name="onlyGameInput">Whether or not the action can only be triggered when in-game and not paused.</param>
+            /// <param name="owner">The plugin that this action belongs to.</param>
             /// <param name="defaultKeyBinds">The default keybinds of this action.</param>
-            public ActionInfo(string name, string uiName, bool onlyGameInput, params KeyBind[] defaultKeyBinds)
+            internal ActionInfo(string name, string uiName, bool onlyGameInput, Plugin owner, params KeyBind[] defaultKeyBinds)
             {
                 Name = name;
                 UiName = uiName;
                 OnlyGameInput = onlyGameInput;
+                Owner = owner;
                 DefaultKeyBinds = defaultKeyBinds;
             }
 
             /// <inheritdoc />
             public bool Equals(ActionInfo other)
             {
-                return Name == other.Name && UiName == other.UiName && OnlyGameInput == other.OnlyGameInput && DefaultKeyBinds.Equals(other.DefaultKeyBinds);
+                if (Name != other.Name)
+                    return false;
+
+                if (UiName != other.UiName)
+                    return false;
+
+                if (OnlyGameInput != other.OnlyGameInput)
+                    return false;
+                
+                if (Owner != other.Owner)
+                    return false;
+
+                if (DefaultKeyBinds != null && other.DefaultKeyBinds != null!)
+                {
+                    if (!DefaultKeyBinds.Equals(other.DefaultKeyBinds))
+                        return false;
+                }
+                else if (DefaultKeyBinds != null || other.DefaultKeyBinds != null!)
+                {
+                    return false;
+                }
+
+                return true;
             }
 
             /// <inheritdoc />
@@ -70,9 +103,26 @@ namespace JKMP.Core.Input
                     var hashCode = Name.GetHashCode();
                     hashCode = (hashCode * 397) ^ UiName.GetHashCode();
                     hashCode = (hashCode * 397) ^ OnlyGameInput.GetHashCode();
+                    hashCode = (hashCode * 397) ^ Owner.GetHashCode();
                     hashCode = (hashCode * 397) ^ DefaultKeyBinds.GetHashCode();
                     return hashCode;
                 }
+            }
+            
+            /// <summary>
+            /// Compares two actions for equality.
+            /// </summary>
+            public static bool operator ==(ActionInfo a, ActionInfo b)
+            {
+                return a.Equals(b);
+            }
+
+            /// <summary>
+            /// Compares two actions for inequality.
+            /// </summary>
+            public static bool operator !=(ActionInfo a, ActionInfo b)
+            {
+                return !(a == b);
             }
         }
 
@@ -408,40 +458,74 @@ namespace JKMP.Core.Input
 
                 return result.AsReadOnly();
             }
+            
+            /// <summary>
+            /// Returns the action defined with the given name, if it exists. Otherwise, returns null.
+            /// </summary>
+            /// <param name="actionName">The name of the action</param>
+            public ActionInfo? GetActionByName(string actionName)
+            {
+                return registeredActions.TryGetValue(actionName, out ActionInfo result) ? result : null;
+            }
 
-            internal bool RegisterAction(string name, string uiName, bool onlyGameInput, params KeyBind[] defaultKeys)
+            internal ActionInfo RegisterAction(string name, string uiName, bool onlyGameInput, params KeyBind[] defaultKeys)
             {
                 if (name == null) throw new ArgumentNullException(nameof(name));
                 if (uiName == null) throw new ArgumentNullException(nameof(uiName));
-                
-                if (registeredActions.ContainsKey(name))
-                    return false;
 
-                registeredActions.Add(name, new ActionInfo(name, uiName, onlyGameInput, defaultKeys));
-                return true;
+                if (registeredActions.ContainsKey(name))
+                    throw new ArgumentException($"An action with the name '{name}' already exists", nameof(name));
+
+                var actionInfo = new ActionInfo(name, uiName, onlyGameInput, owner, defaultKeys);
+                registeredActions.Add(name, actionInfo);
+                return actionInfo;
             }
 
             internal void AddActionCallback(string actionName, PluginInput.BindActionCallback callback)
             {
                 if (actionName == null) throw new ArgumentNullException(nameof(actionName));
+
+                if (!registeredActions.TryGetValue(actionName, out ActionInfo actionInfo))
+                {
+                    throw new ArgumentException($"An action with the name '{actionName}' could not be found", nameof(actionName));
+                }
+
+                AddActionCallback(actionInfo, callback);
+            }
+
+            internal void AddActionCallback(ActionInfo action, PluginInput.BindActionCallback callback)
+            {
+                if (action == default) throw new ArgumentNullException(nameof(action), "Action cannot be the default struct value");
                 if (callback == null) throw new ArgumentNullException(nameof(callback));
 
-                if (!registeredActions.ContainsKey(actionName))
-                    throw new ArgumentException($"Unknown action: {actionName}");
+                if (!registeredActions.ContainsValue(action))
+                    throw new ArgumentException($"Unknown action: {action.Name}");
 
-                var callbacks = GetActionCallbacks(actionName);
+                var callbacks = GetActionCallbacks(action.Name);
                 callbacks.Add(callback);
             }
 
             internal bool RemoveActionCallback(string actionName, PluginInput.BindActionCallback callback)
             {
                 if (actionName == null) throw new ArgumentNullException(nameof(actionName));
+
+                if (!registeredActions.TryGetValue(actionName, out ActionInfo actionInfo))
+                {
+                    throw new ArgumentException($"An action with the name '{actionName}' could not be found", nameof(actionName));
+                }
+
+                return RemoveActionCallback(actionInfo, callback);
+            }
+
+            internal bool RemoveActionCallback(ActionInfo action, PluginInput.BindActionCallback callback)
+            {
+                if (action == default) throw new ArgumentNullException(nameof(action), "Action cannot be the default struct value");
                 if (callback == null) throw new ArgumentNullException(nameof(callback));
 
-                if (!registeredActions.ContainsKey(actionName))
-                    throw new ArgumentException($"Unknown action: {actionName}");
+                if (!registeredActions.ContainsValue(action))
+                    throw new ArgumentException($"Unknown action: {action.Name}");
 
-                var callbacks = GetActionCallbacks(actionName);
+                var callbacks = GetActionCallbacks(action.Name);
                 return callbacks.Remove(callback);
             }
 

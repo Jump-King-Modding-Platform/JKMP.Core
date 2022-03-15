@@ -131,6 +131,15 @@ namespace JKMP.Core.Input
             bindings.AddActionCallback(actionName, callback);
         }
 
+        internal static void BindAction(Plugin? plugin, ActionInfo action, PluginInput.BindActionCallback callback)
+        {
+            if (action == null) throw new ArgumentNullException(nameof(action));
+            if (callback == null) throw new ArgumentNullException(nameof(callback));
+
+            Bindings bindings = GetOrCreateBindings(plugin);
+            bindings.AddActionCallback(action, callback);
+        }
+
         internal static bool UnbindAction(Plugin? plugin, string actionName, PluginInput.BindActionCallback callback)
         {
             if (actionName == null) throw new ArgumentNullException(nameof(actionName));
@@ -139,14 +148,28 @@ namespace JKMP.Core.Input
             Bindings bindings = GetOrCreateBindings(plugin);
             return bindings.RemoveActionCallback(actionName, callback);
         }
+        
+        internal static bool UnbindAction(Plugin? plugin, ActionInfo action, PluginInput.BindActionCallback callback)
+        {
+            if (action == default) throw new ArgumentNullException(nameof(action), "Action cannot be the default struct value");
+            if (callback == null) throw new ArgumentNullException(nameof(callback));
 
-        internal static bool RegisterAction(Plugin? plugin, string name, string uiName, bool onlyGameInput, params KeyBind[] defaultKeys)
+            Bindings bindings = GetOrCreateBindings(plugin);
+            return bindings.RemoveActionCallback(action, callback);
+        }
+
+        internal static ActionInfo RegisterAction(Plugin? plugin, string name, string uiName, bool onlyGameInput, params KeyBind[] defaultKeys)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
             if (uiName == null) throw new ArgumentNullException(nameof(uiName));
 
             Bindings bindings = GetOrCreateBindings(plugin);
             return bindings.RegisterAction(name, uiName, onlyGameInput, defaultKeys);
+        }
+
+        internal static bool IsActionPressed(in ActionInfo action)
+        {
+            return PressedActions.Contains(action);
         }
 
         /// <summary>

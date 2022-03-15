@@ -26,10 +26,10 @@ namespace JKMP.Core.Input
         /// </param>
         /// <param name="onlyGameInput">If true this action can only be triggered if the player is in-game and not paused.</param>
         /// <param name="defaultKeys">The default key name. Must be a valid key name from <see cref="InputManager.ValidKeyNames"/>. Can also be null, in which case it'll be unbound by default.</param>
-        /// <returns>True if the action did not already exist. Note that action names are unique per plugin. Two different plugins can use the same name.</returns>
+        /// <returns>The created action. Can be used as a reference in other places.</returns>
         /// <exception cref="ArgumentException">Thrown if defaultKey is not part of <see cref="InputManager.ValidKeyNames"/>.</exception>
         /// <exception cref="InvalidOperationException">Thrown if this method is called after the plugin has been initialized.</exception>
-        public bool RegisterAction(string name, bool onlyGameInput, params string[] defaultKeys) => RegisterActionWithName(name, name, onlyGameInput, defaultKeys);
+        public InputManager.ActionInfo RegisterAction(string name, bool onlyGameInput, params string[] defaultKeys) => RegisterActionWithName(name, name, onlyGameInput, defaultKeys);
 
         /// <summary>
         /// Registers an input action with a custom name that can be bound to a mouse or keyboard button.
@@ -38,10 +38,10 @@ namespace JKMP.Core.Input
         /// <param name="uiName">This value will be displayed in the settings menu for this action.</param>
         /// <param name="onlyGameInput">If true this action can only be triggered if the player is in-game and not paused.</param>
         /// <param name="defaultKeys">The default key name. Must be a valid key name from <see cref="InputManager.ValidKeyNames"/>. Can also be null, in which case it'll be unbound by default.</param>
-        /// <returns>True if the action did not already exist. Note that action names are unique per plugin. Two different plugins can use the same name.</returns>
+        /// <returns>The created action. Can be used as a reference in other places.</returns>
         /// <exception cref="ArgumentException">Thrown if defaultKey is not part of <see cref="InputManager.ValidKeyNames"/>.</exception>
         /// <exception cref="InvalidOperationException">Thrown if this method is called after the plugin has been initialized.</exception>
-        public bool RegisterActionWithName(string name, string uiName, bool onlyGameInput, params string[] defaultKeys)
+        public InputManager.ActionInfo RegisterActionWithName(string name, string uiName, bool onlyGameInput, params string[] defaultKeys)
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
             if (uiName == null) throw new ArgumentNullException(nameof(uiName));
@@ -71,10 +71,24 @@ namespace JKMP.Core.Input
         }
 
         /// <summary>
+        /// Binds the given action so that the callback will be invoked when the key is pressed or released.
+        /// </summary>
+        /// <param name="action">The action to bind.</param>
+        /// <param name="callback">The callback to invoke when the action is pressed or released.</param>
+        /// <exception cref="ArgumentException">Thrown if there is no registered action matching the specified name.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if name or callback is null.</exception>
+        public void BindAction(InputManager.ActionInfo action, BindActionCallback callback)
+        {
+            if (action == default) throw new ArgumentNullException(nameof(action), "Action cannot be the default struct value.");
+            if (callback == null) throw new ArgumentNullException(nameof(callback));
+            InputManager.BindAction(owner, action, callback);
+        }
+
+        /// <summary>
         /// Removes a binding from the given action name.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="callback"></param>
+        /// <param name="name">The name of the action. Note that it must be registered beforehand or an exception will be thrown.</param>
+        /// <param name="callback">The callback that was invoked when the action was pressed or released.</param>
         /// <returns>True if the callback was successfully removed.</returns>
         /// <exception cref="ArgumentException">Thrown if there is no registered action matching the specified name.</exception>
         /// <exception cref="ArgumentNullException">Thrown if name or callback is null.</exception>
@@ -84,6 +98,33 @@ namespace JKMP.Core.Input
             if (callback == null) throw new ArgumentNullException(nameof(callback));
 
             return InputManager.UnbindAction(owner, name, callback);
+        }
+
+        /// <summary>
+        /// Removes a binding from the given action.
+        /// </summary>
+        /// <param name="action">The action to unbind.</param>
+        /// <param name="callback">The callback that was invoked when the action was pressed or released.</param>
+        /// <returns>True if the callback was successfully removed.</returns>
+        /// <exception cref="ArgumentException">Thrown if there is no registered action matching the specified name.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if name or callback is null.</exception>
+        public bool UnbindAction(InputManager.ActionInfo action, BindActionCallback callback)
+        {
+            if (action == default) throw new ArgumentNullException(nameof(action), "Action cannot be the default struct value.");
+            if (callback == null) throw new ArgumentNullException(nameof(callback));
+
+            return InputManager.UnbindAction(owner, action, callback);
+        }
+
+        /// <summary>
+        /// Returns true if the given action is currently pressed down.
+        /// Note that you can also use the <see cref="InputManager.ActionInfo.IsPressed"/> property on the <see cref="InputManager.ActionInfo"/>.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">Thrown if the action is the default struct value.</exception>
+        public bool IsActionPressed(InputManager.ActionInfo actionInfo)
+        {
+            if (actionInfo == default) throw new ArgumentNullException(nameof(actionInfo));
+            return InputManager.IsActionPressed(actionInfo);
         }
 
         /// <summary>
