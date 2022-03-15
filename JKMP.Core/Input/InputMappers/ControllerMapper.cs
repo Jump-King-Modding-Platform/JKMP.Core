@@ -85,9 +85,6 @@ namespace JKMP.Core.Input.InputMappers
             {
                 for (int i = 0; i < currentStates.Length; ++i)
                 {
-                    if (!currentStates[i].IsConnected)
-                        continue;
-
                     var currentState = currentStates[i];
                     var lastState = lastStates[i];
 
