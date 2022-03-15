@@ -25,7 +25,10 @@ namespace JKMP.Core
         /// </summary>
         public SemVersion Version { get; }
         
-        internal static JKCore Instance { get; private set; } = null!;
+        /// <summary>
+        /// Gets the JKCore singleton. It is the base of the Core framework.
+        /// </summary>
+        public static JKCore Instance { get; private set; } = null!;
         
         private readonly Harmony harmony;
 

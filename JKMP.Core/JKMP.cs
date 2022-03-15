@@ -12,7 +12,7 @@ namespace JKMP.Core
         /// <summary>
         /// Gets the core manager of JKMP which holds all plugins.
         /// </summary>
-        public static JKCore Core { get; private set; } = null!;
+        private static JKCore core = null!;
 
         /// <summary>
         /// Initializes the JKMP framework. Do not call this, it is only public because the game needs to call it.
@@ -32,7 +32,7 @@ namespace JKMP.Core
             
             LogManager.InitializeLogging();
             AssemblyManager.SetupAssemblyResolving(AppDomain.CurrentDomain);
-            Core = new();
+            core = new();
         }
     }
 }
