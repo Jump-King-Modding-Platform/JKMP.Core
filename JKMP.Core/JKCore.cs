@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using HarmonyLib;
 using JKMP.Core.Content;
+using JKMP.Core.Input;
 using JKMP.Core.Logging;
 using JKMP.Core.Plugins;
 using Semver;
@@ -43,9 +44,20 @@ namespace JKMP.Core
             
             harmony = new Harmony("com.jkmp.core");
             harmony.PatchAll(typeof(JKCore).Assembly);
+
+            InputManager.CreateVanillaKeyBinds();
             
             Plugins = new();
             Plugins.LoadPlugins();
+
+            InputManager.Initialize();
+            
+            Events.PreGameUpdate += OnPreGameUpdate;
+        }
+
+        private void OnPreGameUpdate(object sender, float delta)
+        {
+            InputManager.Update();
         }
     }
 }

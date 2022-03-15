@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using JKMP.Core.Configuration;
+using JKMP.Core.Input;
 using Newtonsoft.Json;
 
 namespace JKMP.Core.Plugins
@@ -11,6 +13,8 @@ namespace JKMP.Core.Plugins
     /// </summary>
     public abstract class Plugin
     {
+        internal static readonly Plugin InternalPlugin = new NoOpPlugin();
+        
         /// <summary>
         /// Gets the container that holds this plugin.
         /// Contains various information about this plugin, such as the relative path (from game root) to the content/configuration/root directory.
@@ -26,6 +30,14 @@ namespace JKMP.Core.Plugins
         /// Gets the configuration manager for this plugin.
         /// </summary>
         public PluginConfigs Configs { get; internal set; } = null!;
+
+        /// <summary>
+        /// Gets the input manager for this plugin. It can be used to register input bindings.
+        /// Registered input bindings will be configurable in-game.
+        /// Note that registering input bindings must be done during initialization, preferably from overriding the <see cref="CreateInputActions"/> method.
+        /// An exception will be thrown if an attempt to register input bindings is made after initialization.
+        /// </summary>
+        public PluginInput Input { get; internal set; } = null!;
         
         /// <summary>
         /// Called after all plugins have been loaded.
@@ -35,6 +47,21 @@ namespace JKMP.Core.Plugins
         /// Called right after the plugin was loaded.
         /// </summary>
         public virtual void OnLoaded() { }
+        
+        /// <summary>
+        /// <para>
+        /// Called when the plugin should create its input actions.
+        /// </para>
+        /// Example usage:
+        /// <code>
+        /// Input.RegisterAction("Jump", "space");
+        /// Input.RegisterAction("WalkLeft", "Walk left", "a");
+        ///
+        /// // Later on in the game...
+        /// Input.BindAction("Jump", pressed => { /* do something */ });
+        /// </code>
+        /// </summary>
+        public virtual void CreateInputActions() { }
 
         /// <summary>
         /// Sets the json serialization settings that is used when serializing and deserializing json files.
@@ -43,6 +70,24 @@ namespace JKMP.Core.Plugins
         protected void SetJsonSerializationSettings(JsonSerializerSettings? settings)
         {
             Configs.JsonSerializerSettings = settings ?? PluginManager.CreateDefaultJsonSerializerSettings();
+        }
+    }
+
+    /// <summary>
+    /// A no-op plugin that does nothing. Only used internally for built-in Core functionality in situations where a plugin is needed.
+    /// There should only be one instance of this plugin.
+    /// </summary>
+    internal class NoOpPlugin : Plugin
+    {
+        public NoOpPlugin()
+        {
+            Container = new PluginContainer(this, new PluginInfo
+            {
+                Name = "Core",
+                Description = "Internal plugin used for core functionality.",
+                Version = JKCore.Instance.Version,
+                Authors = new List<string>() { "JKMP" }
+            }, null);
         }
     }
 }

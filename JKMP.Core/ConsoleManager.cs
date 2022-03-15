@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using JKMP.Core.Windows;
 
 namespace JKMP.Core
@@ -16,6 +17,7 @@ namespace JKMP.Core
             }
 
             consoleWriter = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
+            Console.OutputEncoding = Encoding.UTF8;
             Console.SetOut(consoleWriter);
         }
     }

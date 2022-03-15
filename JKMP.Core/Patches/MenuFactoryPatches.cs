@@ -2,13 +2,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using BehaviorTree;
 using HarmonyLib;
 using JKMP.Core.Configuration.UI;
+using JKMP.Core.Input.UI;
 using JumpKing.PauseMenu;
 using JumpKing.PauseMenu.BT;
+using JumpKing.Util;
 
 namespace JKMP.Core.Patches
 {
+    // ReSharper disable InconsistentNaming
+    // ReSharper disable RedundantAssignment
+    
     [HarmonyPatch(typeof(MenuFactory), nameof(MenuFactory.CreateOptionsMenu))]
     internal static class OptionsMenuPatch
     {
@@ -48,6 +54,16 @@ namespace JKMP.Core.Patches
         private static void CreateOptionsMenu(MenuFactory menuFactory, GuiFormat guiFormat, MenuSelector menuSelector, List<JumpKing.Util.IDrawable> drawables)
         {
             SettingsMenuManager.CreateMenus(guiFormat, menuSelector, drawables);
+        }
+    }
+
+    [HarmonyPatch(typeof(MenuFactory), "CreateBindControls")]
+    internal static class ControlsMenuPatch
+    {
+        private static bool Prefix(ref BTsimultaneous __result, ref List<IDrawable> ___m_drawables)
+        {
+            __result = new BTsimultaneous(ControlsMenuManager.CreateMenu(___m_drawables));
+            return false;
         }
     }
 }
