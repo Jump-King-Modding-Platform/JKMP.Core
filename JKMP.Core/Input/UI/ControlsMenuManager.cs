@@ -69,7 +69,7 @@ namespace JKMP.Core.Input.UI
 
                 menuSelector.AddChild(categoryName, new HeaderField());
                 var actions = bindings.GetActions();
-                
+
                 foreach (ActionInfo action in actions)
                 {
                     var menuItem = new ActionBindField(
@@ -77,7 +77,7 @@ namespace JKMP.Core.Input.UI
                         action,
                         drawables,
                         () => selectedBindIndex,
-                        val => OnBindIndexChanged(val, menuSelector),
+                        val => selectedBindIndex = val,
                         () => UpdateAllBinds(menuSelector)
                     );
                     menuSelector.AddChild(categoryName, menuItem);
@@ -94,11 +94,6 @@ namespace JKMP.Core.Input.UI
 
                 bindField.UpdateKeyBinds();
             }
-        }
-
-        private static void OnBindIndexChanged(int colIndex, AdvancedMenuSelector menuSelector)
-        {
-            selectedBindIndex = colIndex;
         }
 
         private class HeaderField : IBTnode, IMenuItem, UnSelectable
