@@ -31,11 +31,14 @@ namespace JKMP.Core.Input.InputMappers
 
         public ISet<string> ValidKeyNames { get; }
 
-        private GamePadState currentState;
-        private GamePadState lastState;
+        private readonly GamePadState[] currentStates;
+        private readonly GamePadState[] lastStates;
 
         public ControllerMapper()
         {
+            currentStates = new GamePadState[GamePad.MaximumGamePadCount];
+            lastStates = new GamePadState[GamePad.MaximumGamePadCount];
+            
             ValidKeyNames = new HashSet<string>();
 
             foreach (var kv in KeyMap)
@@ -49,7 +52,7 @@ namespace JKMP.Core.Input.InputMappers
                 KeyMap[Buttons.RightShoulder],
             };
         }
-        
+
         public IEnumerable<string> GetPressedKeys()
         {
             if (!Game1.instance.IsActive)
@@ -57,31 +60,52 @@ namespace JKMP.Core.Input.InputMappers
 
             foreach (Buttons button in AllButtons)
             {
-                if (currentState.IsButtonDown(button) && !lastState.IsButtonDown(button))
+                for (int i = 0; i < currentStates.Length; ++i)
                 {
-                    yield return KeyMap[button];
+                    if (!currentStates[i].IsConnected)
+                        continue;
+
+                    var currentState = currentStates[i];
+                    var lastState = lastStates[i];
+
+                    if (currentState.IsButtonDown(button) && !lastState.IsButtonDown(button))
+                    {
+                        yield return KeyMap[button];
+                    }
                 }
             }
         }
-        
+
         public IEnumerable<string> GetReleasedKeys()
         {
             if (!Game1.instance.IsActive)
                 yield break;
-            
+
             foreach (Buttons button in AllButtons)
             {
-                if (lastState.IsButtonDown(button) && !currentState.IsButtonDown(button))
+                for (int i = 0; i < currentStates.Length; ++i)
                 {
-                    yield return KeyMap[button];
+                    if (!currentStates[i].IsConnected)
+                        continue;
+
+                    var currentState = currentStates[i];
+                    var lastState = lastStates[i];
+
+                    if (currentState.IsButtonUp(button) && lastState.IsButtonDown(button))
+                    {
+                        yield return KeyMap[button];
+                    }
                 }
             }
         }
 
         public void Update()
         {
-            lastState = currentState;
-            currentState = GamePad.GetState(PlayerIndex.One, GamePadDeadZone.Circular);
+            for (int i = 0; i < GamePad.MaximumGamePadCount; ++i)
+            {
+                lastStates[i] = currentStates[i];
+                currentStates[i] = GamePad.GetState(i, GamePadDeadZone.Circular);
+            }
         }
     }
 }
