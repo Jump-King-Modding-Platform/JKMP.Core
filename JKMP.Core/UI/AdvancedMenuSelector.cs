@@ -49,6 +49,21 @@ namespace JKMP.Core.UI
         /// </summary>
         public GuiFormat GuiFormat => guiFormat;
 
+        /// <summary>
+        /// Gets or sets the viewport's X position of the scrollable area.
+        /// The value is clamped to the size of the content.
+        /// </summary>
+        public float ScrollX
+        {
+            get => scrollBar.ScrollPosition.X;
+            set
+            {
+                var position = scrollBar.ScrollPosition;
+                position.X = value;
+                scrollBar.ScrollPosition = position;
+            }
+        }
+
         private readonly Dictionary<string, List<IMenuItem>> categories = new();
         private readonly List<IMenuItem> uncategorizedItems = new();
         private readonly Dictionary<string, string> categoryNames = new();
