@@ -23,6 +23,13 @@ namespace JKMP.Core.Input
         /// </summary>
         public static bool InputEnabled => disabledInputCount == 0;
 
+        /// <summary>
+        /// Gets whether game input is currently enabled.
+        /// The difference between this and <see cref="InputEnabled"/> is that disabling game input will still allow non game only input to be processed.
+        /// To enable or disable game input, use <see cref="EnableGameInput"/> and <see cref="DisableGameInput"/>.
+        /// </summary>
+        public static bool GameInputEnabled => disabledGameInputCount == 0;
+
         internal static readonly HashSet<string> ValidKeyNames = new();
         internal static readonly HashSet<string> ModifierKeyNames = new();
 
@@ -74,6 +81,7 @@ namespace JKMP.Core.Input
         };
 
         private static uint disabledInputCount;
+        private static uint disabledGameInputCount;
         
         private static readonly ILogger Logger = LogManager.CreateLogger(typeof(InputManager));
 
@@ -280,6 +288,10 @@ namespace JKMP.Core.Input
                 foreach (var action in actions)
                 {
                     if (!pressed && !PressedActions.Contains(action))
+                        continue;
+                    
+                    // If pressed, check if the action is only game input and if game input is disabled
+                    if (pressed && action.OnlyGameInput && disabledGameInputCount > 0)
                         continue;
 
                     // If pressed, check if we're in the main menu (aka PauseManager.instance is null) or paused, and if so, check if the action can be invoked when not in-game.
@@ -504,7 +516,7 @@ namespace JKMP.Core.Input
         }
 
         /// <summary>
-        /// Disables listening for input. If called multiple times, you would have to call <see cref="EnableInput"/> as many times to re-enable listening.
+        /// Disables listening for all input. If called multiple times, you would have to call <see cref="EnableInput"/> as many times to re-enable listening.
         /// </summary>
         public static void DisableInput()
         {
@@ -512,7 +524,8 @@ namespace JKMP.Core.Input
         }
 
         /// <summary>
-        /// Re-enables listening for input. If <see cref="DisableInput"/> was called multiple times, you would have to call this as many times to re-enable listening.
+        /// Re-enables listening for all input. If <see cref="DisableInput"/> was called multiple times, you would have to call this as many times to re-enable listening.
+        /// If game input was disabled separately it will still be disabled.
         /// </summary>
         public static void EnableInput()
         {
@@ -523,6 +536,29 @@ namespace JKMP.Core.Input
             }
             
             --disabledInputCount;
+        }
+
+        /// <summary>
+        /// Disabled listening for input for game-only actions. If called multiple times, you would have to call <see cref="EnableGameInput"/> as many times to re-enable listening.
+        /// </summary>
+        public static void DisableGameInput()
+        {
+            ++disabledGameInputCount;
+        }
+
+        /// <summary>
+        /// Re-enables listening for input for game-only actions. If <see cref="DisableGameInput"/> was called multiple times, you would have to call this as many times to re-enable listening.
+        /// If global input was disabled separately using <see cref="DisableInput"/> it will still be disabled.
+        /// </summary>
+        public static void EnableGameInput()
+        {
+            if (disabledGameInputCount == 0)
+            {
+                Logger.Warning("Game input is already enabled");
+                return;
+            }
+
+            --disabledGameInputCount;
         }
 
         internal static void ResetKeyBinds()
