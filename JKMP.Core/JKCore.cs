@@ -31,6 +31,7 @@ namespace JKMP.Core
         public static JKCore Instance { get; private set; } = null!;
         
         private readonly Harmony harmony;
+        private StartupInformation? startupInformation;
 
         private static readonly ILogger Logger = LogManager.CreateLogger<JKCore>();
 
@@ -55,12 +56,27 @@ namespace JKMP.Core
 
             InputManager.Initialize();
             
+            Events.PostGameInitialized += OnPostGameInitialized;
             Events.PreGameUpdate += OnPreGameUpdate;
+            Events.PostGameUpdate += OnPostGameUpdate;
+        }
+
+        private void OnPostGameInitialized(object sender, EventArgs e)
+        {
+            startupInformation = new();
         }
 
         private void OnPreGameUpdate(object sender, float delta)
         {
             InputManager.Update();
+        }
+
+        private void OnPostGameUpdate(object sender, float delta)
+        {
+            if (startupInformation?.Update() == true)
+            {
+                startupInformation = null;
+            }
         }
     }
 }

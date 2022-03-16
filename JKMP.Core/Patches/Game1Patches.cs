@@ -19,4 +19,13 @@ namespace JKMP.Core.Patches
             Events.OnPostGameUpdate(delta);
         }
     }
+
+    [HarmonyPatch(typeof(Game1), "Initialize")]
+    internal static class Game1InitializePatch
+    {
+        private static void Postfix()
+        {
+            Events.OnPostGameInitialize();
+        }
+    }
 }
