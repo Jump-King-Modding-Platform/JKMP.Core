@@ -282,7 +282,7 @@ namespace JKMP.Core.Input
                 var actions = bindings.GetActionsForKey(keyBind);
 
                 // If there's no actions bound to this key + modifiers check if there's any actions bound to this key without any modifiers
-                if (actions.Count == 0)
+                if (actions.Count == 0 && keyBind.Modifiers!.Count > 0)
                     actions = bindings.GetActionsForKey(new KeyBind(keyBind.KeyName));
 
                 foreach (var action in actions)
