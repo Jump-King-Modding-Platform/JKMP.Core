@@ -298,20 +298,20 @@ namespace JKMP.Core.Input
                     if (pressed && action.OnlyGameInput && PauseManager.instance is null or { IsPaused: true })
                         continue;
 
-                    var callbacks = bindings.GetCallbacksForAction(action.Name);
+                    if (pressed)
+                    {
+                        PressedActions.Add(action);
+                    }
+                    else
+                    {
+                        PressedActions.Remove(action);
+                    }
 
+                    var callbacks = bindings.GetCallbacksForAction(action.Name);
+                    
                     foreach (var callback in callbacks)
                     {
                         callback.Invoke(pressed);
-
-                        if (pressed)
-                        {
-                            PressedActions.Add(action);
-                        }
-                        else
-                        {
-                            PressedActions.Remove(action);
-                        }
                     }
                 }
             }
