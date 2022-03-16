@@ -27,10 +27,20 @@ namespace JKMP.Core.Input
         private static PadState pressedState;
         #pragma warning restore CS0649
 
+        private static readonly HashSet<string> GameOnlyKeys = new()
+        {
+            // JK+ keys
+            "boots",
+            "snake",
+            "restart",
+            "loadPosition",
+            "savePosition"
+        };
+
         public static void InitializeActions()
         {
             // Holds <fieldName, (uiName, keyName)> pairs
-            Dictionary<string, (string uiName, string[] keyName)> vanillaBinds = new();
+            Dictionary<string, (string uiName, string[] keyName, bool onlyGameInput)> vanillaBinds = new();
             
             // Get default binds
             PadBinding keyboard = new KeyboardPad().GetDefaultBind();
@@ -71,15 +81,14 @@ namespace JKMP.Core.Input
                     }
                 }
 
-                vanillaBinds.Add(field.Name, (PrettifyFieldName(field.Name), keyNames.ToArray()));
+                vanillaBinds.Add(field.Name, (PrettifyFieldName(field.Name), keyNames.ToArray(), GameOnlyKeys.Contains(field.Name)));
                 KeyStates[field.Name] = false;
             }
 
             foreach (var kv in vanillaBinds)
             {
                 string fieldName = kv.Key;
-                (string uiName, string[] keyNames) = kv.Value;
-                const bool onlyGameInput = false;
+                (string uiName, string[] keyNames, bool onlyGameInput) = kv.Value;
                 
                 InputManager.RegisterAction(plugin: null, fieldName, uiName, onlyGameInput, defaultKeys: keyNames.Select(k => (InputManager.KeyBind)k).ToArray());
                 InputManager.BindAction(null, fieldName, pressed => OnKeyToggled(fieldName, pressed));
