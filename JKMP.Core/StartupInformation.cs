@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BehaviorTree;
+using JKMP.Core.BehaviourTree.Nodes;
 using JKMP.Core.Logging;
 using JKMP.Core.UI;
 
@@ -7,38 +8,59 @@ namespace JKMP.Core
 {
     internal class StartupInformation
     {
-        private ModalDialog? currentDialog;
-        private readonly IEnumerator<ModalDialog> dialogs;
+        private IBTnode? currentNode;
+        private readonly IEnumerator<IBTnode> nodes;
+        private int currentTick;
 
         public StartupInformation()
         {
-            dialogs = GetDialogs().GetEnumerator();
+            nodes = GetDialogs().GetEnumerator();
         }
 
-        public bool Update()
+        /// <summary>
+        /// Updates the currently shown message and returns false if all messages have been shown.
+        /// </summary>
+        public bool Update(float delta)
         {
-            if (currentDialog is { last_result: BTresult.Failure or BTresult.Success })
+            // Run the current node if it's not a ModalDialog (they are run automatically)
+            if (currentNode is not null and not ModalDialog)
+                currentNode.Run(new TickData(delta, currentTick++));
+
+            if (currentNode is { last_result: BTresult.Failure or BTresult.Success })
             {
-                currentDialog = null;
+                currentNode = null;
             }
-            
-            if (currentDialog == null)
+
+            if (currentNode == null)
             {
-                if (!dialogs.MoveNext())
+                if (!nodes.MoveNext())
                 {
                     return true;
                 }
 
-                currentDialog = dialogs.Current;
+                currentNode = nodes.Current;
             }
 
             return false;
         }
-        
-        private IEnumerable<ModalDialog> GetDialogs()
+
+        private IEnumerable<IBTnode> GetDialogs()
         {
             yield return ModalDialog.ShowInfo("This is a test");
-            yield return ModalDialog.ShowConfirm("Is this a test?");
+
+            var confirmDialog = ModalDialog.ShowConfirm("Do you want to continue?");
+            var waitForResult = new BTWaitForResult(confirmDialog, runChild: false); // Don't run the child node since dialogs are run automatically
+
+            yield return waitForResult;
+
+            if (confirmDialog.DialogResult == 0)
+            {
+                yield return ModalDialog.ShowInfo("You chose to continue");
+            }
+            else
+            {
+                yield return ModalDialog.ShowInfo("You chose to stop");
+            }
         }
     }
 }

@@ -73,7 +73,7 @@ namespace JKMP.Core
 
         private void OnPostGameUpdate(object sender, float delta)
         {
-            if (startupInformation?.Update() == true)
+            if (startupInformation?.Update(delta) == true)
             {
                 startupInformation = null;
             }
