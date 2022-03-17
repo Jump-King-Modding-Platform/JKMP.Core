@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using BehaviorTree;
-using JKMP.Core.BehaviourTree.Nodes;
 using JKMP.Core.Logging;
 using JKMP.Core.UI;
 
@@ -49,9 +48,7 @@ namespace JKMP.Core
             yield return ModalDialog.ShowInfo("This is a test");
 
             var confirmDialog = ModalDialog.ShowConfirm("Do you want to continue?");
-            var waitForResult = new BTWaitForResult(confirmDialog, runChild: false); // Don't run the child node since dialogs are run automatically
-
-            yield return waitForResult;
+            yield return confirmDialog;
 
             if (confirmDialog.DialogResult == 0)
             {
