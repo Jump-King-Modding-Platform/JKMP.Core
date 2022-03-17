@@ -173,6 +173,7 @@ namespace JKMP.Core.Input.UI
                                     modal = ModalDialog.ShowDialog(
                                         $"'{rebindWindow.CurrentBind}' is already bound to the following actions:\n{actionsBuilder}\nWhat do you want to do?",
                                         onClick: null,
+                                        0,
                                         "Replace", "Add", "Cancel"
                                     );
                                     currentState = State.WaitingForModal;

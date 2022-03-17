@@ -14,12 +14,16 @@ namespace JKMP.Core.UI
         /// The action to invoke when the users clicks a button. Can be null.
         /// The int parameter indicates the index of the button that was pressed.
         /// </param>
+        /// <param name="inputDelay">
+        /// The amount of seconds to delay before enabling input.
+        /// Useful for preventing the user from accidentally closing the dialog as soon as it opens.
+        /// </param>
         /// <param name="buttonNames">The text for each button.</param>
-        public static ModalDialog ShowDialog(string message, Action<int?>? onClick = null, params string[] buttonNames)
+        public static ModalDialog ShowDialog(string message, Action<int?>? onClick = null, float inputDelay = 0, params string[] buttonNames)
         {
             ThrowIfNotInitialized();
-            
-            var dialog = new ModalDialog(message, buttonNames, onClick);
+
+            var dialog = new ModalDialog(message, buttonNames, onClick, inputDelay);
             instance!.PushModal(dialog);
             return dialog;
         }
@@ -29,7 +33,11 @@ namespace JKMP.Core.UI
         /// </summary>
         /// <param name="message">The message to display</param>
         /// <param name="onClosed">The callback to invoke when the modal is closed. Can be null.</param>
-        public static ModalDialog ShowInfo(string message, Action? onClosed = null)
+        /// <param name="inputDelay">
+        /// The amount of seconds to delay before enabling input.
+        /// Useful for preventing the user from accidentally closing the dialog as soon as it opens.
+        /// </param>
+        public static ModalDialog ShowInfo(string message, Action? onClosed = null, float inputDelay = 0)
         {
             ThrowIfNotInitialized();
 
@@ -40,7 +48,7 @@ namespace JKMP.Core.UI
                 callback = _ => onClosed();
             }
 
-            var dialog = new ModalDialog(message, new[] { "OK" }, callback);
+            var dialog = new ModalDialog(message, new[] { "ok" }, callback, inputDelay);
             instance!.PushModal(dialog);
             return dialog;
         }
@@ -50,15 +58,20 @@ namespace JKMP.Core.UI
         /// </summary>
         /// <param name="message">The message to display.</param>
         /// <param name="onClosed">The callback to invoke when the modal is closed. Can be null.</param>
+        /// <param name="inputDelay">
+        /// The amount of seconds to delay before enabling input.
+        /// Useful for preventing the user from accidentally closing the dialog as soon as it opens.
+        /// </param>
         /// <exception cref="ArgumentNullException">Thrown is onClosed is null.</exception>
-        public static ModalDialog ShowConfirm(string message, Action<bool>? onClosed = null)
+        public static ModalDialog ShowConfirm(string message, Action<bool>? onClosed = null, float inputDelay = 0)
         {
             ThrowIfNotInitialized();
 
             var dialog = new ModalDialog(
                 message,
-                new[] { "Yes", "No" },
-                index => { onClosed?.Invoke(index == 0); }
+                new[] { "yes", "no" },
+                index => { onClosed?.Invoke(index == 0); },
+                inputDelay
             );
 
             instance!.PushModal(dialog);
