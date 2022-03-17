@@ -92,7 +92,7 @@ namespace JKMP.Core.Plugins
             {
                 RootDirectory = "JKMP",
                 ContentRoot = Path.Combine("JKMP", "Content"),
-                ConfigRoot = Path.Combine("JKMP", "Configs", "Core")
+                ConfigRoot = "JKMP"
             };
         }
     }
