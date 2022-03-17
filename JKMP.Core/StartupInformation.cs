@@ -48,21 +48,29 @@ namespace JKMP.Core
 
         private IEnumerable<IBTnode> GetDialogs()
         {
-            var jkBindings = InputManager.GetBindings(Plugin.InternalPlugin);
-            var action = jkBindings.GetActionByName("confirm")!.Value;
-            var primaryKey = jkBindings.GetKeyBindsForAction(action.Name).FirstOrDefault();
-            string confirmButtonName = primaryKey.ToDisplayString();
-            
-            yield return ModalDialog.ShowDialog("Thank you for installing JKMP!" +
-                                                "\n\nJKMP replaces the vanilla input system, which" +
-                                                "\nunfortunately means that your keybinds have been reset." +
-                                                "\n\nIf you had any custom keybinds you can re-bind them" +
-                                                "\nin the settings menu." +
-                                                "\n\nThis message will not be shown again.",
-                null,
-                inputDelay: 3,
-                $"Press {confirmButtonName} to continue"
-            );
+            bool firstStartup = JKCore.Instance.Config!.FirstStartup;
+
+            if (firstStartup)
+            {
+                var jkBindings = InputManager.GetBindings(Plugin.InternalPlugin);
+                var action = jkBindings.GetActionByName("confirm")!.Value;
+                var primaryKey = jkBindings.GetKeyBindsForAction(action.Name).FirstOrDefault();
+                string confirmButtonName = primaryKey.ToDisplayString();
+
+                yield return ModalDialog.ShowDialog("Thank you for installing JKMP!" +
+                                                    "\n\nJKMP replaces the vanilla input system, which unfortunately" +
+                                                    "\nmeans that your keybinds have been reset to default." +
+                                                    "\n\nIf you had any custom keybinds you can re-bind them" +
+                                                    "\nin the settings menu." +
+                                                    "\n\nThis message will not be shown again.",
+                    null,
+                    inputDelay: 3,
+                    $"Press {confirmButtonName} to continue"
+                );
+
+                JKCore.Instance.Config.FirstStartup = false;
+                JKCore.Instance.SaveConfig();
+            }
         }
     }
 }
