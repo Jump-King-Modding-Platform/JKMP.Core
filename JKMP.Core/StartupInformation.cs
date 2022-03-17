@@ -45,19 +45,12 @@ namespace JKMP.Core
 
         private IEnumerable<IBTnode> GetDialogs()
         {
-            yield return ModalDialog.ShowInfo("This is a test");
-
-            var confirmDialog = ModalDialog.ShowConfirm("Do you want to continue?");
-            yield return confirmDialog;
-
-            if (confirmDialog.DialogResult == 0)
-            {
-                yield return ModalDialog.ShowInfo("You chose to continue");
-            }
-            else
-            {
-                yield return ModalDialog.ShowInfo("You chose to stop");
-            }
+            yield return ModalDialog.ShowInfo("Thank you for installing JKMP!" +
+                                              "\n\nJKMP replaces the vanilla input system, which unfortunately" +
+                                              "\nmeans that your keybinds have been reset." +
+                                              "\n\nIf you had any custom keybinds you can re-bind them in the" +
+                                              "\nsettings menu."
+            );
         }
     }
 }
