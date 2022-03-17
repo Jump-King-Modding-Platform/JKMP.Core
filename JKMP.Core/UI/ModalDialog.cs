@@ -85,6 +85,12 @@ namespace JKMP.Core.UI
         }
 
         /// <inheritdoc />
+        protected override void OnNewRun()
+        {
+            JKContentManager.Audio.Menu.CursorMove.PlayOneShot();
+        }
+
+        /// <inheritdoc />
         protected override BTresult MyRun(TickData tickData)
         {
             var input = ControllerManager.instance.MenuController.GetPadState();
