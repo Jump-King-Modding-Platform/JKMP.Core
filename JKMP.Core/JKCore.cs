@@ -1,10 +1,13 @@
 using System;
 using System.Reflection;
 using HarmonyLib;
+using JKMP.Core.Configuration;
 using JKMP.Core.Content;
 using JKMP.Core.Input;
 using JKMP.Core.Logging;
 using JKMP.Core.Plugins;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Semver;
 using Serilog;
 
@@ -25,12 +28,16 @@ namespace JKMP.Core
         /// </summary>
         public SemVersion Version { get; }
         
+        internal JkmpConfig? Config { get; private set; }
+
         /// <summary>
         /// Gets the JKCore singleton. It is the base of the Core framework.
         /// </summary>
         public static JKCore Instance { get; private set; } = null!;
         
         private readonly Harmony harmony;
+        private PluginConfigs? configs;
+        private StartupInformation? startupInformation;
 
         private static readonly ILogger Logger = LogManager.CreateLogger<JKCore>();
 
@@ -55,12 +62,40 @@ namespace JKMP.Core
 
             InputManager.Initialize();
             
+            Events.PostGameInitialized += OnPostGameInitialized;
             Events.PreGameUpdate += OnPreGameUpdate;
+            Events.PostGameUpdate += OnPostGameUpdate;
+        }
+
+        internal void SaveConfig()
+        {
+            if (configs == null || Config == null)
+                return;
+
+            configs.SaveConfig(Config, "Config");
+        }
+
+        private void OnPostGameInitialized(object sender, EventArgs e)
+        {
+            configs = new PluginConfigs(Plugin.InternalPlugin)
+            {
+                JsonSerializerSettings = PluginManager.CreateDefaultJsonSerializerSettings()
+            };
+            Config = configs.LoadConfig<JkmpConfig>("Config");
+            startupInformation = new();
         }
 
         private void OnPreGameUpdate(object sender, float delta)
         {
             InputManager.Update();
+        }
+
+        private void OnPostGameUpdate(object sender, float delta)
+        {
+            if (startupInformation?.Update(delta) == true)
+            {
+                startupInformation = null;
+            }
         }
     }
 }

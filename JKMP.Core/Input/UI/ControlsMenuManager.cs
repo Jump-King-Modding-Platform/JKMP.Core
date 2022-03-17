@@ -144,6 +144,7 @@ namespace JKMP.Core.Input.UI
                 dialog = ModalDialog.ShowDialog(
                     "Are you sure you want to reset all\nkeybinds to their default values?",
                     onClick: OnModalResult,
+                    0,
                     "Reset", "Cancel"
                 );
                 

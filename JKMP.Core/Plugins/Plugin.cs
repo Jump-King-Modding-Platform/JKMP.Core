@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using JKMP.Core.Configuration;
 using JKMP.Core.Input;
 using Newtonsoft.Json;
@@ -87,7 +88,12 @@ namespace JKMP.Core.Plugins
                 Description = "Internal plugin used for core functionality.",
                 Version = JKCore.Instance.Version,
                 Authors = new List<string>() { "JKMP" }
-            }, null);
+            }, null)
+            {
+                RootDirectory = "JKMP",
+                ContentRoot = Path.Combine("JKMP", "Content"),
+                ConfigRoot = "JKMP"
+            };
         }
     }
 }

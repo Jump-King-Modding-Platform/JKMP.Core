@@ -45,6 +45,11 @@ namespace JKMP.Core.UI
         /// To find out if the user has selected an option, use the <see cref="IBTnode.last_result"/> property.
         /// </summary>
         public int? DialogResult { get; private set; }
+        
+        /// <summary>
+        /// The amount of time in seconds to delay before being able to select an option
+        /// </summary>
+        public float InputDelay { get; }
 
         private static SpriteFont Font => JKContentManager.Font.MenuFont;
         private static SpriteFont SmallFont => JKContentManager.Font.MenuFontSmall;
@@ -55,9 +60,10 @@ namespace JKMP.Core.UI
         private const int PaddingX = 25;
         private const int PaddingY = 30;
         
-        int selectedButton = 0;
+        private int selectedButton = 0;
+        private float timeSinceOpened;
 
-        internal ModalDialog(string message, string[] buttons, Action<int?>? callback)
+        internal ModalDialog(string message, string[] buttons, Action<int?>? callback, float inputDelay = 0)
         {
             if (buttons.Length == 0)
                 throw new ArgumentException("Value cannot be an empty collection.", nameof(buttons));
@@ -65,6 +71,7 @@ namespace JKMP.Core.UI
             Message = message ?? throw new ArgumentNullException(nameof(message));
             Buttons = buttons;
             Callback = callback;
+            InputDelay = inputDelay;
 
             Vector2 sizeOfMessage = SmallFont.MeasureString(message);
 
@@ -78,10 +85,21 @@ namespace JKMP.Core.UI
         }
 
         /// <inheritdoc />
+        protected override void OnNewRun()
+        {
+            JKContentManager.Audio.Menu.CursorMove.PlayOneShot();
+        }
+
+        /// <inheritdoc />
         protected override BTresult MyRun(TickData tickData)
         {
             var input = ControllerManager.instance.MenuController.GetPadState();
             ControllerManager.instance.MenuController.ConsumePadPresses(); // Always consume the pad presses
+            
+            timeSinceOpened += tickData.delta_time;
+            
+            if (timeSinceOpened < InputDelay)
+                return BTresult.Running;
 
             if (input.cancel || input.pause)
             {
@@ -130,7 +148,7 @@ namespace JKMP.Core.UI
 
             for (int i = 0; i < Buttons.Length; ++i)
             {
-                bool selected = selectedButton == i;
+                bool selected = selectedButton == i && timeSinceOpened >= InputDelay;
 
                 TextHelper.DrawString(Font, Buttons[i], position, selected ? Color.White : Color.LightGray, Vector2.Zero);
 
