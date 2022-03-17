@@ -1,6 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 using BehaviorTree;
+using JKMP.Core.Input;
 using JKMP.Core.Logging;
+using JKMP.Core.Plugins;
 using JKMP.Core.UI;
 
 namespace JKMP.Core
@@ -45,11 +48,20 @@ namespace JKMP.Core
 
         private IEnumerable<IBTnode> GetDialogs()
         {
-            yield return ModalDialog.ShowInfo("Thank you for installing JKMP!" +
-                                              "\n\nJKMP replaces the vanilla input system, which unfortunately" +
-                                              "\nmeans that your keybinds have been reset." +
-                                              "\n\nIf you had any custom keybinds you can re-bind them in the" +
-                                              "\nsettings menu."
+            var jkBindings = InputManager.GetBindings(Plugin.InternalPlugin);
+            var action = jkBindings.GetActionByName("confirm")!.Value;
+            var primaryKey = jkBindings.GetKeyBindsForAction(action.Name).FirstOrDefault();
+            string confirmButtonName = primaryKey.ToDisplayString();
+            
+            yield return ModalDialog.ShowDialog("Thank you for installing JKMP!" +
+                                                "\n\nJKMP replaces the vanilla input system, which" +
+                                                "\nunfortunately means that your keybinds have been reset." +
+                                                "\n\nIf you had any custom keybinds you can re-bind them" +
+                                                "\nin the settings menu." +
+                                                "\n\nThis message will not be shown again.",
+                null,
+                inputDelay: 3,
+                $"Press {confirmButtonName} to continue"
             );
         }
     }
