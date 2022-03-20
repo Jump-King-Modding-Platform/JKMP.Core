@@ -27,5 +27,12 @@ namespace JKMP.Core
         {
             PostGameInitialized?.Invoke(DefaultEventSender, EventArgs.Empty);
         }
+
+        public static event EventHandler? GameTitleScreenLoaded;
+
+        public static void OnGameTitleScreenLoaded()
+        {
+            GameTitleScreenLoaded?.Invoke(DefaultEventSender, EventArgs.Empty);
+        }
     }
 }

@@ -68,4 +68,13 @@ namespace JKMP.Core.Patches
             TextHelper.DrawString(JKContentManager.Font.MenuFont, logoText, drawPosition, Color.Gold, Vector2.Zero);
         }
     }
+
+    [HarmonyPatch(typeof(GameTitleScreen), "OnNewRun")]
+    internal static class GameTitleScreenOnNewRunPatch
+    {
+        private static void Postfix()
+        {
+            Events.OnGameTitleScreenLoaded();
+        }
+    }
 }

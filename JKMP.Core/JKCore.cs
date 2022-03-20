@@ -65,6 +65,7 @@ namespace JKMP.Core
             Events.PostGameInitialized += OnPostGameInitialized;
             Events.PreGameUpdate += OnPreGameUpdate;
             Events.PostGameUpdate += OnPostGameUpdate;
+            Events.GameTitleScreenLoaded += OnGameTitleScreenLoaded;
         }
 
         internal void SaveConfig()
@@ -82,6 +83,10 @@ namespace JKMP.Core
                 JsonSerializerSettings = PluginManager.CreateDefaultJsonSerializerSettings()
             };
             Config = configs.LoadConfig<JkmpConfig>("Config");
+        }
+
+        private void OnGameTitleScreenLoaded(object sender, EventArgs e)
+        {
             startupInformation = new();
         }
 
