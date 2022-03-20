@@ -1,3 +1,4 @@
+using System.Reflection;
 using HarmonyLib;
 using JKMP.Core.Input;
 using JumpKing.Controller;
@@ -7,22 +8,17 @@ using JumpKing.Controller;
 
 namespace JKMP.Core.Patches
 {
-    [HarmonyPatch(typeof(PadInstance), nameof(PadInstance.GetState))]
-    internal static class PadInstanceGetStatePatch
+    [HarmonyPatch(typeof(PadInstance), nameof(PadInstance.Update))]
+    internal static class PadInstanceUpdatePatch
     {
-        private static bool Prefix(ref PadState __result)
-        {
-            __result = VanillaKeyBindRouter.GetState();
-            return false;
-        }
-    }
+        private static readonly FieldInfo LastStateField = AccessTools.Field(typeof(PadInstance), "last_state");
+        private static readonly FieldInfo CurrentStateField = AccessTools.Field(typeof(PadInstance), "current_state");
 
-    [HarmonyPatch(typeof(PadInstance), nameof(PadInstance.GetPressed))]
-    internal static class PadInstanceGetPressedPatch
-    {
-        private static bool Prefix(ref PadState __result)
+        private static bool Prefix(PadInstance __instance)
         {
-            __result = VanillaKeyBindRouter.GetPressedState();
+            LastStateField.SetValue(__instance, CurrentStateField.GetValue(__instance));
+            CurrentStateField.SetValue(__instance, VanillaKeyBindRouter.GetState());
+            
             return false;
         }
     }
