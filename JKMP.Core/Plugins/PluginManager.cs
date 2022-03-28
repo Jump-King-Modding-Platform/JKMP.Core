@@ -10,6 +10,7 @@ using JKMP.Core.Configuration;
 using JKMP.Core.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Semver;
 using Serilog;
 
 namespace JKMP.Core.Plugins
@@ -57,34 +58,14 @@ namespace JKMP.Core.Plugins
 
         internal void LoadPlugins()
         {
-            string pluginsDirectory = Path.Combine("JKMP", "Plugins");
-            Directory.CreateDirectory(pluginsDirectory);
+            var pluginsToLoad = GetPluginsToLoad();
 
-            foreach (string pluginDirectory in Directory.GetDirectories(pluginsDirectory))
+            foreach ((PluginInfo pluginInfo, string pluginDirectory) in pluginsToLoad)
             {
                 PluginContainer? pluginContainer = null;
                 
                 try
                 {
-                    string pluginMetaDataPath = Path.Combine(pluginDirectory, "plugin.json");
-
-                    if (!File.Exists(pluginMetaDataPath))
-                    {
-                        throw new PluginLoadException("Could not find plugin.json");
-                    }
-
-                    PluginInfo pluginInfo;
-
-                    try
-                    {
-                        string jsonContents = File.ReadAllText(pluginMetaDataPath);
-                        pluginInfo = JsonConvert.DeserializeObject<PluginInfo>(jsonContents, SerializerSettings) ?? throw new JsonException("Deserialized plugin.json is null");
-                    }
-                    catch (JsonException ex)
-                    {
-                        throw new PluginLoadException("plugin.json is not formatted correctly", ex);
-                    }
-
                     string uniqueId = new DirectoryInfo(pluginDirectory).Name;
 
                     if (pluginInfo.OnlyContent)
@@ -162,6 +143,161 @@ namespace JKMP.Core.Plugins
 
             foreach (var pluginContainer in loadedPlugins.Values)
                 pluginContainer.Plugin.Initialize();
+        }
+
+        private List<(PluginInfo info, string directoryPath)> GetPluginsToLoad()
+        {
+            string pluginsDirectory = Path.Combine("JKMP", "Plugins");
+            Directory.CreateDirectory(pluginsDirectory);
+            var plugins = new Dictionary<string, (PluginInfo, string)>();
+
+            foreach (string path in Directory.GetDirectories(pluginsDirectory))
+            {
+                string id = new DirectoryInfo(path).Name;
+                var pluginInfo = LoadPluginInfo(path);
+                plugins.Add(id, (pluginInfo, path));
+            }
+
+            Dictionary<string, (PluginInfo, string)> orderedPlugins = new(plugins.Count);
+
+            // Order plugins by their dependencies
+            foreach (var kv in plugins)
+            {
+                string id = kv.Key;
+                var (info, path) = kv.Value;
+                AddPlugin(info, path, orderedPlugins, plugins);
+            }
+
+            return orderedPlugins.Values.ToList();
+        }
+
+        private bool AddPlugin(PluginInfo info, string path, Dictionary<string, (PluginInfo, string)> orderedPlugins, Dictionary<string, (PluginInfo, string)> allPlugins)
+        {
+            string id = new DirectoryInfo(path).Name;
+
+            // Check if it was already loaded from a previous plugin depending on it
+            if (orderedPlugins.ContainsKey(id))
+                return true;
+            
+            if (info.Dependencies.Count == 0)
+            {
+                orderedPlugins.Add(id, (info, path));
+                return true;
+            }
+
+            bool CompareVersions(string id, SemVersion target, SemVersion current)
+            {
+                if (!IsVersionCompatible(target, current))
+                {
+                    Logger.Error(
+                        "Version mismatch found for dependency '{dependencyPlugin}@{version}' for plugin {pluginName}, installed version is {installedVersion}",
+                        id,
+                        current,
+                        id,
+                        target
+                    );
+
+                    return false;
+                }
+
+                return true;
+            }
+
+            foreach (var dependency in info.Dependencies)
+            {
+                string dependencyId = dependency.Key;
+                SemVersion version;
+
+                try
+                {
+                    version = SemVersion.Parse(dependency.Value, strict: false);
+                }
+                catch (Exception e)
+                {
+                    Logger.Error(
+                        "Could not parse version for dependency '{dependencyPlugin}@{version}' for plugin '{pluginName}'",
+                        dependencyId,
+                        dependency.Value,
+                        id
+                    );
+                    
+                    return false;
+                }
+
+                if (!orderedPlugins.ContainsKey(dependencyId))
+                {
+                    if (!allPlugins.ContainsKey(dependencyId))
+                    {
+                        Logger.Error(
+                            "Could not find dependant plugin '{dependencyPlugin}@{version}' for plugin '{pluginName}'",
+                            dependencyId,
+                            dependency.Value,
+                            id
+                        );
+                        
+                        return false;
+                    }
+
+                    var tuple = allPlugins[dependencyId];
+
+                    if (tuple.Item1.Dependencies.ContainsKey(id))
+                    {
+                        Logger.Error(
+                            "Circular dependency detected between '{dependencyPlugin}' and '{pluginName}'",
+                            dependencyId,
+                            id
+                        );
+
+                        return false;
+                    }
+
+                    if (!CompareVersions(dependencyId, tuple.Item1.Version!, version))
+                        return false;
+
+                    if (!AddPlugin(tuple.Item1, tuple.Item2, orderedPlugins, allPlugins))
+                        return false;
+                }
+                else
+                {
+                    var tuple = allPlugins[dependencyId];
+
+                    if (!CompareVersions(dependencyId, tuple.Item1.Version!, version))
+                        return false;
+                }
+            }
+            
+            orderedPlugins.Add(id, (info, path));
+            return true;
+        }
+
+        private bool IsVersionCompatible(SemVersion? target, SemVersion current)
+        {
+            // todo: implement
+            return true;
+        }
+
+        private PluginInfo LoadPluginInfo(string pluginPath)
+        {
+            string pluginMetaDataPath = Path.Combine(pluginPath, "plugin.json");
+
+            if (!File.Exists(pluginMetaDataPath))
+            {
+                throw new PluginLoadException("Could not find plugin.json");
+            }
+
+            PluginInfo pluginInfo;
+
+            try
+            {
+                string jsonContents = File.ReadAllText(pluginMetaDataPath);
+                pluginInfo = JsonConvert.DeserializeObject<PluginInfo>(jsonContents, SerializerSettings) ?? throw new JsonException("Deserialized plugin.json is null");
+            }
+            catch (JsonException ex)
+            {
+                throw new PluginLoadException("plugin.json is not formatted correctly", ex);
+            }
+
+            return pluginInfo;
         }
 
         private string? FindPluginEntryFile(string pluginDirectory)

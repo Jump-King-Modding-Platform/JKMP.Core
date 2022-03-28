@@ -41,6 +41,6 @@ namespace JKMP.Core.Plugins
         /// <summary>
         /// Gets the dependencies of this plugin. The key is the plugin name and the value is the version.
         /// </summary>
-        public Dictionary<string, string>? Dependencies { get; set; } = new();
+        public Dictionary<string, string> Dependencies { get; } = new();
     }
 }
