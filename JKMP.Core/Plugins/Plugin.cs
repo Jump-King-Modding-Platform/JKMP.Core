@@ -26,6 +26,11 @@ namespace JKMP.Core.Plugins
         /// Gets the metadata of this plugin contained within plugin.json.
         /// </summary>
         public PluginInfo Info => Container.Info;
+
+        /// <summary>
+        /// Gets the unique identifier for this plugin.
+        /// </summary>
+        public string Id { get; internal set; } = null!;
         
         /// <summary>
         /// Gets the configuration manager for this plugin.
@@ -82,6 +87,8 @@ namespace JKMP.Core.Plugins
     {
         public NoOpPlugin()
         {
+            Id = "Core";
+            
             Container = new PluginContainer(this, new PluginInfo
             {
                 Name = "Core",
