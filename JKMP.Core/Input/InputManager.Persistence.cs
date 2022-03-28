@@ -13,7 +13,7 @@ namespace JKMP.Core.Input
         /// </summary>
         private static class Persistence
         {
-            const string FilePath ="./JKMP/Keybinds.json";
+            private static readonly string FilePath = Path.Combine("JKMP", "Keybinds.json");
             
             public static void SaveMappings(Dictionary<Plugin, Bindings> pluginBindings, Dictionary<Plugin, HashSet<string>> unboundActions)
             {
