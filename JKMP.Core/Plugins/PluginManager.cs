@@ -174,7 +174,7 @@ namespace JKMP.Core.Plugins
                 return null;
 
             if (matchingFiles.Length > 1)
-                throw new PluginLoadException($"There are multiple files matching the JKMP.Plugin.*.* pattern in the plugin's directory");
+                throw new PluginLoadException($"There are multiple files matching the JKMP.Plugin.{nameOfPlugin}.* pattern in the plugin's directory");
 
             return matchingFiles.First();
         }
