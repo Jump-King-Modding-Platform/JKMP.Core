@@ -338,7 +338,7 @@ namespace JKMP.Core.Input
                 foreach (ActionInfo actionInfo in bindings.GetActions())
                 {
                     // todo: add a unique name property for plugins that isn't normally renamed.
-                    if (!loadedMappings.TryGetValue(plugin.Container.Info.Name!, out Dictionary<string, List<string>>? mappings))
+                    if (!loadedMappings.TryGetValue(plugin.Id, out Dictionary<string, List<string>>? mappings))
                         mappings = new Dictionary<string, List<string>>();
 
                     if (mappings.TryGetValue(actionInfo.Name, out var keyNames))

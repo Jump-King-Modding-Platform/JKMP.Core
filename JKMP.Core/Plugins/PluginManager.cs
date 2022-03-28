@@ -85,6 +85,8 @@ namespace JKMP.Core.Plugins
                         throw new PluginLoadException("plugin.json is not formatted correctly", ex);
                     }
 
+                    string uniqueId = new DirectoryInfo(pluginDirectory).Name;
+
                     if (pluginInfo.OnlyContent)
                     {
                         pluginContainer = new PluginContainer(new ContentPlugin(), pluginInfo, null)
@@ -95,7 +97,7 @@ namespace JKMP.Core.Plugins
 
                         pluginContainer.Plugin.Container = pluginContainer;
 
-                        loadedPlugins[pluginDirectory.ToLowerInvariant()] = pluginContainer;
+                        loadedPlugins[uniqueId] = pluginContainer;
                         continue;
                     }
 
@@ -123,6 +125,7 @@ namespace JKMP.Core.Plugins
                     pluginContainer.RootDirectory = pluginDirectory;
                     pluginContainer.ContentRoot = Path.Combine(pluginDirectory, "Content");
                     pluginContainer.ConfigRoot = Path.Combine("JKMP", "Configs", pluginInfo.Name!);
+                    pluginContainer.Plugin.Id = uniqueId;
                     pluginContainer.Plugin.Container = pluginContainer;
                     pluginContainer.Plugin.Configs = new(pluginContainer.Plugin);
                     pluginContainer.Plugin.Configs.JsonSerializerSettings ??= CreateDefaultJsonSerializerSettings();
