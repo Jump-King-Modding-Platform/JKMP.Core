@@ -144,7 +144,7 @@ namespace JKMP.Core.Plugins
                     );
 
                     if (ex.InnerException != null)
-                        Logger.Error(ex.InnerException, string.Empty);
+                        Logger.Error(ex.InnerException, "");
                 }
                 catch (Exception ex)
                 {
