@@ -210,7 +210,7 @@ namespace JKMP.Core.Plugins
 
                 try
                 {
-                    version = SemVersion.Parse(dependency.Value, strict: false);
+                    version = SemVersion.Parse(dependency.Value, SemVersionStyles.Any);
                 }
                 catch (Exception e)
                 {

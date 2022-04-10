@@ -48,7 +48,7 @@ namespace JKMP.Core
             
             Instance = this;
 
-            Version = new SemVersion(Assembly.GetExecutingAssembly().GetName().Version);
+            Version = SemVersion.FromVersion(Assembly.GetExecutingAssembly().GetName().Version);
 
             Logger.Information("Initializing JKMP v{version}!", Version);
             
