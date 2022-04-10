@@ -11,6 +11,8 @@ using JKMP.Core.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Semver;
+using Semver.Ranges;
+using Semver.Ranges.Comparers.Npm;
 using Serilog;
 
 namespace JKMP.Core.Plugins
@@ -163,7 +165,6 @@ namespace JKMP.Core.Plugins
             // Order plugins by their dependencies
             foreach (var kv in plugins)
             {
-                string id = kv.Key;
                 var (info, path) = kv.Value;
                 AddPlugin(info, path, orderedPlugins, plugins);
             }
@@ -185,16 +186,16 @@ namespace JKMP.Core.Plugins
                 return true;
             }
 
-            bool CompareVersions(string id, SemVersion target, SemVersion current)
+            bool CompareVersions(string depId, NpmRange range, SemVersion current)
             {
-                if (!IsVersionCompatible(target, current))
+                if (!range.Includes(current))
                 {
                     Logger.Error(
                         "Version mismatch found for dependency '{dependencyPlugin}@{version}' for plugin {pluginName}, installed version is {installedVersion}",
+                        depId,
+                        range,
                         id,
-                        current,
-                        id,
-                        target
+                        current
                     );
 
                     return false;
@@ -206,13 +207,13 @@ namespace JKMP.Core.Plugins
             foreach (var dependency in info.Dependencies)
             {
                 string dependencyId = dependency.Key;
-                SemVersion version;
+                NpmRange range;
 
                 try
                 {
-                    version = SemVersion.Parse(dependency.Value, SemVersionStyles.Any);
+                    range = NpmRange.Parse(dependency.Value);
                 }
-                catch (Exception e)
+                catch (RangeParseException ex)
                 {
                     Logger.Error(
                         "Could not parse version for dependency '{dependencyPlugin}@{version}' for plugin '{pluginName}'",
@@ -251,7 +252,10 @@ namespace JKMP.Core.Plugins
                         return false;
                     }
 
-                    if (!CompareVersions(dependencyId, tuple.Item1.Version!, version))
+                    if (!CompareVersions(dependencyId, range, tuple.Item1.Version!))
+                        return false;
+
+                    if (!range.Includes(tuple.Item1.Version!))
                         return false;
 
                     if (!AddPlugin(tuple.Item1, tuple.Item2, orderedPlugins, allPlugins))
@@ -261,18 +265,12 @@ namespace JKMP.Core.Plugins
                 {
                     var tuple = allPlugins[dependencyId];
 
-                    if (!CompareVersions(dependencyId, tuple.Item1.Version!, version))
+                    if (!CompareVersions(dependencyId, range, tuple.Item1.Version!))
                         return false;
                 }
             }
             
             orderedPlugins.Add(id, (info, path));
-            return true;
-        }
-
-        private bool IsVersionCompatible(SemVersion? target, SemVersion current)
-        {
-            // todo: implement
             return true;
         }
 
