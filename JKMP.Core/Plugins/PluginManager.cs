@@ -99,7 +99,7 @@ namespace JKMP.Core.Plugins
 
                     Logger.Information(
                         "Loading plugin '{name}' v{version} using {loaderName}",
-                        pluginInfo.Name,
+                        uniqueId,
                         pluginInfo.Version,
                         loader.GetType().Name
                     );
@@ -107,7 +107,7 @@ namespace JKMP.Core.Plugins
                     pluginContainer = loader.LoadPlugin(entryFileName, pluginInfo);
                     pluginContainer.RootDirectory = pluginDirectory;
                     pluginContainer.ContentRoot = Path.Combine(pluginDirectory, "Content");
-                    pluginContainer.ConfigRoot = Path.Combine("JKMP", "Configs", pluginInfo.Name!);
+                    pluginContainer.ConfigRoot = Path.Combine("JKMP", "Configs", uniqueId);
                     pluginContainer.Plugin.Id = uniqueId;
                     pluginContainer.Plugin.Container = pluginContainer;
                     pluginContainer.Plugin.Configs = new(pluginContainer.Plugin);

@@ -52,7 +52,7 @@ namespace JKMP.Core.Configuration
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error(ex, "Config file {sourceName} for plugin {pluginName} is not valid", owner.Info.Name);
+                    Logger.Error(ex, "Config file {sourceName} for plugin {pluginName} is not valid", owner.Id);
                     throw;
                 }
                 
