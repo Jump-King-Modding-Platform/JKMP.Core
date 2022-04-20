@@ -3,6 +3,7 @@ using System.IO;
 using JKMP.Core.Configuration;
 using JKMP.Core.Input;
 using Newtonsoft.Json;
+using Semver;
 
 namespace JKMP.Core.Plugins
 {
@@ -88,12 +89,12 @@ namespace JKMP.Core.Plugins
         public NoOpPlugin()
         {
             Id = "Core";
-            
+
             Container = new PluginContainer(this, new PluginInfo
             {
                 Name = "Core",
                 Description = "Internal plugin used for core functionality.",
-                Version = JKCore.Instance.Version,
+                Version = new SemVersion(0), // Unused
                 Authors = new List<string>() { "JKMP" }
             }, null)
             {

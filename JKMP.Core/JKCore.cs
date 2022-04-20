@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 using JKMP.Core.Configuration;
@@ -28,7 +29,9 @@ namespace JKMP.Core
         /// </summary>
         public SemVersion Version { get; }
         
-        internal JkmpConfig? Config { get; private set; }
+        internal JkmpConfig Config { get; }
+
+        internal PluginConfigs InternalConfigs { get; }
 
         /// <summary>
         /// Gets the JKCore singleton. It is the base of the Core framework.
@@ -36,7 +39,6 @@ namespace JKMP.Core
         public static JKCore Instance { get; private set; } = null!;
         
         private readonly Harmony harmony;
-        private PluginConfigs? configs;
         private StartupInformation? startupInformation;
 
         private static readonly ILogger Logger = LogManager.CreateLogger<JKCore>();
@@ -54,6 +56,12 @@ namespace JKMP.Core
             
             harmony = new Harmony("com.jkmp.core");
             harmony.PatchAll(typeof(JKCore).Assembly);
+            
+            InternalConfigs = new PluginConfigs(Plugin.InternalPlugin)
+            {
+                JsonSerializerSettings = PluginManager.CreateDefaultJsonSerializerSettings()
+            };
+            Config = InternalConfigs.LoadConfig<JkmpConfig>("Config");
 
             InputManager.CreateVanillaKeyBinds();
             
@@ -70,19 +78,12 @@ namespace JKMP.Core
 
         internal void SaveConfig()
         {
-            if (configs == null || Config == null)
-                return;
-
-            configs.SaveConfig(Config, "Config");
+            InternalConfigs.SaveConfig(Config, "Config");
         }
 
         private void OnPostGameInitialized(object sender, EventArgs e)
         {
-            configs = new PluginConfigs(Plugin.InternalPlugin)
-            {
-                JsonSerializerSettings = PluginManager.CreateDefaultJsonSerializerSettings()
-            };
-            Config = configs.LoadConfig<JkmpConfig>("Config");
+            
         }
 
         private void OnGameTitleScreenLoaded(object sender, EventArgs e)

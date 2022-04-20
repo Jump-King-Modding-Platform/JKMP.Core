@@ -26,9 +26,10 @@ namespace JKMP.Core.Plugins
         /// <summary>
         /// Gets the number of loaded plugins.
         /// </summary>
-        public int Count => loadedPlugins.Count;
+        public int Count => pluginsDict.Count;
         
-        private readonly Dictionary<string, PluginContainer> loadedPlugins = new();
+        private readonly Dictionary<string, PluginContainer> pluginsDict = new();
+        private readonly List<PluginContainer> pluginsList = new(); // used for ordered (by load order) enumeration
 
         private readonly List<IPluginLoader> loaders = new();
 
@@ -62,7 +63,7 @@ namespace JKMP.Core.Plugins
         {
             var pluginsToLoad = GetPluginsToLoad();
 
-            foreach ((PluginInfo pluginInfo, string pluginDirectory) in pluginsToLoad)
+            foreach ((PluginInfo pluginInfo, string pluginDirectory, _) in pluginsToLoad)
             {
                 PluginContainer? pluginContainer = null;
                 
@@ -80,7 +81,8 @@ namespace JKMP.Core.Plugins
 
                         pluginContainer.Plugin.Container = pluginContainer;
 
-                        loadedPlugins[uniqueId] = pluginContainer;
+                        pluginsDict[uniqueId] = pluginContainer;
+                        pluginsList.Add(pluginContainer);
                         continue;
                     }
 
@@ -114,7 +116,8 @@ namespace JKMP.Core.Plugins
                     pluginContainer.Plugin.Configs.JsonSerializerSettings ??= CreateDefaultJsonSerializerSettings();
                     pluginContainer.Plugin.Input = new(pluginContainer.Plugin);
 
-                    loadedPlugins[Path.GetFileName(pluginDirectory).ToLowerInvariant()] = pluginContainer;
+                    pluginsDict[Path.GetFileName(pluginDirectory).ToLowerInvariant()] = pluginContainer;
+                    pluginsList.Add(pluginContainer);
 
                     Logger.Verbose("Plugin loaded");
                 }
@@ -136,18 +139,22 @@ namespace JKMP.Core.Plugins
 
                 pluginContainer?.Plugin.OnLoaded();
             }
+            
+            // Save plugin load order
+            /*JKCore.Instance.Config.PluginLoadOrder = pluginsList.Select(val => val.Plugin.Id).ToList();
+            JKCore.Instance.SaveConfig();*/
 
-            foreach (var pluginContainer in loadedPlugins.Values)
+            foreach (var pluginContainer in pluginsList)
             {
                 pluginContainer.Plugin.CreateInputActions();
                 pluginContainer.Plugin.Input.FinalizeActions();
             }
 
-            foreach (var pluginContainer in loadedPlugins.Values)
+            foreach (var pluginContainer in pluginsList)
                 pluginContainer.Plugin.Initialize();
         }
 
-        private List<(PluginInfo info, string directoryPath)> GetPluginsToLoad()
+        private List<(PluginInfo info, string directoryPath, string pluginId)> GetPluginsToLoad()
         {
             string pluginsDirectory = Path.Combine("JKMP", "Plugins");
             Directory.CreateDirectory(pluginsDirectory);
@@ -160,29 +167,37 @@ namespace JKMP.Core.Plugins
                 plugins.Add(id, (pluginInfo, path));
             }
 
-            Dictionary<string, (PluginInfo, string)> orderedPlugins = new(plugins.Count);
+            List<(PluginInfo info, string path, string id)> orderedPlugins = new(plugins.Count);
 
-            // Order plugins by their dependencies
-            foreach (var kv in plugins)
+            // Order plugins by load order (if possible) then by their dependencies
+            int GetLoadOrderIndex(string pluginId)
+            {
+                var loadOrders = JKCore.Instance.Config.PluginLoadOrder;
+
+                var index = loadOrders.IndexOf(pluginId);
+                return index == -1 ? int.MaxValue : index; // If the plugin is not in the load order, it will be loaded after all the other plugins
+            }
+
+            foreach (var kv in plugins.OrderBy(kv => GetLoadOrderIndex(kv.Key)))
             {
                 var (info, path) = kv.Value;
                 AddPlugin(info, path, orderedPlugins, plugins);
             }
 
-            return orderedPlugins.Values.ToList();
+            return orderedPlugins;
         }
 
-        private bool AddPlugin(PluginInfo info, string path, Dictionary<string, (PluginInfo, string)> orderedPlugins, Dictionary<string, (PluginInfo, string)> allPlugins)
+        private bool AddPlugin(PluginInfo info, string path, List<(PluginInfo info, string path, string id)> orderedPlugins, Dictionary<string, (PluginInfo, string)> allPlugins)
         {
             string id = new DirectoryInfo(path).Name;
 
             // Check if it was already loaded from a previous plugin depending on it
-            if (orderedPlugins.ContainsKey(id))
+            if (orderedPlugins.Any(t => t.id == id))
                 return true;
             
             if (info.Dependencies.Count == 0)
             {
-                orderedPlugins.Add(id, (info, path));
+                orderedPlugins.Add((info, path, id));
                 return true;
             }
 
@@ -191,7 +206,7 @@ namespace JKMP.Core.Plugins
                 if (!range.Includes(current))
                 {
                     Logger.Error(
-                        "Version mismatch found for dependency '{dependencyPlugin}@{version}' for plugin {pluginName}, installed version is {installedVersion}",
+                        "Version mismatch found for dependency '{dependencyPlugin}@{versionRange}' for plugin {pluginName}, installed version is {installedVersion}",
                         depId,
                         range,
                         id,
@@ -225,7 +240,7 @@ namespace JKMP.Core.Plugins
                     return false;
                 }
 
-                if (!orderedPlugins.ContainsKey(dependencyId))
+                if (orderedPlugins.All(t => t.id != dependencyId))
                 {
                     if (!allPlugins.ContainsKey(dependencyId))
                     {
@@ -269,8 +284,8 @@ namespace JKMP.Core.Plugins
                         return false;
                 }
             }
-            
-            orderedPlugins.Add(id, (info, path));
+
+            orderedPlugins.Add((info, path, id));
             return true;
         }
 
@@ -375,45 +390,55 @@ namespace JKMP.Core.Plugins
             }
         }
 
-        IEnumerator<KeyValuePair<string, PluginContainer>> IEnumerable<KeyValuePair<string, PluginContainer>>.GetEnumerator() => loadedPlugins.GetEnumerator();
+        /// <summary>
+        /// Gets an enumerator that iterates through the loaded plugins. The key is the plugin's id and the value is the plugin's container.
+        /// The order of the plugins is not guaranteed to be the same as the load order.
+        /// </summary>
+        /// <returns>An enumerator that iterates through the loaded plugins. The key is the plugin's id and the value is the plugin's container.</returns>
+        IEnumerator<KeyValuePair<string, PluginContainer>> IEnumerable<KeyValuePair<string, PluginContainer>>.GetEnumerator() => pluginsDict.GetEnumerator();
 
         /// <summary>
         /// Gets an enumerator that iterates through the containers of the loaded plugins.
+        /// The order is guaranteed to be the same as the order in which the plugins were loaded.
         /// </summary>
         /// <returns></returns>
-        public IEnumerator<PluginContainer> GetEnumerator() => loadedPlugins.Values.GetEnumerator();
+        public IEnumerator<PluginContainer> GetEnumerator() => pluginsList.GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <summary>
-        /// Determines whether the plugin with the specified name is loaded.
+        /// Determines whether the plugin with the specified id is loaded.
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public bool ContainsKey(string key) => loadedPlugins.ContainsKey(key.ToLowerInvariant());
+        public bool ContainsKey(string key) => pluginsDict.ContainsKey(key.ToLowerInvariant());
 
         /// <summary>
         /// Determines whether the plugin with the specified name is loaded and returns the plugin container if it is.
         /// </summary>
-        /// <param name="key">The unique name of the plugin. It is case-insensitive.</param>
+        /// <param name="key">The unique id of the plugin. It is case-insensitive.</param>
         /// <param name="value">If the method returns true, this value is set to the value of the found plugin container.</param>
         /// <returns>True if the plugin is loaded.</returns>
-        public bool TryGetValue(string key, out PluginContainer value) => loadedPlugins.TryGetValue(key.ToLowerInvariant(), out value);
+        public bool TryGetValue(string key, out PluginContainer value) => pluginsDict.TryGetValue(key.ToLowerInvariant(), out value);
 
         /// <summary>
-        /// Gets the plugin container of the plugin with the specified unique name. The name is case-insensitive.
+        /// Gets the plugin container of the plugin with the specified unique id. The name is case-insensitive.
+        /// If no plugin is found with the specified id, a <see cref="KeyNotFoundException"/> is thrown.
+        /// Use <see cref="TryGetValue"/> to avoid this exception if necessary.
         /// </summary>
         /// <param name="key"></param>
-        public PluginContainer this[string key] => loadedPlugins[key.ToLowerInvariant()];
+        public PluginContainer this[string key] => pluginsDict[key.ToLowerInvariant()];
 
         /// <summary>
         /// Gets a collection of all the loaded plugin names.
+        /// Note that the order of the names is not guaranteed to be the same as the load order of the plugins.
         /// </summary>
-        public IEnumerable<string> Keys => loadedPlugins.Keys;
-        
+        public IEnumerable<string> Keys => pluginsDict.Keys;
+
         /// <summary>
         /// Gets a collection of all the loaded plugin containers.
+        /// The order of the plugins is guaranteed to be the same as the load order.
         /// </summary>
-        public IEnumerable<PluginContainer> Values => loadedPlugins.Values;
+        public IEnumerable<PluginContainer> Values => pluginsList;
     }
 }
