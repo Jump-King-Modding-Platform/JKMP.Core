@@ -24,6 +24,38 @@ namespace JKMP.Core.Plugins
     public sealed class PluginManager : IReadOnlyCollection<PluginContainer>, IReadOnlyDictionary<string, PluginContainer>
     {
         /// <summary>
+        /// Gets the load order of plugins. The first plugin in this list will be the first one initialized, etc.
+        /// This is loaded from a json file on first access and cached for future uses.
+        /// </summary>
+        public static IList<string> PluginLoadOrder => pluginLoadOrder ??= LoadPluginLoadOrder();
+
+        private static IList<string> LoadPluginLoadOrder()
+        {
+            string filePath = Path.Combine("JKMP", "PluginLoadOrder.json");
+
+            if (!File.Exists(filePath))
+                return new List<string>();
+
+            try
+            {
+                return JsonConvert.DeserializeObject<IList<string>>(File.ReadAllText(filePath)) ?? new List<string>();
+            }
+            catch (JsonException ex)
+            {
+                Logger.Warning(ex, "Plugin load order file is invalid");
+                return new List<string>();
+            }
+        }
+
+        internal static void SavePluginLoadOrder()
+        {
+            if (pluginLoadOrder == null)
+                throw new InvalidOperationException("Plugin load order list is null (should not happen)");
+
+            File.WriteAllText(Path.Combine("JKMP", "PluginLoadOrder.json"), JsonConvert.SerializeObject(pluginLoadOrder.Distinct(), Formatting.Indented));
+        }
+
+        /// <summary>
         /// Gets the number of loaded plugins.
         /// </summary>
         public int Count => pluginsDict.Count;
@@ -44,7 +76,9 @@ namespace JKMP.Core.Plugins
                 new SemVersionConverter(),
             }
         };
-        
+
+        private static IList<string>? pluginLoadOrder;
+
         internal PluginManager()
         {
             LoadPluginLoaders();
@@ -62,6 +96,20 @@ namespace JKMP.Core.Plugins
         internal void LoadPlugins()
         {
             var pluginsToLoad = GetPluginsToLoad();
+            
+            // Save the load order
+            if (pluginsToLoad.Count > 0)
+            {
+                foreach (var (_, _, pluginId) in pluginsToLoad)
+                {
+                    if (!PluginLoadOrder.Contains(pluginId))
+                    {
+                        PluginLoadOrder.Add(pluginId);
+                    }
+                }
+                
+                SavePluginLoadOrder();
+            }
 
             foreach ((PluginInfo pluginInfo, string pluginDirectory, _) in pluginsToLoad)
             {
@@ -172,9 +220,7 @@ namespace JKMP.Core.Plugins
             // Order plugins by load order (if possible) then by their dependencies
             int GetLoadOrderIndex(string pluginId)
             {
-                var loadOrders = JKCore.Instance.Config.PluginLoadOrder;
-
-                var index = loadOrders.IndexOf(pluginId);
+                var index = PluginLoadOrder.IndexOf(pluginId);
                 return index == -1 ? int.MaxValue : index; // If the plugin is not in the load order, it will be loaded after all the other plugins
             }
 
