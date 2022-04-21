@@ -89,7 +89,7 @@ namespace JKMP.Core
                     if (assembly != null)
                         return assembly;
                     
-                    if (requestingPluginName != null)
+                    if (requestingPluginName != null && PluginPathRgx.IsMatch(directoryPath))
                     {
                         // If a plugin is requesting an assembly, also check subfolder "Dependencies"
                         string depsPath = Path.Combine(directoryPath, "Dependencies");
