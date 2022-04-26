@@ -111,13 +111,12 @@ namespace JKMP.Core.Plugins
                 SavePluginLoadOrder();
             }
 
-            foreach ((PluginInfo pluginInfo, string pluginDirectory, _) in pluginsToLoad)
+            foreach ((PluginInfo pluginInfo, string pluginDirectory, string uniqueId) in pluginsToLoad)
             {
                 PluginContainer? pluginContainer = null;
                 
                 try
                 {
-                    string uniqueId = new DirectoryInfo(pluginDirectory).Name;
 
                     if (pluginInfo.OnlyContent)
                     {
@@ -164,7 +163,7 @@ namespace JKMP.Core.Plugins
                     pluginContainer.Plugin.Configs.JsonSerializerSettings ??= CreateDefaultJsonSerializerSettings();
                     pluginContainer.Plugin.Input = new(pluginContainer.Plugin);
 
-                    pluginsDict[Path.GetFileName(pluginDirectory).ToLowerInvariant()] = pluginContainer;
+                    pluginsDict[uniqueId.ToLowerInvariant()] = pluginContainer;
                     pluginsList.Add(pluginContainer);
 
                     Logger.Verbose("Plugin loaded");
