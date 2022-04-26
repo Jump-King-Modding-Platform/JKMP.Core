@@ -114,10 +114,26 @@ namespace JKMP.Core.Plugins
             foreach ((PluginInfo pluginInfo, string pluginDirectory, string uniqueId) in pluginsToLoad)
             {
                 PluginContainer? pluginContainer = null;
-                
+
+                {
+                    bool canLoad = true;
+                    
+                    // Check that all dependant plugins have been loaded
+                    foreach (string depPluginId in pluginInfo.Dependencies.Keys)
+                    {
+                        if (!ContainsKey(depPluginId))
+                        {
+                            Logger.Error("Can not load plugin {PluginId} because it depends on {DependantPluginId} which is not loaded", uniqueId, depPluginId);
+                            canLoad = false;
+                        }
+                    }
+
+                    if (!canLoad)
+                        continue;
+                }
+
                 try
                 {
-
                     if (pluginInfo.OnlyContent)
                     {
                         pluginContainer = new PluginContainer(new ContentPlugin(), pluginInfo, null)
