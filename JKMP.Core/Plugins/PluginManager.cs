@@ -186,10 +186,6 @@ namespace JKMP.Core.Plugins
 
                 pluginContainer?.Plugin.OnLoaded();
             }
-            
-            // Save plugin load order
-            /*JKCore.Instance.Config.PluginLoadOrder = pluginsList.Select(val => val.Plugin.Id).ToList();
-            JKCore.Instance.SaveConfig();*/
 
             foreach (var pluginContainer in pluginsList)
             {
