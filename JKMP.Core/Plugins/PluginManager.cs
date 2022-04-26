@@ -128,7 +128,7 @@ namespace JKMP.Core.Plugins
 
                         pluginContainer.Plugin.Container = pluginContainer;
 
-                        pluginsDict[uniqueId] = pluginContainer;
+                        pluginsDict[uniqueId.ToLowerInvariant()] = pluginContainer;
                         pluginsList.Add(pluginContainer);
                         continue;
                     }
