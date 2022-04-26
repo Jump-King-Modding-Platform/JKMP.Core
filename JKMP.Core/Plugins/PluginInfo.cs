@@ -39,8 +39,8 @@ namespace JKMP.Core.Plugins
         public bool OnlyContent { get; set; }
 
         /// <summary>
-        /// Gets the dependencies of this plugin. The key is the plugin name and the value is the version.
+        /// Gets the dependencies of this plugin. The key is the plugin name and the value is the range of compatible versions.
         /// </summary>
-        public Dictionary<string, string>? Dependencies { get; set; } = new();
+        public Dictionary<string, string> Dependencies { get; } = new();
     }
 }

@@ -43,7 +43,7 @@ namespace JKMP.Core.Input
                         }
                     }
 
-                    pluginMappings[plugin.Info.Name!] = mappings;
+                    pluginMappings[plugin.Id] = mappings;
                 }
 
                 foreach (var kv in unboundActions)
@@ -51,7 +51,7 @@ namespace JKMP.Core.Input
                     var plugin = kv.Key;
                     var actions = kv.Value;
 
-                    var mappings = pluginMappings[plugin.Info.Name!];
+                    var mappings = pluginMappings[plugin.Id];
 
                     foreach (string actionName in actions)
                     {

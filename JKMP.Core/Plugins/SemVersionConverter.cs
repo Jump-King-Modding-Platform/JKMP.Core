@@ -27,7 +27,7 @@ namespace JKMP.Core.Plugins
 
             try
             {
-                return SemVersion.Parse((string)reader.Value, true);
+                return SemVersion.Parse((string)reader.Value, SemVersionStyles.Strict);
             }
             catch (Exception ex)
             {

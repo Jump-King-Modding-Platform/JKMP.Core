@@ -38,16 +38,9 @@ namespace JKMP.Core.UI
             anchor_bounds = new Rectangle(0, 0, Width / 2, Height),
         };
 
-        private readonly PluginLoadOrderMenu pluginLoadOrderMenu;
-
         public PluginsMenu(List<IDrawable> drawables) : base(PluginsGuiFormat, autoSize: false)
         {
             drawables.Add(this);
-            
-            /*pluginLoadOrderMenu = new();
-            drawables.Add(pluginLoadOrderMenu);
-            AddChild("Core options", new TextButton("Plugin load order", pluginLoadOrderMenu, JKContentManager.Font.MenuFontSmall, Color.LightGray));
-            SetCategoryOrder("Core options", 10); // Core options should be last*/
         }
 
         public override void Draw()

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace JKMP.Core.Configuration
 {
     internal class JkmpConfig
