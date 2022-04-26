@@ -10,6 +10,7 @@
         <Nullable>enable</Nullable>
         <LangVersion>9</LangVersion>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <PlatformTarget>x86</PlatformTarget>
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="JKMP.Facepunch.Steamworks.Win32" Version="2.5.0" />
