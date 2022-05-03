@@ -13,24 +13,24 @@
         <PlatformTarget>x86</PlatformTarget>
     </PropertyGroup>
     <ItemGroup>
-      <PackageReference Include="JKMP.Facepunch.Steamworks.Win32" Version="2.5.0" />
-      <PackageReference Include="JKMP.GameDependencies" Version="1.0.0" />
-      <PackageReference Include="Lib.Harmony" Version="2.1.1" />
-      <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-      <PackageReference Include="Semver" Version="2.1.0" />
-      <PackageReference Include="Serilog" Version="2.10.0" />
-      <PackageReference Include="Serilog.Enrichers.Demystifier" Version="1.0.1" />
-      <PackageReference Include="Serilog.Expressions" Version="3.2.0" />
-      <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0" />
-      <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+        <PackageReference Include="JKMP.Facepunch.Steamworks.Win32" Version="2.5.0" />
+        <PackageReference Include="JKMP.GameDependencies" Version="1.0.0" />
+        <PackageReference Include="Lib.Harmony" Version="2.1.1" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+        <PackageReference Include="Semver" Version="2.1.0" />
+        <PackageReference Include="Serilog" Version="2.10.0" />
+        <PackageReference Include="Serilog.Enrichers.Demystifier" Version="1.0.1" />
+        <PackageReference Include="Serilog.Expressions" Version="3.2.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0" />
+        <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
     </ItemGroup>
     <Import Project="$(SolutionDir)DevVars.targets" Condition="Exists('$(SolutionDir)DevVars.targets')" />
-    
+
     <!-- Copy files to game directories if this is not a CI build -->
     <Target Name="CopyFilesToGameDirectory" AfterTargets="PostBuildEvent" Condition="$(CI) == ''" Outputs="%(GameDirectory.Identity)">
         <ItemGroup>
             <CoreFiles Include="$(TargetDir)JKMP.Core.dll" />
-            
+
             <!--
             Serilog and newtonsoft.json dependencies need to be in the root game folder due to logging being initialized before assembly resolving (json is used for customizing logging)
             This means that the Serilog dll's won't be found unless they're in the root folder.
@@ -44,18 +44,18 @@
             <CoreFiles Include="$(TargetDir)Ben.Demystifier.dll" />
             <CoreFiles Include="$(TargetDir)Newtonsoft.Json.dll" />
         </ItemGroup>
-        
+
         <ItemGroup>
             <DependencyFiles Include="$(TargetDir)0Harmony.dll" />
             <DependencyFiles Include="$(TargetDir)Semver.dll" />
             <DependencyFiles Include="$(TargetDir)Facepunch.Steamworks.Win32.dll" />
             <DependencyFiles Include="$(TargetDir)System.Collections.Immutable.dll" />
         </ItemGroup>
-        
+
         <PropertyGroup>
             <Destination>%(GameDirectory.Identity)</Destination>
         </PropertyGroup>
-        
+
         <Message Importance="high" Text="Copying @(CoreFiles->'%(filename)%(extension)') to $(Destination)" />
         <Copy SourceFiles="@(CoreFiles)" DestinationFolder="$(Destination)" SkipUnchangedFiles="true" />
 
