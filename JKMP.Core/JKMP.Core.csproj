@@ -6,7 +6,7 @@
         <Authors>Skipcast</Authors>
         <Company>Jump King Multiplayer</Company>
         <PackageDescription>The core module of the Jump King Multiplayer mod.</PackageDescription>
-        <RepositoryUrl>https://github.com/Jump-King-Multiplayer/JKMP.Core</RepositoryUrl>
+        <RepositoryUrl>https://github.com/Jump-King-Modding-Platform/JKMP.Core</RepositoryUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Nullable>enable</Nullable>
         <LangVersion>9</LangVersion>
